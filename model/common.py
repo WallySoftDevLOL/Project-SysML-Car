@@ -150,50 +150,49 @@ def add_cylinder(bm, radius, depth, segments=24, matrix=None, cap_ends=True):
 
 def add_torus_by_spin(bm, major_radius, minor_radius, major_segments=24,
                       minor_segments=8, matrix=None):
-    """Torus around local Z built by spinning a small circle profile."""
+    """Torus around local Z built by spinning a small circle profile.
+
+    The torus is built in a private bmesh, transformed there, and only then
+    copied into ``bm``. That keeps the operation safe no matter what geometry
+    ``bm`` already holds (spin/remove_doubles reorder element tables, so index
+    slices into a shared bmesh are not reliable).
+    """
     major_radius = float(major_radius)
     minor_radius = float(minor_radius)
     major_segments = int(major_segments)
     minor_segments = int(minor_segments)
 
-    # Only the geometry created here may be merged/transformed: the bmesh may
-    # already hold other parts of the same block.
-    bm.verts.ensure_lookup_table()
-    n0 = len(bm.verts)
-
+    tmp = bmesh.new()
     profile = []
     for i in range(minor_segments):
         a = 2.0 * math.pi * i / minor_segments
-        profile.append(bm.verts.new((
+        profile.append(tmp.verts.new((
             major_radius + minor_radius * math.cos(a),
             0.0,
             minor_radius * math.sin(a),
         )))
-    bm.verts.ensure_lookup_table()
-    edges = []
-    for i in range(minor_segments):
-        edges.append(bm.edges.new((profile[i], profile[(i + 1) % minor_segments])))
-
-    geom = list(profile) + list(edges)
+    tmp.verts.ensure_lookup_table()
+    edges = [tmp.edges.new((profile[i], profile[(i + 1) % minor_segments])) for i in range(minor_segments)]
     step_angle = 2.0 * math.pi / major_segments
     ret = bmesh.ops.spin(
-        bm, geom=geom, cent=(0.0, 0.0, 0.0), axis=(0.0, 0.0, 1.0),
+        tmp, geom=list(profile) + edges, cent=(0.0, 0.0, 0.0), axis=(0.0, 0.0, 1.0),
         dvec=(0.0, 0.0, 0.0), angle=step_angle * major_segments,
         steps=major_segments, use_duplicate=False, use_merge=False,
     )
-    bm.verts.ensure_lookup_table()
-    new_verts = bm.verts[n0:]
-    bmesh.ops.remove_doubles(bm, verts=new_verts, dist=1e-5)
-    bm.verts.ensure_lookup_table()
-    new_verts = bm.verts[n0:]
-    new_faces = [f for f in bm.faces if all(v.index >= n0 for v in f.verts)]
-    bmesh.ops.recalc_face_normals(bm, faces=new_faces)
-
+    bmesh.ops.remove_doubles(tmp, verts=tmp.verts[:], dist=1e-5)
+    bmesh.ops.recalc_face_normals(tmp, faces=tmp.faces[:])
     m = _as_matrix(matrix)
     if m != Matrix.Identity(4):
-        bmesh.ops.transform(bm, matrix=m, verts=new_verts)
-    return ret
+        bmesh.ops.transform(tmp, matrix=m, verts=tmp.verts[:])
 
+    # Copy into the caller's bmesh in a deterministic order.
+    tmp.verts.ensure_lookup_table()
+    lookup = [bm.verts.new(v.co) for v in tmp.verts]
+    for f in tmp.faces:
+        bm.faces.new([lookup[v.index] for v in f.verts])
+    tmp.free()
+    bm.verts.ensure_lookup_table()
+    return ret
 
 def profile_extrude(bm, profile_yz_points, width_x, matrix=None):
     """Extrude a YZ polygon along X.

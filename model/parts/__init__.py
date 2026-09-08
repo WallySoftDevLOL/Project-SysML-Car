@@ -13,8 +13,10 @@ from . import (
     body,
     brakes,
     charge,
+    chassis,
     control,
     energy,
+    exterior,
     flows,
     hmi,
     powertrain,
@@ -45,6 +47,8 @@ DECOR_BUILDERS = [
     wheels.build_wheels,
     body.build_canopy,
     body.build_seats,
+    exterior.build_exterior,
+    chassis.build_structure,
 ]
 
 #: harness tubes, built last (they need model.json)

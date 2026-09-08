@@ -1,5 +1,11 @@
-"""Preview render. Runs AFTER the glb export, so the camera and lights it adds
-never reach the exported file.
+"""Preview renders. Runs AFTER the glb export, so the cameras, lights and the
+shadow-catcher ground it adds never reach the exported file.
+
+Two views:
+
+* the hero shot - three-quarter front-left, soft area key + fill + rim, 1600x900
+* an optional side elevation (``--render-side``) - an orthographic-ish camera
+  square on the flank, which is the quickest way to judge the silhouette
 """
 
 import os
@@ -7,13 +13,29 @@ import os
 import bpy
 from mathutils import Vector
 
-CAMERA_LOCATION = (4.6, -4.9, 2.4)
-CAMERA_TARGET = (0.0, 0.0, 0.55)
-CAMERA_LENS_MM = 40.0
-SUN_STRENGTH = 3.0
-SUN_DIRECTION = (-0.5, 0.6, -1.0)      # direction the sun points
-WORLD_GREY = (0.55, 0.55, 0.58, 1.0)
-RESOLUTION = (1280, 720)
+# hero: three-quarter front-left (nose is -Y, +X is the car's left side)
+CAMERA_LOCATION = (4.70, -6.10, 2.00)
+CAMERA_TARGET = (0.00, 0.05, 0.70)
+CAMERA_LENS_MM = 48.0
+RESOLUTION = (1600, 900)
+
+# side elevation, orthographic, looking along -X at the car's left flank
+SIDE_LOCATION = (12.0, 0.0, 0.70)
+SIDE_TARGET = (0.0, 0.0, 0.70)
+SIDE_ORTHO_SCALE = 5.0
+SIDE_RESOLUTION = (1600, 700)
+
+WORLD_GREY = (0.62, 0.63, 0.66, 1.0)
+GROUND_GREY = (0.52, 0.53, 0.56, 1.0)
+GROUND_SIZE = 60.0
+FILM_EXPOSURE = 0.35
+
+#: (name, location, target, size, energy) - big soft area lamps
+AREA_LIGHTS = [
+    ("PreviewKey", (5.2, -6.0, 5.6), (0.0, -0.3, 0.7), 4.5, 2600.0),
+    ("PreviewFill", (-6.0, -3.2, 2.6), (0.0, -0.2, 0.7), 5.0, 900.0),
+    ("PreviewRim", (-2.2, 6.4, 3.4), (0.0, 0.6, 0.8), 4.0, 1800.0),
+]
 
 
 def _engine_available(engine_id):
@@ -44,6 +66,17 @@ def _eevee_engine_id():
     return None
 
 
+def _try_set(owner, attribute, value):
+    """Set ``owner.attribute`` when this Blender build has it."""
+    if owner is None or not hasattr(owner, attribute):
+        return False
+    try:
+        setattr(owner, attribute, value)
+    except (AttributeError, TypeError, ValueError):
+        return False
+    return True
+
+
 def set_engine(engine, samples=32):
     """``eevee`` | ``cycles`` | ``workbench`` | ``auto`` -> configured engine id."""
     scene = bpy.context.scene
@@ -53,9 +86,16 @@ def set_engine(engine, samples=32):
         eevee = _eevee_engine_id()
         if eevee is not None:
             scene.render.engine = eevee
-            if hasattr(scene, "eevee"):
-                if hasattr(scene.eevee, "taa_render_samples"):
-                    scene.eevee.taa_render_samples = int(samples)
+            eevee_settings = getattr(scene, "eevee", None)
+            _try_set(eevee_settings, "taa_render_samples", int(samples))
+            # soft shadows / raytraced contact shadows where the build has them
+            _try_set(eevee_settings, "use_shadows", True)
+            _try_set(eevee_settings, "use_shadow_jitter_viewport", True)
+            _try_set(eevee_settings, "shadow_ray_count", 2)
+            _try_set(eevee_settings, "shadow_step_count", 6)
+            _try_set(eevee_settings, "use_raytracing", True)
+            _try_set(eevee_settings, "use_soft_shadows", True)
+            _try_set(eevee_settings, "use_gtao", True)
             return scene.render.engine
         if engine == "eevee":
             raise RuntimeError("no EEVEE engine in Blender %s" % bpy.app.version_string)
@@ -103,51 +143,130 @@ def _add_world():
     return world
 
 
-def _add_camera():
+def _aimed(obj, location, target):
+    obj.location = location
+    direction = Vector(target) - Vector(location)
+    obj.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
+    return obj
+
+
+def _add_camera(name, location, target, lens_mm=None, ortho_scale=None):
     scene = bpy.context.scene
-    cam_data = bpy.data.cameras.new("PreviewCamera")
-    cam_data.lens = CAMERA_LENS_MM
-    cam = bpy.data.objects.new("PreviewCamera", cam_data)
-    cam.location = CAMERA_LOCATION
-    direction = Vector(CAMERA_TARGET) - Vector(CAMERA_LOCATION)
-    cam.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
+    existing = bpy.data.objects.get(name)
+    if existing is not None:
+        return existing
+    cam_data = bpy.data.cameras.new(name)
+    if ortho_scale is not None:
+        cam_data.type = "ORTHO"
+        cam_data.ortho_scale = float(ortho_scale)
+    else:
+        cam_data.lens = float(lens_mm)
+    cam = bpy.data.objects.new(name, cam_data)
+    _aimed(cam, location, target)
     scene.collection.objects.link(cam)
-    scene.camera = cam
     return cam
 
 
-def _add_sun():
+def _add_lights():
     scene = bpy.context.scene
-    sun_data = bpy.data.lights.new("PreviewSun", type="SUN")
-    sun_data.energy = SUN_STRENGTH
-    sun = bpy.data.objects.new("PreviewSun", sun_data)
-    sun.location = (3.0, -3.0, 6.0)
-    sun.rotation_euler = Vector(SUN_DIRECTION).to_track_quat("-Z", "Y").to_euler()
-    scene.collection.objects.link(sun)
-    return sun
+    lights = []
+    for (name, location, target, size, energy) in AREA_LIGHTS:
+        if bpy.data.objects.get(name) is not None:
+            lights.append(bpy.data.objects[name])
+            continue
+        data = bpy.data.lights.new(name, type="AREA")
+        data.energy = float(energy)
+        data.size = float(size)
+        _try_set(data, "shape", "SQUARE")
+        _try_set(data, "use_shadow", True)
+        obj = bpy.data.objects.new(name, data)
+        _aimed(obj, location, target)
+        scene.collection.objects.link(obj)
+        lights.append(obj)
+    return lights
 
 
-def render_preview(filepath, engine="auto", samples=32):
-    """Add camera + sun + world, render a PNG. Returns the path."""
+def _add_ground():
+    """Large matte plane so the soft shadows have something to land on."""
+    name = "PreviewGround"
+    if bpy.data.objects.get(name) is not None:
+        return bpy.data.objects[name]
+
+    mesh = bpy.data.meshes.new(name)
+    half = GROUND_SIZE / 2.0
+    mesh.from_pydata(
+        [(-half, -half, 0.0), (half, -half, 0.0), (half, half, 0.0),
+         (-half, half, 0.0)],
+        [], [[0, 1, 2, 3]],
+    )
+    mesh.update()
+
+    mat = bpy.data.materials.new("M_PREVIEW_ground")
+    mat.use_nodes = True
+    for node in mat.node_tree.nodes:
+        if node.type == "BSDF_PRINCIPLED":
+            node.inputs["Base Color"].default_value = GROUND_GREY
+            node.inputs["Roughness"].default_value = 0.85
+            if node.inputs.get("Metallic") is not None:
+                node.inputs["Metallic"].default_value = 0.0
+    mesh.materials.append(mat)
+
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    return obj
+
+
+def _grade():
+    view = getattr(bpy.context.scene, "view_settings", None)
+    _try_set(view, "exposure", FILM_EXPOSURE)
+    for look in ("AgX - Punchy", "Punchy", "AgX - Medium High Contrast"):
+        if _try_set(view, "look", look):
+            break
+
+
+def _render_to(filepath, camera, resolution):
+    scene = bpy.context.scene
     filepath = os.path.abspath(filepath)
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    directory = os.path.dirname(filepath)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
 
-    scene = bpy.context.scene
-    used = set_engine(engine, samples)
-    _add_world()
-    _add_camera()
-    _add_sun()
-
-    scene.render.resolution_x = RESOLUTION[0]
-    scene.render.resolution_y = RESOLUTION[1]
+    scene.camera = camera
+    scene.render.resolution_x = int(resolution[0])
+    scene.render.resolution_y = int(resolution[1])
     scene.render.resolution_percentage = 100
     scene.render.film_transparent = False
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGB"
     scene.render.filepath = filepath
 
-    print("rendering %s with %s (%d samples)" % (filepath, used, samples))
+    print("rendering %s with %s" % (filepath, scene.render.engine))
     bpy.ops.render.render(write_still=True)
     if not os.path.exists(filepath):
         raise RuntimeError("render produced no file at %s" % filepath)
     return filepath
+
+
+def render_preview(filepath, engine="auto", samples=32, side_filepath=None):
+    """Add cameras + lights + ground, render the hero PNG (and optionally the
+    side elevation). Returns the hero path, or ``None`` when only a side
+    elevation was asked for."""
+    set_engine(engine, samples)
+    _add_world()
+    _add_lights()
+    _add_ground()
+    _grade()
+
+    hero = None
+    if filepath:
+        camera = _add_camera("PreviewCamera", CAMERA_LOCATION, CAMERA_TARGET,
+                             lens_mm=CAMERA_LENS_MM)
+        hero = _render_to(filepath, camera, RESOLUTION)
+
+    if side_filepath:
+        camera = _add_camera("PreviewSideCamera", SIDE_LOCATION, SIDE_TARGET,
+                             ortho_scale=SIDE_ORTHO_SCALE)
+        side = _render_to(side_filepath, camera, SIDE_RESOLUTION)
+        print("side elevation %s" % side)
+
+    return hero

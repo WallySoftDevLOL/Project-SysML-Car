@@ -1,49 +1,80 @@
-"""THERMAL (front radiator + fan + pipe stubs) and THERM_CTRL (small box)."""
+"""THERMAL (front cooling pack + coolant hoses) and THERM_CTRL.
+
+THERMAL: a radiator core with horizontal fin lines and a side tank at each end,
+a fan shroud ring with a seven-blade fan, an expansion tank, a small electric
+coolant pump, and two hoses swept back along the car's right side - one to the
+battery pack, one to the rear drive unit. Everything stays behind y = -2.05 and
+under z = 0.78 at the nose.
+THERM_CTRL: the pump / fan controller box with a connector, outboard of the
+expansion tank.
+"""
 
 import math
 
 import bmesh
-from mathutils import Matrix
 
 import common
 import layout
 
-#: cylinders build along local Z; the fan spins about the car's Y axis
-AXIS_Y = Matrix.Rotation(-math.pi / 2.0, 4, "X")
-SEG_FAN = 16
-SEG_PIPE = 8
+from . import _shapes
 
 
 def build_thermal(ctx):
-    """THERMAL: radiator slab with fin lines, a fan, and two coolant stubs."""
+    """THERMAL: radiator, shrouded fan, expansion tank, pump and hoses."""
     spec = layout.BLOCKS["THERMAL"]
+    _shapes.block_material(ctx, "THERMAL")
     bm = bmesh.new()
-    common.add_box(bm, spec["size"], common.trs(spec["center"]))
 
-    cx, cy, cz = spec["center"]
-    fin_size = spec["fin_size"]
-    fin_x = cx
-    # fins sit on the -Y (nose-facing, outward) side so they read as a grille
-    # from outside the car; the fan and pipes live on the +Y (cabin) side.
-    fin_y = cy - spec["size"][1] / 2.0 - fin_size[1] / 2.0
-    for z_off in spec["fin_z_offsets"]:
-        common.add_box(bm, fin_size, common.trs((fin_x, fin_y, cz + z_off)))
+    # radiator core, fin lines on the nose-facing side, a tank at each end
+    common.add_box(bm, spec["core_size"], common.trs(spec["core_center"]))
+    _shapes.fin_stack(bm, spec["fin_center"], spec["fin_z_offsets"],
+                      spec["fin_size"], along="Z")
+    tank_size = spec["tank_size"]
+    for center in spec["tank_centers"]:
+        common.add_box(bm, tank_size, common.trs(center))
 
-    common.add_cylinder(
-        bm, radius=spec["fan_radius"], depth=spec["fan_depth"], segments=SEG_FAN,
-        matrix=common.trs(spec["fan_center"], AXIS_Y),
-    )
+    # fan shroud: an open ring, so it reads as a duct rather than a plate
+    _shapes.axis_cylinder(bm, spec["shroud_center"], spec["shroud_radius"],
+                          spec["shroud_depth"], axis="Y",
+                          segments=spec["shroud_segments"], cap_ends=False)
+    _shapes.axis_cylinder(bm, spec["fan_hub_center"], spec["fan_hub_radius"],
+                          spec["fan_hub_depth"], axis="Y",
+                          segments=spec["fan_hub_segments"])
+    _shapes.radial_boxes(bm, spec["fan_blade_count"], spec["fan_blade_radius"],
+                         spec["fan_blade_size"], center=spec["fan_hub_center"],
+                         axis="Y", phase=math.pi / 14.0)
 
-    pipe_len = spec["pipe_length"]
-    for (px, py, pz) in spec["pipe_centers"]:
-        common.add_cylinder(
-            bm, radius=spec["pipe_radius"], depth=pipe_len, segments=SEG_PIPE,
-            matrix=common.trs((px, py, pz), AXIS_Y),
-        )
+    # expansion tank with its filler cap
+    _shapes.axis_cylinder(bm, spec["expansion_center"], spec["expansion_radius"],
+                          spec["expansion_depth"], axis="Z",
+                          segments=spec["expansion_segments"])
+    _shapes.axis_cylinder(bm, spec["expansion_cap_center"],
+                          spec["expansion_cap_radius"],
+                          spec["expansion_cap_depth"], axis="Z",
+                          segments=spec["expansion_cap_segments"])
+
+    # electric coolant pump, sitting inline on the rear hose
+    _shapes.axis_cylinder(bm, spec["pump_center"], spec["pump_radius"],
+                          spec["pump_depth"], axis="Y",
+                          segments=spec["pump_segments"])
+
+    # coolant hoses, swept along their polylines
+    for points in spec["hoses"]:
+        _shapes.poly_tube(bm, points, spec["hose_radius"],
+                          sides=spec["hose_sides"])
 
     return ctx.emit_block("THERMAL", bm)
 
 
 def build_therm_ctrl(ctx):
     """THERM_CTRL: pump / fan controller box beside the radiator."""
-    return common.stub_box_block(ctx, "THERM_CTRL")
+    spec = layout.BLOCKS["THERM_CTRL"]
+    _shapes.block_material(ctx, "THERM_CTRL")
+    bm = bmesh.new()
+
+    common.add_box(bm, spec["body_size"], common.trs(spec["body_center"]))
+    _shapes.fin_stack(bm, spec["fin_center"], spec["fin_y_offsets"],
+                      spec["fin_size"], along="Y")
+    common.add_box(bm, spec["connector_size"], common.trs(spec["connector_center"]))
+
+    return ctx.emit_block("THERM_CTRL", bm)

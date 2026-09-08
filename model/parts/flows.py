@@ -10,12 +10,40 @@ import bpy
 import common
 import layout
 
+#: harness gauge per connector. High-voltage cable runs are drawn fatter than
+#: the low-voltage signal harnesses, and the coolant line sits between them.
+#: These are tube radii, not placements, so they live with the tube builder
+#: rather than in layout.py.
+HV_RADIUS = 0.016
+COOLANT_RADIUS = 0.014
+LV_RADIUS = 0.010
 
-def _tube_mesh_object(name, points, material, parent):
+HV_PAIRS = frozenset([
+    ("ENERGY", "POWERTRAIN"),
+    ("CHARGE", "ENERGY"),
+    ("POWERTRAIN", "INVERTER"),
+    ("INVERTER", "POWERTRAIN"),
+])
+COOLANT_PAIRS = frozenset([
+    ("ENERGY", "THERMAL"),
+])
+
+
+def tube_radius(source, target):
+    """Radius for one connector's tube."""
+    pair = (source, target)
+    if pair in HV_PAIRS:
+        return HV_RADIUS
+    if pair in COOLANT_PAIRS:
+        return COOLANT_RADIUS
+    return LV_RADIUS
+
+
+def _tube_mesh_object(name, points, material, parent, radius=None):
     """Poly curve -> beveled -> evaluated mesh -> plain mesh object."""
     curve = bpy.data.curves.new(name, "CURVE")
     curve.dimensions = "3D"
-    curve.bevel_depth = layout.FLOW_RADIUS
+    curve.bevel_depth = layout.FLOW_RADIUS if radius is None else float(radius)
     curve.bevel_resolution = layout.FLOW_BEVEL_RESOLUTION
     curve.use_fill_caps = True
 
@@ -89,7 +117,8 @@ def build_flows(ctx):
                      "centers" % (source, target))
             points = layout.fallback_route(source, target)
 
-        obj = _tube_mesh_object(name, points, material, ctx.root)
+        obj = _tube_mesh_object(name, points, material, ctx.root,
+                                radius=tube_radius(source, target))
         ctx.emit_flow(obj, source, target, flow.get("item"), flow.get("label"))
         objs.append(obj)
 

@@ -336,50 +336,47 @@ def validate_glb(
         mesh = meshes[mesh_idx]
         primitives = mesh.get("primitives", [])
 
-        # Check that mesh uses exactly one material
-        material_indices = set()
+        # Blocks use exactly one material. Decor may use several slots (glass +
+        # opaque pillars, tire + two-tone rim); primitives[0] is slot 0, the
+        # object's primary material.
+        material_indices = []
         for prim in primitives:
             mat_idx = prim.get("material")
-            if mat_idx is not None:
-                material_indices.add(mat_idx)
+            if mat_idx is not None and mat_idx not in material_indices:
+                material_indices.append(mat_idx)
 
-        if len(material_indices) > 1:
+        if len(material_indices) > 1 and name in block_ids:
             errors.append(ValidationError(4, f"Block '{name}' uses multiple materials"))
 
-        mat_idx = next(iter(material_indices), None)
-
-        if mat_idx is not None and mat_idx < len(materials):
-            material = materials[mat_idx]
-            alpha_mode = material.get("alphaMode", "OPAQUE")
+        def _material_alpha(index):
+            material = materials[index]
             pbr = material.get("pbrMetallicRoughness", {})
             base_color = pbr.get("baseColorFactor", [1, 1, 1, 1])
-            alpha = base_color[3] if len(base_color) > 3 else 1.0
+            return (
+                material.get("alphaMode", "OPAQUE"),
+                base_color[3] if len(base_color) > 3 else 1.0,
+            )
 
-            # VEH and DECOR_canopy must be BLEND with alpha < 1
-            if name == "VEH":
-                if alpha_mode != "BLEND":
-                    errors.append(
-                        ValidationError(4, f"VEH material must have alphaMode BLEND, got {alpha_mode}")
-                    )
-                if alpha >= 1.0:
-                    errors.append(
-                        ValidationError(4, f"VEH material alpha must be < 1, got {alpha}")
-                    )
+        usable = [i for i in material_indices if i < len(materials)]
 
-            if name == "DECOR_canopy":
-                if alpha_mode != "BLEND":
-                    errors.append(
-                        ValidationError(
-                            4, f"DECOR_canopy material must have alphaMode BLEND, got {alpha_mode}"
-                        )
+        # VEH and DECOR_canopy: the primary material must be BLEND with alpha < 1
+        if usable and name in ("VEH", "DECOR_canopy"):
+            alpha_mode, alpha = _material_alpha(usable[0])
+            if alpha_mode != "BLEND":
+                errors.append(
+                    ValidationError(
+                        4, f"{name} material must have alphaMode BLEND, got {alpha_mode}"
                     )
-                if alpha >= 1.0:
-                    errors.append(
-                        ValidationError(4, f"DECOR_canopy material alpha must be < 1, got {alpha}")
-                    )
+                )
+            if alpha >= 1.0:
+                errors.append(
+                    ValidationError(4, f"{name} material alpha must be < 1, got {alpha}")
+                )
 
-            # All other blocks must be OPAQUE
-            if name in block_ids and name not in ("VEH", "DECOR_canopy"):
+        # All other blocks must be OPAQUE
+        if name in block_ids and name != "VEH":
+            for index in usable:
+                alpha_mode, _alpha = _material_alpha(index)
                 if alpha_mode != "OPAQUE" and alpha_mode is not None:
                     errors.append(
                         ValidationError(

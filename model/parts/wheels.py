@@ -1,9 +1,15 @@
 """Wheel decor: DECOR_wheel_FL / FR / RL / RR.
 
-Each wheel is one object: a tire revolved from a rounded-shoulder cross-section
-plus a dished rim (face cone, hub cap, raised spokes). The tire is a *ring*, not
-a solid cylinder, and the rim only occupies the outboard third of the barrel, so
-the brake disc at x = +/-0.72 stays visible from inboard and through the shell.
+Each wheel is one object with three material slots:
+
+0. ``M_DECOR_tire``     - the tire ring (revolved cross-section with a sidewall
+   bulge) plus a ring of shallow raised tread blocks.
+1. ``M_DECOR_rim_dark`` - the dished rim face, recessed inside the shoulder.
+2. ``M_DECOR_rim``      - the outer lip, ten spokes and the centre cap.
+
+The tire is a *ring*, not a solid cylinder, and the rim only occupies the
+outboard third of the barrel, so the brake disc at x = +/-0.72 stays visible
+from inboard and reads between the spokes.
 
 Every piece is modelled with local +Z pointing outboard, then rotated onto the
 car's X axis, so the same numbers serve both sides of the car.
@@ -17,33 +23,16 @@ from mathutils import Matrix
 import common
 import layout
 
+from . import decor_util
+
 #: local +Z -> +X (car-left wheels) and local +Z -> -X (car-right wheels)
 OUTBOARD_LEFT = Matrix.Rotation(math.pi / 2.0, 4, "Y")
 OUTBOARD_RIGHT = Matrix.Rotation(-math.pi / 2.0, 4, "Y")
 
 
 def tire_profile():
-    """Closed (radius, axial) cross-section of the tire ring.
-
-    Inboard face -> rounded inboard shoulder -> tread -> rounded outboard
-    shoulder -> outboard face -> back down the inner wall.
-    """
-    r_out = float(layout.WHEEL_RADIUS)
-    r_in = float(layout.TIRE_INNER_RADIUS)
-    half = float(layout.WHEEL_WIDTH) / 2.0
-    sh = float(layout.TIRE_SHOULDER_RADIUS)
-    segs = int(layout.TIRE_SHOULDER_SEGMENTS)
-
-    points = [(r_in, -half), (r_out - sh, -half)]
-    for i in range(1, segs + 1):                      # inboard shoulder
-        a = -math.pi / 2.0 + (math.pi / 2.0) * i / segs
-        points.append((r_out - sh + sh * math.cos(a), -half + sh + sh * math.sin(a)))
-    points.append((r_out, half - sh))                 # tread
-    for i in range(1, segs + 1):                      # outboard shoulder
-        a = (math.pi / 2.0) * i / segs
-        points.append((r_out - sh + sh * math.cos(a), half - sh + sh * math.sin(a)))
-    points.append((r_in, half))
-    return points
+    """Closed ``(radius, axial)`` cross-section of the tire ring."""
+    return [(float(r), float(a)) for (r, a) in layout.TIRE_PROFILE]
 
 
 def _spin_ring(bm, profile_rz, segments):
@@ -76,12 +65,30 @@ def _cone(bm, radius1, radius2, depth, z_center, segments):
     )
 
 
-def _add_rim(bm):
-    """Dished face + hub cap + raised spokes, all outboard of the axle."""
-    inner_x = float(layout.RIM_DISH_INNER_X)
-    outer_x = float(layout.RIM_DISH_OUTER_X)
-    _cone(bm, layout.RIM_DISH_INNER_RADIUS, layout.RIM_DISH_OUTER_RADIUS,
-          outer_x - inner_x, (inner_x + outer_x) / 2.0, layout.RIM_SEGMENTS)
+def _build_tire(bm):
+    _spin_ring(bm, tire_profile(), layout.SEG_WHEEL)
+    decor_util.ring_of_boxes(bm, layout.TREAD_BLOCK_COUNT,
+                             layout.TREAD_BLOCK_RADIUS,
+                             layout.TREAD_BLOCK_SIZE, 0.0)
+
+
+def _build_rim_face(bm):
+    """The dark inner barrel plus the hub flange the spokes land on.
+
+    A revolved rectangle, not a capped cylinder: the wheel face stays open so
+    the brake disc reads between the spokes.
+    """
+    _spin_ring(bm, layout.RIM_BARREL_PROFILE, layout.RIM_SEGMENTS)
+    flange_in = float(layout.HUB_FLANGE_INNER_X)
+    flange_out = float(layout.HUB_FLANGE_OUTER_X)
+    _cone(bm, layout.HUB_FLANGE_RADIUS, layout.HUB_FLANGE_RADIUS,
+          flange_out - flange_in, (flange_in + flange_out) / 2.0,
+          layout.HUB_FLANGE_SEGMENTS)
+
+
+def _build_rim_bright(bm):
+    """Outer lip, spokes and centre cap."""
+    _spin_ring(bm, layout.RIM_LIP_PROFILE, layout.RIM_SEGMENTS)
 
     hub_in = float(layout.HUB_INNER_X)
     hub_out = float(layout.HUB_OUTER_X)
@@ -90,7 +97,7 @@ def _add_rim(bm):
 
     r_in = float(layout.SPOKE_INNER_RADIUS)
     r_out = float(layout.SPOKE_OUTER_RADIUS)
-    spoke_z = outer_x + float(layout.SPOKE_THICKNESS) / 2.0
+    spoke_z = float(layout.SPOKE_X)
     size = (r_out - r_in, float(layout.SPOKE_WIDTH), float(layout.SPOKE_THICKNESS))
     count = int(layout.SPOKE_COUNT)
     for i in range(count):
@@ -101,18 +108,28 @@ def _add_rim(bm):
 
 
 def build_wheels(ctx):
-    mat = common.make_material("M_DECOR_tire", layout.COLOR_TIRE,
-                               alpha=1.0, roughness=0.85, metallic=0.0)
-    profile = tire_profile()
+    tire_mat = common.make_material("M_DECOR_tire", layout.COLOR_TIRE,
+                                    alpha=1.0, roughness=0.85, metallic=0.0)
+    dark_mat = common.make_material("M_DECOR_rim_dark", layout.COLOR_RIM_DARK,
+                                    alpha=1.0, roughness=0.55, metallic=0.35)
+    rim_mat = common.make_material("M_DECOR_rim", layout.COLOR_RIM,
+                                   alpha=1.0, roughness=0.32, metallic=0.75)
+
     objs = []
     for name in sorted(layout.WHEELS):
         center = layout.WHEELS[name]
         outboard = OUTBOARD_LEFT if center[0] >= 0.0 else OUTBOARD_RIGHT
-        bm = bmesh.new()
-        _spin_ring(bm, profile, layout.SEG_WHEEL)
-        _add_rim(bm)
-        bmesh.ops.transform(bm, matrix=common.trs(center, outboard),
-                            verts=bm.verts[:])
-        objs.append(ctx.emit_decor(name, bm, mat,
-                                   sysml_name=name.replace("DECOR_", "")))
+        placement = common.trs(center, outboard)
+
+        parts = []
+        for builder, material in ((_build_tire, tire_mat),
+                                  (_build_rim_face, dark_mat),
+                                  (_build_rim_bright, rim_mat)):
+            bm = bmesh.new()
+            builder(bm)
+            bmesh.ops.transform(bm, matrix=placement, verts=bm.verts[:])
+            parts.append((bm, material))
+
+        objs.append(decor_util.emit_multi_decor(
+            ctx, name, parts, sysml_name=name.replace("DECOR_", "")))
     return objs

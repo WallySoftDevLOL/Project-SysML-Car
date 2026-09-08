@@ -51,6 +51,8 @@ def parse_args(argv):
     parser.add_argument("--blend", default=None, help="also save a .blend here")
     parser.add_argument("--report", default=None, help="write a build report JSON here")
     parser.add_argument("--render", default=None, help="render a preview PNG here")
+    parser.add_argument("--render-side", default=None,
+                        help="also render an orthographic side elevation PNG here")
     parser.add_argument("--engine", default="auto",
                         choices=["auto", "eevee", "cycles", "workbench"])
     parser.add_argument("--samples", type=int, default=32)
@@ -158,9 +160,14 @@ def validate_scene(ctx):
             raise RuntimeError("%s is not a direct child of %s" % (obj.name, ROOT_NAME))
         if obj.type != "MESH":
             raise RuntimeError("%s is a %s, expected MESH" % (obj.name, obj.type))
-        if len(obj.data.materials) != 1:
-            raise RuntimeError("%s has %d materials, expected exactly 1"
-                               % (obj.name, len(obj.data.materials)))
+        # blocks carry exactly one material (contract section 3); decor may use
+        # several slots (glass + pillars, tire + two-tone rim)
+        limit = 1 if ctx.kinds.get(obj.name) != "Decor" else None
+        count = len(obj.data.materials)
+        if count < 1 or (limit is not None and count != limit):
+            raise RuntimeError("%s has %d materials, expected %s"
+                               % (obj.name, count,
+                                  "exactly 1" if limit else "at least 1"))
     print("validated %d objects under %s" % (len(scene_objects), ROOT_NAME))
     return scene_objects
 
@@ -273,10 +280,12 @@ def main():
                                     copy=False, relative_remap=False)
         print("saved %s" % blend_path)
 
-    if args.render:
+    if args.render or args.render_side:
         import render as render_mod
-        png = render_mod.render_preview(args.render, args.engine, args.samples)
-        print("preview %s" % png)
+        png = render_mod.render_preview(args.render, args.engine, args.samples,
+                                        side_filepath=args.render_side)
+        if png:
+            print("preview %s" % png)
 
     if ctx.warnings:
         print("%d warning(s):" % len(ctx.warnings))
