@@ -1,10 +1,13 @@
-"""POWERTRAIN (dual drive units) and INVERTER.
+"""POWERTRAIN (dual drive units), MOTOR (the two motor housings) and INVERTER.
 
-Each drive unit is built from the same description: a ribbed motor housing on
-the axle line, an end bell at each end, a rounded reduction-gearbox casing
-offset to the car's right with the differential bulge inside it, and half-shafts
-carrying CV joint boots out to |x| = 0.66, just inside the wheel hubs. The front
-unit is the same language at a smaller scale.
+Each drive unit is built from the same description: a rounded reduction-gearbox
+casing offset to the car's right with the differential bulge inside it, and
+half-shafts carrying CV joint boots out to |x| = 0.66, just inside the wheel
+hubs. The front unit is the same language at a smaller scale.
+
+MOTOR is the pair of ribbed motor housings that sit on the axle lines between
+those gearcases, with an end bell at each end. It is its own clickable block, so
+it lives in its own mesh and its own material.
 
 INVERTER: a finned traction inverter sitting on the rear motor's ribs, with two
 HV connector ports and one low-voltage connector on its forward face.
@@ -19,22 +22,9 @@ from . import _shapes
 
 
 def _drive_unit(bm, unit):
-    """One motor + gearbox + shaft assembly, from a ``drive_units`` entry."""
+    """One gearbox + shaft assembly, from a ``drive_units`` entry."""
     y = unit["axle_y"]
     z = unit["axis_z"]
-    axle = (0.0, y, z)
-
-    # motor housing with its stack of cooling ribs
-    _shapes.axis_cylinder(bm, axle, unit["motor_radius"], unit["motor_length"],
-                          axis="X", segments=unit["motor_segments"])
-    _shapes.rib_stack(bm, axle, unit["rib_x_offsets"], unit["rib_radius"],
-                      unit["rib_depth"], axis="X", segments=unit["rib_segments"])
-
-    # end bells
-    for sign in (1.0, -1.0):
-        _shapes.axis_cylinder(bm, (sign * unit["bell_x"], y, z),
-                              unit["bell_radius"], unit["bell_depth"],
-                              axis="X", segments=unit["bell_segments"])
 
     # reduction gearbox casing (rounded) with the differential bulge inside it
     _shapes.bevel_box(bm, unit["gearbox_size"], unit["gearbox_center"],
@@ -56,14 +46,41 @@ def _drive_unit(bm, unit):
                               segments=unit["boot_segments"])
 
 
+def _motor_housing(bm, unit):
+    """One ribbed motor housing + its two end bells, from a ``housings`` entry."""
+    y = unit["axle_y"]
+    z = unit["axis_z"]
+    axle = (0.0, y, z)
+
+    _shapes.axis_cylinder(bm, axle, unit["motor_radius"], unit["motor_length"],
+                          axis="X", segments=unit["motor_segments"])
+    _shapes.rib_stack(bm, axle, unit["rib_x_offsets"], unit["rib_radius"],
+                      unit["rib_depth"], axis="X", segments=unit["rib_segments"])
+
+    for sign in (1.0, -1.0):
+        _shapes.axis_cylinder(bm, (sign * unit["bell_x"], y, z),
+                              unit["bell_radius"], unit["bell_depth"],
+                              axis="X", segments=unit["bell_segments"])
+
+
 def build_powertrain(ctx):
-    """POWERTRAIN: rear + front drive units, dual-motor layout."""
+    """POWERTRAIN: rear + front gearcases, differentials and half-shafts."""
     spec = layout.BLOCKS["POWERTRAIN"]
     _shapes.block_material(ctx, "POWERTRAIN")
     bm = bmesh.new()
     for unit in spec["drive_units"]:
         _drive_unit(bm, unit)
     return ctx.emit_block("POWERTRAIN", bm)
+
+
+def build_motor(ctx):
+    """MOTOR: the two ribbed traction-motor housings on the axle lines."""
+    spec = layout.BLOCKS["MOTOR"]
+    _shapes.block_material(ctx, "MOTOR")
+    bm = bmesh.new()
+    for unit in spec["housings"]:
+        _motor_housing(bm, unit)
+    return ctx.emit_block("MOTOR", bm)
 
 
 def build_inverter(ctx):

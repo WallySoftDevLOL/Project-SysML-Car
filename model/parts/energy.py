@@ -1,10 +1,12 @@
-"""ENERGY (battery pack) and BMS (battery management box).
+"""ENERGY (battery pack), BAT_MODULE (the cells) and BMS (management box).
 
 ENERGY: a skateboard pack that reads as a pack rather than a slab - a tray with
-a perimeter lip, twelve cell modules in two rows either side of a cooling plate
-line, cross straps over the module tops, and an HV junction box with two cable
-bosses at the rear end. The whole thing stays inside x +/- 0.62, y +/- 1.00,
-z 0.22 - 0.36 so it sits on the floor pan.
+a perimeter lip, a cooling plate line down the spine, cross straps over the
+module tops, and an HV junction box with two cable bosses at the rear end. The
+whole thing stays inside x +/- 0.62, y +/- 1.00, z 0.22 - 0.36 so it sits on the
+floor pan.
+BAT_MODULE: the twelve cell modules that sit in that tray, two rows of six
+either side of the cooling plate. Its own clickable block, so its own mesh.
 BMS: a controller with a ribbed heatsink lid and a connector block, on the pack.
 """
 
@@ -29,13 +31,6 @@ def build_energy(ctx):
     # perimeter lip; the rear rail is split for the junction box
     _shapes.boxes(bm, spec["lip_boxes"])
 
-    # 12 cell modules, two rows with a small gap between every module
-    module_size = spec["module_size"]
-    module_z = spec["module_z"]
-    for row_x in spec["module_row_x"]:
-        for y in spec["module_row_y"]:
-            common.add_box(bm, module_size, common.trs((row_x, y, module_z)))
-
     # cooling plate line down the spine, between the rows
     common.add_box(bm, spec["plate_size"], common.trs(spec["plate_center"]))
 
@@ -51,6 +46,21 @@ def build_energy(ctx):
                               axis="Y", segments=spec["boss_segments"])
 
     return ctx.emit_block("ENERGY", bm)
+
+
+def build_bat_module(ctx):
+    """BAT_MODULE: 12 cell modules, two rows of six, in the ENERGY tray."""
+    spec = layout.BLOCKS["BAT_MODULE"]
+    _shapes.block_material(ctx, "BAT_MODULE")
+    bm = bmesh.new()
+
+    module_size = spec["module_size"]
+    module_z = spec["module_z"]
+    for row_x in spec["module_row_x"]:
+        for y in spec["module_row_y"]:
+            common.add_box(bm, module_size, common.trs((row_x, y, module_z)))
+
+    return ctx.emit_block("BAT_MODULE", bm)
 
 
 def build_bms(ctx):

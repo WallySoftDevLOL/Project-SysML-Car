@@ -26,7 +26,10 @@ from . import (
 )
 
 #: block id -> builder. Must cover every id in data/blocks.json, exactly once.
+#: The 13 systems come first, then the 10 components; ``build_car.build`` walks
+#: blocks.json order, which lists every component after its parent system.
 BUILDERS = {
+    # systems
     "VEH": body.build_veh,
     "POWERTRAIN": powertrain.build_powertrain,
     "INVERTER": powertrain.build_inverter,
@@ -40,6 +43,17 @@ BUILDERS = {
     "HMI": hmi.build_hmi,
     "CHARGE": charge.build_charge,
     "DIAG": control.build_diag,
+    # components (tier "component" in blocks.json)
+    "MOTOR": powertrain.build_motor,
+    "BAT_MODULE": energy.build_bat_module,
+    "CHARGE_PORT": charge.build_charge_port,
+    "OBC": charge.build_obc,
+    "BRAKE_CTRL": brakes.build_brake_ctrl,
+    "BRAKE_ACT": brakes.build_brake_act,
+    "PUMP": thermal.build_pump,
+    "FUSION": sensors.build_fusion,
+    "WHEEL_SENSOR": sensors.build_wheel_sensor,
+    "DIAG_GATEWAY": control.build_diag_gateway,
 }
 
 #: non-clickable scenery, in build order

@@ -119,8 +119,9 @@ BLOCKS = {
         "metallic": 0.60,
         "roughness": 0.30,
     },
-    # skateboard battery pack: tray + lip, 12 cell modules in two rows either
-    # side of a cooling plate, HV junction box and cable bosses at the rear.
+    # skateboard battery pack: tray + lip, cooling plate, cross straps, HV
+    # junction box and cable bosses at the rear. The 12 cell modules that used
+    # to live here are their own clickable block (BAT_MODULE, below).
     # The whole pack lives in z 0.22 - 0.36 so it sits on the floor pan.
     "ENERGY": {
         "center": (0.00, 0.00, 0.29),
@@ -139,12 +140,7 @@ BLOCKS = {
             ((0.6025, -0.0175, 0.315), (0.035, 1.965, 0.090)),
             ((-0.6025, -0.0175, 0.315), (0.035, 1.965, 0.090)),
         ],
-        # 12 modules: two rows, 6 deep, 0.02 gaps between modules
-        "module_size": (0.50, 0.26, 0.075),
-        "module_row_x": (0.30, -0.30),
-        "module_row_y": [-0.81, -0.53, -0.25, 0.03, 0.31, 0.59],
-        "module_z": 0.3075,
-        # cooling plate line down the spine, between the two rows
+        # cooling plate line down the spine, between the two module rows
         "plate_center": (0.00, -0.11, 0.285),
         "plate_size": (0.090, 1.660, 0.030),
         # cross straps over the module tops
@@ -157,6 +153,18 @@ BLOCKS = {
         "boss_depth": 0.060,
         "boss_segments": 10,
         "boss_centers": [(0.12, 0.965, 0.325), (-0.12, 0.965, 0.325)],
+    },
+    # the cell modules themselves: 12 boxes in two rows, 6 deep, with 0.02 gaps,
+    # sitting in the ENERGY tray either side of its cooling plate.
+    "BAT_MODULE": {
+        "center": (0.00, -0.11, 0.3075),
+        "size": (1.10, 1.66, 0.075),
+        "metallic": 0.15,
+        "roughness": 0.55,
+        "module_size": (0.50, 0.26, 0.075),
+        "module_row_x": (0.30, -0.30),
+        "module_row_y": [-0.81, -0.53, -0.25, 0.03, 0.31, 0.59],
+        "module_z": 0.3075,
     },
     "BMS": {
         "center": (0.30, 0.68, 0.385),
@@ -171,31 +179,20 @@ BLOCKS = {
         "connector_size": (0.090, 0.045, 0.032),
         "connector_center": (0.30, 0.578, 0.372),
     },
-    # rear + front drive units. Both share one description: a ribbed motor
-    # housing on the axle line, end bells, a rounded reduction-gearbox casing
-    # offset to the car's right (-X) with the differential bulge inside it, and
-    # half-shafts with CV boots that stop at |x| = 0.66, inside the wheel hubs.
+    # rear + front drive units, minus the motor housings (those are their own
+    # clickable block, MOTOR, below). Both share one description: a rounded
+    # reduction-gearbox casing offset to the car's right (-X) with the
+    # differential bulge inside it, and half-shafts with CV boots that stop at
+    # |x| = 0.66, inside the wheel hubs.
     "POWERTRAIN": {
         "center": (0.00, 0.00, 0.36),
-        "size": (1.32, 3.00, 0.29),
+        "size": (1.32, 3.00, 0.26),
         "metallic": 0.70,
         "roughness": 0.35,
         "drive_units": [
             {
                 "axle_y": REAR_AXLE_Y,
                 "axis_z": 0.36,
-                "motor_radius": 0.130,
-                "motor_length": 0.400,
-                "motor_segments": 16,
-                "rib_radius": 0.145,
-                "rib_depth": 0.012,
-                "rib_segments": 12,
-                "rib_x_offsets": [-0.175, -0.125, -0.075, -0.025,
-                                  0.025, 0.075, 0.125, 0.175],
-                "bell_radius": 0.100,
-                "bell_depth": 0.055,
-                "bell_x": 0.2275,
-                "bell_segments": 12,
                 "gearbox_center": (-0.38, REAR_AXLE_Y, 0.36),
                 "gearbox_size": (0.240, 0.300, 0.260),
                 "gearbox_bevel": 0.030,
@@ -215,17 +212,6 @@ BLOCKS = {
             {
                 "axle_y": FRONT_AXLE_Y,
                 "axis_z": 0.36,
-                "motor_radius": 0.108,
-                "motor_length": 0.320,
-                "motor_segments": 14,
-                "rib_radius": 0.120,
-                "rib_depth": 0.011,
-                "rib_segments": 12,
-                "rib_x_offsets": [-0.140, -0.084, -0.028, 0.028, 0.084, 0.140],
-                "bell_radius": 0.084,
-                "bell_depth": 0.050,
-                "bell_x": 0.1850,
-                "bell_segments": 12,
                 "gearbox_center": (-0.34, FRONT_AXLE_Y, 0.36),
                 "gearbox_size": (0.200, 0.260, 0.220),
                 "gearbox_bevel": 0.026,
@@ -241,6 +227,48 @@ BLOCKS = {
                 "boot_depth": 0.058,
                 "boot_segments": 10,
                 "boot_x": [0.245, 0.630, -0.630],
+            },
+        ],
+    },
+    # the two traction motors: a ribbed housing on each axle line with an end
+    # bell at either end. Sized to sit inside the POWERTRAIN gearcase / shaft
+    # set, so the two blocks read as one drive unit until they are exploded.
+    "MOTOR": {
+        "center": (0.00, 0.00, 0.36),
+        "size": (0.51, 3.00, 0.29),
+        "metallic": 0.70,
+        "roughness": 0.35,
+        "housings": [
+            {
+                "axle_y": REAR_AXLE_Y,
+                "axis_z": 0.36,
+                "motor_radius": 0.130,
+                "motor_length": 0.400,
+                "motor_segments": 16,
+                "rib_radius": 0.145,
+                "rib_depth": 0.012,
+                "rib_segments": 12,
+                "rib_x_offsets": [-0.175, -0.125, -0.075, -0.025,
+                                  0.025, 0.075, 0.125, 0.175],
+                "bell_radius": 0.100,
+                "bell_depth": 0.055,
+                "bell_x": 0.2275,
+                "bell_segments": 12,
+            },
+            {
+                "axle_y": FRONT_AXLE_Y,
+                "axis_z": 0.36,
+                "motor_radius": 0.108,
+                "motor_length": 0.320,
+                "motor_segments": 14,
+                "rib_radius": 0.120,
+                "rib_depth": 0.011,
+                "rib_segments": 12,
+                "rib_x_offsets": [-0.140, -0.084, -0.028, 0.028, 0.084, 0.140],
+                "bell_radius": 0.084,
+                "bell_depth": 0.050,
+                "bell_x": 0.1850,
+                "bell_segments": 12,
             },
         ],
     },
@@ -263,8 +291,9 @@ BLOCKS = {
         "lv_port_size": (0.070, 0.045, 0.035),
         "lv_port_center": (0.00, 1.222, 0.590),
     },
-    # four vented rotors + hats + calipers, merged into one object. Nothing
-    # reaches past |x| = 0.750, so the wheel rims clear the calipers.
+    # four vented rotors + hats/hubs, merged into one object. The calipers are
+    # their own clickable block (BRAKE_ACT, below). Nothing reaches past
+    # |x| = 0.750, so the wheel rims clear the calipers.
     "BRAKES": {
         "center": (0.00, 0.00, 0.345),
         "size": (1.50, 3.03, 0.34),
@@ -294,9 +323,22 @@ BLOCKS = {
         "hub_depth": 0.060,
         "hub_x_offset": -0.010,
         "hub_segments": 10,
-        # caliper, straddling the top of the rotor: two bridge blocks with the
-        # pad slot between them, a pad housing each side, and the two pads
-        # showing through the slot
+    },
+    # the four calipers, straddling the top of each rotor: two bridge blocks
+    # with the pad slot between them, a pad housing each side, and the two pads
+    # showing through the slot. Offsets are relative to the rotor centre, so
+    # ``caliper_centers`` must stay in step with BRAKES ``disc_centers``.
+    "BRAKE_ACT": {
+        "center": (0.00, 0.00, 0.445),
+        "size": (1.50, 2.85, 0.14),
+        "metallic": 0.70,
+        "roughness": 0.40,
+        "caliper_centers": [
+            (0.72, FRONT_AXLE_Y, WHEEL_Z),
+            (-0.72, FRONT_AXLE_Y, WHEEL_Z),
+            (0.72, REAR_AXLE_Y, WHEEL_Z),
+            (-0.72, REAR_AXLE_Y, WHEEL_Z),
+        ],
         "caliper_bridge_size": (0.058, 0.055, 0.050),
         "caliper_bridge_offsets": [(-0.045, 0.150), (0.045, 0.150)],
         "caliper_side_size": (0.014, 0.150, 0.130),
@@ -306,10 +348,31 @@ BLOCKS = {
         "caliper_pad_x": 0.014,
         "caliper_pad_offset": (0.000, 0.132),
     },
+    # ABS / ESC hydraulic modulator: a small block with six brake-line stubs on
+    # top, in the front bay on the car's left, just inboard of and behind the
+    # strut tower (tower gusset ends at y = -1.515, expansion tank at y = -1.745)
+    "BRAKE_CTRL": {
+        "center": (0.55, -1.600, 0.645),
+        "size": (0.16, 0.12, 0.17),
+        "metallic": 0.35,
+        "roughness": 0.45,
+        "body_center": (0.55, -1.600, 0.620),
+        "body_size": (0.160, 0.120, 0.120),
+        "body_bevel": 0.010,
+        "stub_radius": 0.009,
+        "stub_depth": 0.050,
+        "stub_segments": 8,
+        "stub_z": 0.705,
+        "stub_offsets": [
+            (-0.055, -0.028), (0.000, -0.028), (0.055, -0.028),
+            (-0.055, 0.028), (0.000, 0.028), (0.055, 0.028),
+        ],
+    },
     # front cooling pack: radiator core with side tanks, shrouded fan,
-    # expansion tank, an electric pump and the two coolant hoses that run back
-    # along the car's right (-X) side. Everything stays behind y = -2.05 and
-    # under z = 0.78 so the nose and the front bumper stay clear.
+    # expansion tank and the two coolant hoses that run back along the car's
+    # right (-X) side (the electric pump is its own block, PUMP, below).
+    # Everything stays behind y = -2.05 and under z = 0.78 so the nose and the
+    # front bumper stay clear.
     "THERMAL": {
         "center": (-0.05, -0.35, 0.49),
         "size": (1.34, 3.30, 0.54),
@@ -342,10 +405,6 @@ BLOCKS = {
         "expansion_cap_radius": 0.030,
         "expansion_cap_depth": 0.030,
         "expansion_cap_segments": 8,
-        "pump_center": (-0.545, -1.720, 0.360),
-        "pump_radius": 0.048,
-        "pump_depth": 0.110,
-        "pump_segments": 12,
         "hose_radius": 0.021,
         "hose_sides": 8,
         # both hoses hug the right rocker, clear of the wheels (|x| <= 0.669
@@ -363,6 +422,18 @@ BLOCKS = {
              (-0.690, 0.600, 0.250), (-0.648, 1.010, 0.280),
              (-0.620, 1.180, 0.350), (-0.530, 1.280, 0.420)],
         ],
+    },
+    # electric coolant pump, sitting inline on the rear coolant hose (the hose
+    # itself stays in THERMAL and runs through the pump body)
+    "PUMP": {
+        "center": (-0.545, -1.720, 0.360),
+        "size": (0.096, 0.110, 0.096),
+        "metallic": 0.50,
+        "roughness": 0.40,
+        "pump_center": (-0.545, -1.720, 0.360),
+        "pump_radius": 0.048,
+        "pump_depth": 0.110,
+        "pump_segments": 12,
     },
     # coolant / fan controller, tucked outboard of the expansion tank
     "THERM_CTRL": {
@@ -413,6 +484,18 @@ BLOCKS = {
         "pin_y": -0.7185,
         "pin_x_offsets": [-0.030, -0.010, 0.010, 0.030],
         "pin_z_offsets": [-0.009, 0.007],
+    },
+    # secure diagnostic gateway, on the dash rail just inboard of the OBD port
+    # (DIAG shell ends at y = -0.7155, so this starts at y = -0.705)
+    "DIAG_GATEWAY": {
+        "center": (0.55, -0.645, 0.660),
+        "size": (0.12, 0.12, 0.03),
+        "metallic": 0.10,
+        "roughness": 0.50,
+        "body_center": (0.55, -0.660, 0.660),
+        "body_size": (0.120, 0.090, 0.030),
+        "connector_center": (0.55, -0.600, 0.658),
+        "connector_size": (0.034, 0.030, 0.016),
     },
     # cockpit: dashboard, binnacle, screen, vents, wheel, pedals, selector
     "HMI": {
@@ -484,27 +567,14 @@ BLOCKS = {
         "knob_depth": 0.070,
         "knob_segments": 10,
     },
-    # four wheel-speed pucks + one front radar, merged into one object
+    # radar, windshield camera, ultrasonics and the rear camera, merged into
+    # one object. The four wheel-speed pucks are their own clickable block
+    # (WHEEL_SENSOR, below).
     "SENSORS": {
-        "center": (0.00, 0.00, 0.805),
-        "size": (1.40, 4.40, 1.15),
+        "center": (0.00, 0.00, 0.936),
+        "size": (0.66, 4.40, 0.88),
         "metallic": 0.10,
         "roughness": 0.45,
-        # wheel-speed sensors: a puck plus a short cable stub running inboard,
-        # dropped to z = 0.26 so they clear the half-shaft CV boots
-        "puck_radius": 0.028,
-        "puck_depth": 0.030,
-        "puck_segments": 10,
-        "puck_centers": [
-            (0.66, FRONT_AXLE_Y, 0.26),
-            (-0.66, FRONT_AXLE_Y, 0.26),
-            (0.66, REAR_AXLE_Y, 0.26),
-            (-0.66, REAR_AXLE_Y, 0.26),
-        ],
-        "stub_radius": 0.008,
-        "stub_depth": 0.070,
-        "stub_segments": 6,
-        "stub_x_offset": -0.045,
         "radar_center": (0.00, -2.140, 0.580),
         "radar_size": (0.180, 0.050, 0.100),
         "radar_face_center": (0.00, -2.175, 0.580),
@@ -528,9 +598,56 @@ BLOCKS = {
         "rear_camera_depth": 0.025,
         "rear_camera_segments": 10,
     },
+    # wheel-speed sensors: a puck plus a short cable stub running inboard,
+    # dropped to z = 0.26 so they clear the half-shaft CV boots
+    "WHEEL_SENSOR": {
+        "center": (0.00, 0.00, 0.260),
+        "size": (1.35, 2.76, 0.056),
+        "metallic": 0.10,
+        "roughness": 0.45,
+        "puck_radius": 0.028,
+        "puck_depth": 0.030,
+        "puck_segments": 10,
+        "puck_centers": [
+            (0.66, FRONT_AXLE_Y, 0.26),
+            (-0.66, FRONT_AXLE_Y, 0.26),
+            (0.66, REAR_AXLE_Y, 0.26),
+            (-0.66, REAR_AXLE_Y, 0.26),
+        ],
+        "stub_radius": 0.008,
+        "stub_depth": 0.070,
+        "stub_segments": 6,
+        "stub_x_offset": -0.045,
+    },
+    # sensor-fusion module: a flat box with one connector, on the tunnel next
+    # to the vehicle controller. Offset to the passenger side (-X) because
+    # VCONTROL already owns x -0.17 .. 0.17 at y = -0.615.
+    "FUSION": {
+        "center": (-0.30, -0.635, 0.660),
+        "size": (0.20, 0.19, 0.04),
+        "metallic": 0.30,
+        "roughness": 0.45,
+        "body_center": (-0.30, -0.620, 0.660),
+        "body_size": (0.200, 0.160, 0.040),
+        "body_bevel": 0.006,
+        "connector_center": (-0.30, -0.715, 0.655),
+        "connector_size": (0.050, 0.030, 0.025),
+    },
+    # what is left of the charging system once the socket and its door move to
+    # CHARGE_PORT: the slim mounting bezel / back box let into the rear quarter
+    # panel, just inboard of the door (door inner face is at x = 0.850).
+    "CHARGE": {
+        "center": (0.820, 1.900, 0.780),
+        "size": (0.06, 0.22, 0.22),
+        "metallic": 0.30,
+        "roughness": 0.45,
+        "bezel_center": (0.820, 1.900, 0.780),
+        "bezel_size": (0.060, 0.220, 0.220),
+        "bezel_bevel": 0.008,
+    },
     # charge door on the car's left rear quarter, flush with the body side.
     # CCS-style face: two big DC pins under a ring of 7 small AC pins.
-    "CHARGE": {
+    "CHARGE_PORT": {
         "center": (0.881, 1.899, 0.78),
         "size": (0.062, 0.224, 0.20),
         "metallic": 0.30,
@@ -560,6 +677,25 @@ BLOCKS = {
         "dc_pin_depth": 0.018,
         "dc_pin_segments": 8,
         "dc_pin_centers": [(0.898, 1.882, 0.752), (0.898, 1.918, 0.752)],
+    },
+    # onboard charger: an AC/DC box on the boot floor behind the battery pack,
+    # on the charge-door side. Kept at x <= 0.40 to clear the left frame rail
+    # (x 0.42 - 0.50, y 1.125 - 1.975) and at z >= 0.305 so it stays above the
+    # rear subframe crossmember (z <= 0.2825) and inside the underbody line
+    # (z ~ 0.30 at y = 1.85). Well clear of the rear drive unit at y <= 1.50.
+    "OBC": {
+        "center": (0.25, 1.830, 0.350),
+        "size": (0.30, 0.26, 0.09),
+        "metallic": 0.40,
+        "roughness": 0.45,
+        "body_center": (0.25, 1.850, 0.350),
+        "body_size": (0.300, 0.220, 0.090),
+        "body_bevel": 0.010,
+        # two connector bosses on the forward face, pointing at the pack
+        "boss_radius": 0.024,
+        "boss_depth": 0.050,
+        "boss_segments": 10,
+        "boss_centers": [(0.18, 1.725, 0.350), (0.32, 1.725, 0.350)],
     },
 }
 
@@ -917,8 +1053,10 @@ ROUTES = {
     ],
     ("CHARGE", "ENERGY"): [
         # charge port -> left rocker lane at x = 0.66 (inboard of the rear
-        # wheel, outboard of the pack) -> HV junction box
-        (0.870, 1.900, 0.762), (0.800, 1.820, 0.560),
+        # wheel, outboard of the pack) -> HV junction box. It drops almost
+        # straight down first so it passes under the CHARGE mounting bezel
+        # (x 0.79 - 0.85, z 0.67 - 0.89) instead of through it.
+        (0.870, 1.900, 0.762), (0.862, 1.880, 0.640), (0.800, 1.820, 0.560),
         (0.680, 1.720, 0.400), (0.660, 1.560, 0.300),
         (0.660, 1.100, 0.300), (0.400, 1.020, 0.315),
         (0.140, 0.985, 0.325),

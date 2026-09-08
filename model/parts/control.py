@@ -1,9 +1,11 @@
-"""VCONTROL (vehicle controller) and DIAG (service diagnostics port).
+"""VCONTROL, DIAG (service diagnostics port) and DIAG_GATEWAY.
 
 VCONTROL: a rounded ECU case on the tunnel with a finned aluminium lid, two
 connector banks on its forward face and four mounting tabs.
 DIAG: the OBD-II trapezoid connector under the dash on the driver's side, its
 opening facing the cabin, with a suggestion of the pin field inside.
+DIAG_GATEWAY: the secure gateway module on the dash rail just inboard of that
+connector, a small box with one connector on its cabin-facing side.
 """
 
 import bmesh
@@ -66,3 +68,16 @@ def build_diag(ctx):
                            common.trs((cx + x_off, pin_y, cz + z_off)))
 
     return ctx.emit_block("DIAG", bm)
+
+
+def build_diag_gateway(ctx):
+    """DIAG_GATEWAY: secure gateway module next to the OBD-II port."""
+    spec = layout.BLOCKS["DIAG_GATEWAY"]
+    _shapes.block_material(ctx, "DIAG_GATEWAY")
+    bm = bmesh.new()
+
+    common.add_box(bm, spec["body_size"], common.trs(spec["body_center"]))
+    common.add_box(bm, spec["connector_size"],
+                   common.trs(spec["connector_center"]))
+
+    return ctx.emit_block("DIAG_GATEWAY", bm)

@@ -100,6 +100,16 @@ Rules:
 | HMI | `#EC4899` | pink |
 | CHARGE | `#EAB308` | yellow |
 | DIAG | `#0D9488` | teal |
+| MOTOR | `#FB923C` | component of POWERTRAIN |
+| BAT_MODULE | `#4ADE80` | component of ENERGY |
+| CHARGE_PORT | `#FDE047` | component of CHARGE |
+| OBC | `#FACC15` | component of CHARGE |
+| BRAKE_CTRL | `#F87171` | component of BRAKES |
+| BRAKE_ACT | `#FCA5A5` | component of BRAKES |
+| PUMP | `#67E8F9` | component of THERMAL |
+| FUSION | `#C084FC` | component of SENSORS |
+| WHEEL_SENSOR | `#D8B4FE` | component of SENSORS |
+| DIAG_GATEWAY | `#2DD4BF` | component of DIAG |
 
 Decor colors (glass `#BFE3F5` alpha 0.25, tire `#2B2B2B`, rim `#C8C8C8`, seat `#4A4A4A`, flow tube `#FFA500` emissive) live only in `model/layout.py`.
 
