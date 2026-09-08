@@ -53,7 +53,8 @@ export interface Element {
   label?: string;
   blurb?: string;
   mesh?: string;
-  parent?: string;
+  /** Containing block id, or `null` for the root (VEH) — the converter emits a literal `null`, not an omitted field. */
+  parent?: string | null;
   color?: string;
   alpha?: number;
   explode?: [number, number, number];
@@ -152,10 +153,18 @@ export interface ModelJson {
 /** A Block element's id, e.g. `"POWERTRAIN"`. Kept as a distinct alias for readability at call sites. */
 export type BlockId = string;
 
-/** What is currently picked in the UI: a block (car part) or a requirement. */
+/**
+ * What is currently picked in the UI: a block (car part), a requirement, a
+ * test case, or a use case. Extended additively (beyond block/requirement)
+ * so `model/highlight.ts` can compute highlight state for every selectable
+ * kind; existing `selection.kind === 'block' | 'requirement'` checks are
+ * unaffected.
+ */
 export type Selection =
   | { kind: 'block'; id: BlockId }
   | { kind: 'requirement'; id: string }
+  | { kind: 'test'; id: string }
+  | { kind: 'usecase'; id: string }
   | null;
 
 /**

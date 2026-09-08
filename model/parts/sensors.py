@@ -1,6 +1,5 @@
-"""SENSORS: four wheel-speed pucks plus a front radar, merged into ONE object.
-
-STUB. The real version adds the camera behind the windscreen.
+"""SENSORS: four wheel-speed pucks, a front radar and a windshield camera,
+merged into ONE object.
 """
 
 import math
@@ -26,4 +25,5 @@ def build_sensors(ctx):
             matrix=common.trs(center, AXIS_X),
         )
     common.add_box(bm, spec["radar_size"], common.trs(spec["radar_center"]))
+    common.add_box(bm, spec["camera_size"], common.trs(spec["camera_center"]))
     return ctx.emit_block("SENSORS", bm)

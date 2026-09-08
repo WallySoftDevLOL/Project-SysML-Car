@@ -156,6 +156,11 @@ def add_torus_by_spin(bm, major_radius, minor_radius, major_segments=24,
     major_segments = int(major_segments)
     minor_segments = int(minor_segments)
 
+    # Only the geometry created here may be merged/transformed: the bmesh may
+    # already hold other parts of the same block.
+    bm.verts.ensure_lookup_table()
+    n0 = len(bm.verts)
+
     profile = []
     for i in range(minor_segments):
         a = 2.0 * math.pi * i / minor_segments
@@ -176,12 +181,17 @@ def add_torus_by_spin(bm, major_radius, minor_radius, major_segments=24,
         dvec=(0.0, 0.0, 0.0), angle=step_angle * major_segments,
         steps=major_segments, use_duplicate=False, use_merge=False,
     )
-    bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=1e-5)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    bm.verts.ensure_lookup_table()
+    new_verts = bm.verts[n0:]
+    bmesh.ops.remove_doubles(bm, verts=new_verts, dist=1e-5)
+    bm.verts.ensure_lookup_table()
+    new_verts = bm.verts[n0:]
+    new_faces = [f for f in bm.faces if all(v.index >= n0 for v in f.verts)]
+    bmesh.ops.recalc_face_normals(bm, faces=new_faces)
 
     m = _as_matrix(matrix)
     if m != Matrix.Identity(4):
-        bmesh.ops.transform(bm, matrix=m, verts=bm.verts[:])
+        bmesh.ops.transform(bm, matrix=m, verts=new_verts)
     return ret
 
 
@@ -216,6 +226,42 @@ def profile_extrude(bm, profile_yz_points, width_x, matrix=None):
 # --------------------------------------------------------------------------
 # object plumbing
 # --------------------------------------------------------------------------
+def _vert_key(vert):
+    return (round(vert.co.x, 6), round(vert.co.y, 6), round(vert.co.z, 6))
+
+
+def bmesh_to_mesh(bm, mesh):
+    """Write ``bm`` into ``mesh`` in a canonical, process-independent order.
+
+    bmesh element order after ops such as ``spin``, ``triangulate`` and
+    ``remove_doubles`` is not stable between Blender processes, and the bevel
+    modifier's result depends on the mesh's edge order, so two builds of the
+    same scene produced .glb files that differed in vertex order and by single
+    float ULPs. Sorting the verts and the faces by geometry, rotating each face
+    loop to start at its lowest vertex, and letting ``from_pydata`` derive the
+    edges from the faces makes the whole mesh canonical, which is what the
+    build's byte-reproducibility promise needs.
+    """
+    bm.verts.ensure_lookup_table()
+    ranks = {key: i for i, key in enumerate(sorted({_vert_key(v) for v in bm.verts}))}
+    bm.verts.sort(key=lambda v: ranks[_vert_key(v)])
+    bm.verts.index_update()
+
+    def face_key(face):
+        loop = [v.index for v in face.verts]
+        start = loop.index(min(loop))
+        return tuple(loop[start:] + loop[:start])
+
+    bm.faces.ensure_lookup_table()
+    frank = {key: i for i, key in enumerate(sorted(face_key(f) for f in bm.faces))}
+    bm.faces.sort(key=lambda f: frank[face_key(f)])
+
+    mesh.from_pydata([_vert_key(v) for v in bm.verts], [],
+                     [list(face_key(f)) for f in bm.faces])
+    mesh.update()
+    return mesh
+
+
 def new_mesh_object(name, bm, material=None, parent=None):
     """Turn a bmesh into a scene object named exactly ``name``.
 
@@ -223,8 +269,7 @@ def new_mesh_object(name, bm, material=None, parent=None):
     mean a duplicate name and a ``.001`` suffix in the glb).
     """
     mesh = bpy.data.meshes.new(name)
-    bm.normal_update()
-    bm.to_mesh(mesh)
+    bmesh_to_mesh(bm, mesh)
     bm.free()
 
     obj = bpy.data.objects.new(name, mesh)

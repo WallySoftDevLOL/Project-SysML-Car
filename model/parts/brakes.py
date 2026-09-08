@@ -1,7 +1,4 @@
-"""BRAKES: four discs merged into ONE object named BRAKES.
-
-STUB. Discs only; the real version adds calipers.
-"""
+"""BRAKES: four discs plus four calipers, merged into ONE object named BRAKES."""
 
 import math
 
@@ -17,6 +14,9 @@ AXIS_X = Matrix.Rotation(math.pi / 2.0, 4, "Y")
 def build_brakes(ctx):
     spec = layout.BLOCKS["BRAKES"]
     bm = bmesh.new()
+    caliper_size = spec["caliper_size"]
+    y_offset = spec["caliper_y_offset"]
+    caliper_z = spec["caliper_z"]
     for center in spec["disc_centers"]:
         common.add_cylinder(
             bm,
@@ -25,4 +25,6 @@ def build_brakes(ctx):
             segments=layout.SEG_DISC,
             matrix=common.trs(center, AXIS_X),
         )
+        cx, cy, _cz = center
+        common.add_box(bm, caliper_size, common.trs((cx, cy + y_offset, caliper_z)))
     return ctx.emit_block("BRAKES", bm)

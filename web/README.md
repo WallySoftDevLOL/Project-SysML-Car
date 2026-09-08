@@ -40,6 +40,11 @@ web/
     plain.ts            plain-language <-> SysML term labels
     model/
       schema.ts          types mirroring docs/model-contract.md section 2
+      load.ts            fetch + validate data/model.json (loadModel/parseModel)
+      index.ts           buildIndex(model) -> ModelIndex lookup structures
+      trace.ts           traceForRequirement/Block/Test/UseCase + ancestor/descendant BFS
+      highlight.ts       highlightFor(selection) -> HighlightState, flowsToLight
+      search.ts          search(idx, query, opts) over requirements/blocks/tests
     scene/
       viewer-api.ts       the Viewer interface every scene implementation must satisfy
       placeholder.ts      13-box stand-in scene (today's working implementation)
@@ -92,6 +97,59 @@ long as it satisfies the same interface.
 with `store.set(patch)`, react with `store.subscribe(fn)`. `src/state/url.ts`
 keeps `selection` / `xray` / `explode` mirrored to `location.hash` for deep
 links.
+
+## Data layer API
+
+`src/model/` turns `data/model.json` into typed, query-able structures. Every
+consumer (`src/scene/*`, `src/ui/*`, `main.ts`) should go through this layer
+rather than scanning `model.elements` / `model.relationships` by hand.
+
+- **`model/schema.ts`** — types mirroring the contract, plus `Selection`
+  (`block` | `requirement` | `test` | `usecase`, or `null`) and
+  `HighlightState` (`{ primary, secondary }`, both `Set<BlockId>`).
+- **`model/load.ts`** — `loadModel(url): Promise<ModelJson>` fetches and
+  validates; `parseModel(json)` is the pure validator (used directly in
+  tests). Both throw a single `Error` listing every missing/malformed
+  top-level key by name, rather than failing on the first one.
+- **`model/index.ts`** — `buildIndex(model): ModelIndex` builds one-time
+  lookup structures: `byId`, `byKind`, `out`/`in` (relationships keyed by
+  `source`/`target`) with `outBy(id, type)`/`inBy(id, type)` filters,
+  `categories`/`categoryOf(reqId)`, `flows`, `hierarchy`, `parentOf`/
+  `childrenOf` (direct only), `requirements(authoritativeOnly = true)` (drops
+  the 8 non-authoritative VER copies by default), `displayName(id)`, and
+  `blocks` — the 13 real (meshed) Block elements in the original
+  `data/blocks.json` catalog order (VEH, then each child in that order, each
+  child's own children immediately after it). `model.hierarchy`'s child
+  lists are alphabetically sorted by the converter, so `index.ts` restores
+  the authored order via a small hardcoded id table; an id outside that
+  table just sorts after the known ones.
+- **`model/trace.ts`** — traceability queries on top of `ModelIndex`:
+  `parentsOf`/`childrenOf` (one DeriveRequirement hop), `ancestors`/
+  `descendants` (BFS, cycle-safe), and the four "give me everything about
+  this thing" queries: `traceForRequirement`, `traceForBlock`,
+  `traceForTest`, `traceForUseCase`. See the JSDoc on each returned
+  interface (`RequirementTrace`, `BlockTrace`, `TestTrace`, `UseCaseTrace`)
+  for the exact shape.
+- **`model/highlight.ts`** — `highlightFor(idx, selection): HighlightState`
+  computes what the 3D scene should light up for the current `Selection`;
+  `flowsToLight(idx, highlight): Set<string>` returns the flow-tube mesh
+  names (`FLOW__SRC__TGT`) touching `primary`.
+- **`model/search.ts`** — `search(idx, query, { category?, includeCopies? })`
+  is a simple all-tokens-must-match substring search over requirements,
+  blocks, and test cases, ranked displayId-prefix match > name match > other.
+
+```ts
+import { loadModel } from './model/load';
+import { buildIndex } from './model/index';
+import { traceForBlock } from './model/trace';
+import { highlightFor, flowsToLight } from './model/highlight';
+
+const model = await loadModel('/data/model.json');
+const idx = buildIndex(model);
+const trace = traceForBlock(idx, 'POWERTRAIN'); // { reqCount: 11, ... }
+const h = highlightFor(idx, { kind: 'block', id: 'POWERTRAIN' });
+const litFlows = flowsToLight(idx, h);
+```
 
 ## How to add a UI module
 
