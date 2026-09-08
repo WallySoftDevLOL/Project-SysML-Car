@@ -20,9 +20,11 @@ import type { MaterialBase, SceneAssets } from './load-glb';
 import { CANOPY_NAME, SHELL_BLOCK_ID } from './load-glb';
 
 /** Emissive intensity / opacity constants, kept together so they read as a set. */
-export const PRIMARY_EMISSIVE = 0.55;
-export const SECONDARY_EMISSIVE = 0.2;
-export const SECONDARY_OPACITY = 0.95;
+export const PRIMARY_EMISSIVE = 0.9;
+export const SECONDARY_EMISSIVE = 0.5;
+export const SECONDARY_OPACITY = 1;
+/** Blocks at rest keep a faint self-glow of their own colour so they read as solid, saturated parts through the shell. */
+export const REST_EMISSIVE = 0.14;
 /**
  * Dimmed = "something else is selected". 0.12 read as invisible against the
  * dark shell, so the car lost its silhouette the moment you picked anything;
@@ -34,16 +36,20 @@ const DECOR_DIM_OPACITY = 0.35;
 /** A dimmed block still lifts a little under the pointer so hover reads. */
 export const DIM_HOVER_OPACITY = 0.4;
 export const HOVER_EMISSIVE = 0.12;
-export const SHELL_PRIMARY_EMISSIVE = 0.15;
+export const SHELL_PRIMARY_EMISSIVE = 0.35;
 export const FLOW_HOT_EMISSIVE = 1.2;
-export const FLOW_DIM_OPACITY = 0.28;
+export const FLOW_DIM_OPACITY = 0.15;
 
 /** X-ray on / off opacities for the shell and the glass canopy. */
-export const SHELL_OPACITY = { on: 0.35, off: 0.9 };
-export const CANOPY_OPACITY = { on: 0.25, off: 0.6 };
+export const SHELL_OPACITY = { on: 0.22, off: 0.9 };
+export const CANOPY_OPACITY = { on: 0.18, off: 0.6 };
+/** While something is selected the shell steps further back so the highlighted parts are unmistakable. */
+export const SHELL_SELECTED_FACTOR = 0.45;
 
-/** Inverted-hull outline scale on primary blocks. */
-const OUTLINE_SCALE = 1.03;
+/** Inverted-hull outline scales: a bold rim on primary blocks, a finer one on related (secondary) blocks. */
+const OUTLINE_SCALE = 1.045;
+const OUTLINE_SCALE_SECONDARY = 1.02;
+const _outlineColor = new THREE.Color();
 /** Exponential-smoothing time constant; ~95% of the way there in 250 ms. */
 const LERP_TAU = 250 / 3;
 const EPSILON = 0.0025;
@@ -172,36 +178,43 @@ export function createHighlighter(
   }
 
   const _center = new THREE.Vector3();
+  const WHITE = new THREE.Color(0xffffff);
 
-  function refreshOutlines(primary: Set<BlockId>) {
+  function refreshOutlines(primary: Set<BlockId>, secondary: Set<BlockId>) {
     for (const outline of activeOutlines) {
       outline.removeFromParent();
       outlinePool.push(outline);
     }
     activeOutlines.length = 0;
 
-    for (const id of primary) {
-      // The shell would fill its own silhouette with a flat backface hull, so
-      // it advertises selection with the emissive bump instead (see below).
-      if (id === SHELL_BLOCK_ID) continue;
-      const entry = assets.blocks.get(id);
-      if (!entry) continue;
-      const color = blockColors.get(id)!;
-      for (const mesh of entry.meshes) {
-        const outline = acquireOutline();
-        outline.geometry = mesh.geometry;
-        (outline.material as THREE.MeshBasicMaterial).color.copy(color);
-        // Scale about the geometry's own centre, not the node origin, so the
-        // rim stays even on meshes whose origin sits off to one side.
-        if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
-        mesh.geometry.boundingBox!.getCenter(_center);
-        outline.scale.setScalar(OUTLINE_SCALE);
-        outline.position.copy(_center).multiplyScalar(1 - OUTLINE_SCALE);
-        outline.renderOrder = mesh.renderOrder;
-        mesh.add(outline);
-        activeOutlines.push(outline);
+    const addOutlines = (ids: Set<BlockId>, scale: number, lighten: number) => {
+      for (const id of ids) {
+        // The shell would fill its own silhouette with a flat backface hull, so
+        // it advertises selection with the emissive bump instead (see below).
+        if (id === SHELL_BLOCK_ID) continue;
+        if (scale === OUTLINE_SCALE_SECONDARY && primary.has(id)) continue;
+        const entry = assets.blocks.get(id);
+        if (!entry) continue;
+        const color = blockColors.get(id)!;
+        _outlineColor.copy(color).lerp(WHITE, lighten);
+        for (const mesh of entry.meshes) {
+          const outline = acquireOutline();
+          outline.geometry = mesh.geometry;
+          (outline.material as THREE.MeshBasicMaterial).color.copy(_outlineColor);
+          // Scale about the geometry's own centre, not the node origin, so the
+          // rim stays even on meshes whose origin sits off to one side.
+          if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+          mesh.geometry.boundingBox!.getCenter(_center);
+          outline.scale.setScalar(scale);
+          outline.position.copy(_center).multiplyScalar(1 - scale);
+          outline.renderOrder = mesh.renderOrder;
+          mesh.add(outline);
+          activeOutlines.push(outline);
+        }
       }
-    }
+    };
+    addOutlines(primary, OUTLINE_SCALE, 0.35);
+    addOutlines(secondary, OUTLINE_SCALE_SECONDARY, 0.15);
   }
 
   // --- inputs ------------------------------------------------------------
@@ -239,7 +252,9 @@ export function createHighlighter(
       if (id === SHELL_BLOCK_ID) {
         // The shell is a window, not a part: x-ray owns its opacity, explode
         // fades it out of the way, and selection only tints it.
-        const opacity = (xray ? SHELL_OPACITY.on : SHELL_OPACITY.off) * (1 - 0.8 * explode);
+        // When the whole vehicle is the selected part, the shell IS the subject: keep it visible.
+        const selectedFactor = hasSelection && xray && !isPrimary ? SHELL_SELECTED_FACTOR : 1;
+        const opacity = (xray ? SHELL_OPACITY.on : SHELL_OPACITY.off) * selectedFactor * (1 - 0.8 * explode);
         const intensity = isPrimary ? SHELL_PRIMARY_EMISSIVE : isHovered ? HOVER_EMISSIVE : 0;
         for (const s of states) {
           s.tgtEmissive.copy(intensity > 0 ? color : s.base.emissive);
@@ -267,7 +282,7 @@ export function createHighlighter(
       } else if (isHovered) {
         setBlockTarget(states, color, HOVER_EMISSIVE, states[0]?.base.opacity ?? 1);
       } else {
-        setBlockTarget(states, null, states[0]?.base.emissiveIntensity ?? 0, states[0]?.base.opacity ?? 1);
+        setBlockTarget(states, color, REST_EMISSIVE, states[0]?.base.opacity ?? 1);
       }
     }
 
@@ -309,7 +324,7 @@ export function createHighlighter(
       s.tgtDepthWrite = s.base.depthWrite;
     }
 
-    refreshOutlines(primary);
+    refreshOutlines(primary, secondary);
     dirty = true;
   }
 
