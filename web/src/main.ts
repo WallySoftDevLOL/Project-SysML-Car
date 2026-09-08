@@ -1,26 +1,51 @@
-// App entry point. Wires the placeholder scene, the toolbar, and a minimal
-// panel together against the state store. This is intentionally thin: the
-// real panel (src/ui/*) and the real scene (src/scene/*, replacing
-// placeholder.ts) plug into the same store/Viewer contracts without this
-// file needing structural changes.
+// App entry point: loads model.json, builds the index, mounts the glTF viewer
+// (falling back to placeholder boxes if car.glb is missing) and the panel UI,
+// and keeps scene <-> store <-> panel in sync.
 import './style.css';
 import type { ModelJson } from './model/schema';
+import { loadModel } from './model/load';
+import { buildIndex, type ModelIndex } from './model/index';
+import { highlightFor } from './model/highlight';
+import { createViewer, type ViewerBlockDef } from './scene/viewer';
 import { createPlaceholderViewer } from './scene/placeholder';
 import type { Viewer } from './scene/viewer-api';
 import { store } from './state/store';
 import { initUrlSync } from './state/url';
-import { onColor, paletteFromModel } from './palette';
+import { paletteFromModel } from './palette';
+import { mountUI } from './ui';
 
 const BASE = import.meta.env.BASE_URL;
 
-async function fetchModel(): Promise<ModelJson | null> {
-  try {
-    const res = await fetch(`${BASE}data/model.json`);
-    if (!res.ok) return null;
-    return (await res.json()) as ModelJson;
-  } catch {
-    return null;
+function setLoadingText(text: string) {
+  const el = document.getElementById('loading-text');
+  if (el) el.textContent = text;
+}
+
+function hideLoading() {
+  document.getElementById('loading')?.setAttribute('hidden', '');
+}
+
+function applyTheme(theme: 'dark' | 'light') {
+  document.documentElement.setAttribute('data-theme', theme);
+}
+
+function blockDefs(model: ModelJson): ViewerBlockDef[] {
+  const defs: ViewerBlockDef[] = [];
+  for (const el of model.elements) {
+    if (el.kind !== 'Block' || typeof el.mesh !== 'string') continue;
+    const explode = Array.isArray(el.explode) && el.explode.length === 3
+      ? (el.explode as [number, number, number])
+      : ([0, 0, 0] as [number, number, number]);
+    defs.push({
+      id: el.id,
+      label: el.label ?? el.name,
+      color: el.color ?? '#94A3B8',
+      alpha: typeof el.alpha === 'number' ? el.alpha : 1,
+      explode,
+      parent: el.parent ?? null,
+    });
   }
+  return defs;
 }
 
 async function glbExists(url: string): Promise<boolean> {
@@ -32,123 +57,109 @@ async function glbExists(url: string): Promise<boolean> {
   }
 }
 
-function setLoadingText(text: string) {
-  const el = document.getElementById('loading-text');
-  if (el) el.textContent = text;
-}
+/** Scene <-> store glue: selection drives highlight/focus, toggles drive the viewer. */
+function bindViewerToStore(viewer: Viewer, idx: ModelIndex) {
+  let lastSelectionKey = '';
+  let lastHover: string | null = null;
+  let lastXray: boolean | null = null;
+  let lastExplode = -1;
+  let lastTheme: string | null = null;
 
-function hideLoading() {
-  const overlay = document.getElementById('loading');
-  overlay?.setAttribute('hidden', '');
-}
+  const apply = () => {
+    const s = store.get();
+    const selKey = s.selection ? `${s.selection.kind}:${s.selection.id}` : '';
+    if (selKey !== lastSelectionKey) {
+      lastSelectionKey = selKey;
+      viewer.setHighlight(highlightFor(idx, s.selection));
+      viewer.setAutoRotate(false);
+    }
+    if (s.hover !== lastHover) {
+      lastHover = s.hover;
+      viewer.setHover(s.hover);
+    }
+    if (s.xray !== lastXray) {
+      lastXray = s.xray;
+      viewer.setXray(s.xray);
+    }
+    if (s.explode !== lastExplode) {
+      lastExplode = s.explode;
+      viewer.setExplode(s.explode);
+    }
+    if (s.theme !== lastTheme) {
+      lastTheme = s.theme;
+      viewer.setTheme(s.theme);
+      applyTheme(s.theme);
+    }
+  };
+  store.subscribe(apply);
+  apply();
 
-function applyTheme(theme: 'dark' | 'light') {
-  document.documentElement.setAttribute('data-theme', theme);
-}
-
-// --- Minimal panel: shows the selected block's label + Satisfy count. ---
-// The real panel (src/ui/*) replaces this with the full tabbed parts/reqs
-// browser; this exists only so the page is useful before that lands.
-function renderMinimalPanel(model: ModelJson | null) {
-  const state = store.get();
-  const titleEl = document.getElementById('detail-title');
-  const contentEl = document.getElementById('detail-content');
-  const countEl = document.getElementById('req-count');
-  if (!titleEl || !contentEl || !countEl) return;
-
-  if (!model || state.selection === null || state.selection.kind !== 'block') {
-    titleEl.textContent = 'Select a part';
-    contentEl.innerHTML = '<p class="muted">Click a part in the 3D view to see its requirements.</p>';
-    countEl.textContent = '0 requirements';
-    return;
-  }
-
-  const blockId = state.selection.id;
-  const block = model.elements.find((e) => e.kind === 'Block' && e.id === blockId);
-  const satisfyCount = model.relationships.filter((r) => r.type === 'Satisfy' && r.source === blockId).length;
-
-  const palette = paletteFromModel(model);
-  const color = palette.get(blockId) ?? '#94A3B8';
-  const fg = onColor(color);
-
-  titleEl.textContent = block?.label ?? block?.name ?? blockId;
-  contentEl.innerHTML = `
-    <p class="muted">${block?.blurb ?? ''}</p>
-    <span class="chip" style="background:${color}; color:${fg}; border-color:${color}">${blockId}</span>
-  `;
-  countEl.textContent = `${satisfyCount} requirement${satisfyCount === 1 ? '' : 's'}`;
-}
-
-function wireToolbar(viewer: Viewer) {
-  const xrayBtn = document.getElementById('xray') as HTMLButtonElement | null;
-  const tourBtn = document.getElementById('tour') as HTMLButtonElement | null;
-  const termsBtn = document.getElementById('terms') as HTMLButtonElement | null;
-  const themeBtn = document.getElementById('theme') as HTMLButtonElement | null;
-  const explodeInput = document.getElementById('explode') as HTMLInputElement | null;
-  const searchInput = document.getElementById('search') as HTMLInputElement | null;
-  const tabParts = document.getElementById('tab-parts') as HTMLButtonElement | null;
-  const tabReqs = document.getElementById('tab-reqs') as HTMLButtonElement | null;
-
-  xrayBtn?.addEventListener('click', () => store.set({ xray: !store.get().xray }));
-  tourBtn?.addEventListener('click', () => store.set({ tour: !store.get().tour }));
-  termsBtn?.addEventListener('click', () =>
-    store.set({ terms: store.get().terms === 'plain' ? 'sysml' : 'plain' }),
-  );
-  themeBtn?.addEventListener('click', () =>
-    store.set({ theme: store.get().theme === 'dark' ? 'light' : 'dark' }),
-  );
-  explodeInput?.addEventListener('input', () => store.set({ explode: Number(explodeInput.value) }));
-  searchInput?.addEventListener('input', () => store.set({ query: searchInput.value }));
-  tabParts?.addEventListener('click', () => store.set({ tab: 'parts' }));
-  tabReqs?.addEventListener('click', () => store.set({ tab: 'reqs' }));
-
-  store.subscribe((state) => {
-    xrayBtn?.setAttribute('aria-pressed', String(state.xray));
-    tourBtn?.setAttribute('aria-pressed', String(state.tour));
-    termsBtn?.setAttribute('aria-pressed', String(state.terms === 'sysml'));
-    themeBtn?.setAttribute('aria-pressed', String(state.theme === 'light'));
-    tabParts?.classList.toggle('is-active', state.tab === 'parts');
-    tabReqs?.classList.toggle('is-active', state.tab === 'reqs');
-
-    viewer.setXray(state.xray);
-    viewer.setExplode(state.explode);
-    viewer.setAutoRotate(state.tour);
-    viewer.setTheme(state.theme);
-    applyTheme(state.theme);
+  viewer.on('pick', ({ id }) => {
+    const current = store.get().selection;
+    if (id === null) {
+      if (current) store.set({ selection: null });
+      return;
+    }
+    const same = current?.kind === 'block' && current.id === id;
+    store.set({ selection: same ? null : { kind: 'block', id } });
+  });
+  viewer.on('hover', ({ id }) => {
+    if (store.get().hover !== id) store.set({ hover: id });
   });
 }
 
 async function main() {
-  setLoadingText('Loading model…');
-  const model = await fetchModel();
-
   const viewport = document.getElementById('viewport');
-  if (!viewport) throw new Error('#viewport not found');
+  const panelRoot = document.getElementById('panel');
+  const toolbar = document.getElementById('toolbar');
+  if (!viewport || !panelRoot || !toolbar) throw new Error('required layout elements missing');
 
-  const viewer = createPlaceholderViewer(viewport);
+  setLoadingText('Loading requirements…');
+  const model = await loadModel(`${BASE}data/model.json`);
+  const idx = buildIndex(model);
+  const palette = Object.fromEntries(paletteFromModel(model));
 
-  setLoadingText('Loading scene…');
+  // X-ray on is the point of the demo; the URL hash may still override it.
+  store.set({ xray: true });
+
+  setLoadingText('Loading car…');
   const glbUrl = `${BASE}car.glb`;
-  const hasGlb = await glbExists(glbUrl);
-  if (!hasGlb) {
+  let viewer: Viewer;
+  if (await glbExists(glbUrl)) {
+    viewer = createViewer(viewport, {
+      blocks: blockDefs(model),
+      theme: store.get().theme,
+      xray: true,
+    });
+    const { missing } = await viewer.load(glbUrl);
+    const realMissing = missing.filter((id) => idx.blocks.some((b) => b.id === id));
+    if (realMissing.length) console.warn('[main] blocks without glb nodes:', realMissing);
+  } else {
     console.info('[main] car.glb not found at', glbUrl, '- using placeholder boxes.');
+    viewer = createPlaceholderViewer(viewport);
+    await viewer.load(glbUrl);
   }
-  await viewer.load(glbUrl);
 
-  viewer.on('pick', ({ id }) => {
-    store.set({ selection: id ? { kind: 'block', id } : null });
-  });
-  viewer.on('hover', ({ id }) => {
-    store.set({ hover: id });
-    viewer.setHover(id);
+  bindViewerToStore(viewer, idx);
+
+  mountUI({
+    root: panelRoot,
+    toolbar,
+    store,
+    idx,
+    palette,
+    onFocusBlock: (id) => viewer.focus(id),
   });
 
-  wireToolbar(viewer);
   initUrlSync(store);
 
-  store.subscribe(() => renderMinimalPanel(model));
-  renderMinimalPanel(model);
-  applyTheme(store.get().theme);
+  // Landing state: gentle idle rotation until the first interaction.
+  if (!store.get().selection) viewer.setAutoRotate(true);
+  const stopIdle = () => {
+    viewer.setAutoRotate(false);
+    viewport.removeEventListener('pointerdown', stopIdle);
+  };
+  viewport.addEventListener('pointerdown', stopIdle, { once: true });
 
   hideLoading();
   document.body.setAttribute('data-ready', 'true');

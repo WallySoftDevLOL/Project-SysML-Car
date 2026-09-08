@@ -493,6 +493,19 @@ button {
 .filter-chip {
   cursor: pointer;
   background: var(--color-bg);
+  font-family: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+/* Category filters: one horizontally scrollable row so the list stays above the fold. */
+.chip-row.category-filters {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .filter-chip.is-active {

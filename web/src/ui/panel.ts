@@ -72,8 +72,8 @@ export function mountPanel(deps: PanelDeps): PanelHandle {
 
   const tabParts = h('button', { type: 'button', id: 'tab-parts', 'data-testid': 'tab-parts', class: 'tab-btn' }, 'Parts') as HTMLButtonElement;
   const tabReqs = h('button', { type: 'button', id: 'tab-reqs', 'data-testid': 'tab-reqs', class: 'tab-btn' }, 'Requirements') as HTMLButtonElement;
-  tabParts.addEventListener('click', () => store.set({ tab: 'parts' }));
-  tabReqs.addEventListener('click', () => store.set({ tab: 'reqs' }));
+  tabParts.addEventListener('click', () => store.set({ tab: 'parts', selection: null }));
+  tabReqs.addEventListener('click', () => store.set({ tab: 'reqs', selection: null }));
   const tabs = h('div', { class: 'panel-tabs' }, tabParts, tabReqs);
 
   const searchInput = h('input', {
@@ -88,7 +88,13 @@ export function mountPanel(deps: PanelDeps): PanelHandle {
   searchInput.addEventListener('input', () => {
     const value = searchInput.value;
     if (searchTimer) clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => store.set({ query: value }), 120);
+    searchTimer = setTimeout(() => {
+      // Typing a query is a request to search requirements: bring that list forward.
+      const patch: Partial<AppState> = { query: value };
+      if (value.trim() && store.get().tab !== 'reqs') patch.tab = 'reqs';
+      if (value.trim() && store.get().selection) patch.selection = null;
+      store.set(patch);
+    }, 120);
   });
   const searchRow = h('div', { class: 'panel-search' }, searchInput);
 
@@ -173,7 +179,8 @@ export function mountPanel(deps: PanelDeps): PanelHandle {
     const sel = state.selection;
     const el = sel ? idx.byId.get(sel.id) : undefined;
     if (!sel || !el) {
-      detailArea.append(renderLanding());
+      // The landing card only earns its space when nothing else is going on.
+      if (!state.query.trim() && state.tab === 'parts') detailArea.append(renderLanding());
       return;
     }
     if (sel.kind === 'block') {
@@ -221,7 +228,7 @@ export function mountPanel(deps: PanelDeps): PanelHandle {
   let prev: AppState | null = null;
   function onStateChange(state: AppState) {
     const changed = (key: keyof AppState) => !prev || prev[key] !== state[key];
-    if (changed('selection') || changed('terms')) renderDetail(state);
+    if (changed('selection') || changed('terms') || (!state.selection && (changed('query') || changed('tab')))) renderDetail(state);
     if (changed('tab') || changed('selection') || changed('hover') || changed('terms') || changed('query') || changed('categoryFilter') || changed('showCopies')) {
       renderLists(state);
     }

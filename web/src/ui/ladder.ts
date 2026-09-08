@@ -43,8 +43,10 @@ function reqRung(idx: ModelIndex, req: Element, opts: LadderOptions, isSelf: boo
 export function renderLadder(idx: ModelIndex, trace: RequirementTrace, opts: LadderOptions): HTMLElement {
   const rows: HTMLElement[] = [];
 
+  const selfIsRoot = (idx.categoryOf(trace.self.id)?.level ?? 1) === 0;
   if (trace.stakeholderRoots.length === 0) {
-    rows.push(h('div', { class: 'ladder-rung is-muted' }, 'No customer need linked'));
+    // A stakeholder requirement is itself the customer need; only complain for lower levels.
+    if (!selfIsRoot) rows.push(h('div', { class: 'ladder-rung is-muted' }, 'No customer need linked'));
   } else {
     for (const root of trace.stakeholderRoots) {
       rows.push(reqRung(idx, root, opts, root.id === trace.self.id, false));
