@@ -3472,15 +3472,15 @@
   ],
   "hierarchy": {
     "VEH": [
-      "BRAKES",
-      "CHARGE",
-      "DIAG",
-      "ENERGY",
-      "HMI",
       "POWERTRAIN",
-      "SENSORS",
+      "ENERGY",
+      "VCONTROL",
+      "BRAKES",
       "THERMAL",
-      "VCONTROL"
+      "SENSORS",
+      "HMI",
+      "CHARGE",
+      "DIAG"
     ],
     "POWERTRAIN": [
       "INVERTER"

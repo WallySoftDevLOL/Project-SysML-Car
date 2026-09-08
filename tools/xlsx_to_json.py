@@ -409,8 +409,7 @@ def convert(xlsx_path: Path, blocks_path: Path, out_path: Path) -> dict:
     for b in blocks_catalog:
         if b["parentId"] is not None:
             hierarchy.setdefault(b["parentId"], []).append(b["id"])
-    for parent in hierarchy:
-        hierarchy[parent].sort()
+    # children keep the authored order of blocks.json (already deterministic)
 
     stats = {
         "requirements": sum(1 for r in requirements_by_id.values() if "copyOf" not in r),
