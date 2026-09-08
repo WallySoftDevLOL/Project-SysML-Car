@@ -13,6 +13,7 @@ import { store, persistTheme } from './state/store';
 import { initUrlSync } from './state/url';
 import { paletteFromModel } from './palette';
 import { mountUI } from './ui';
+import { mountHelp } from './ui/help';
 import scenariosFile from './tour/scenarios.json';
 import { createTourPlayer } from './tour/player';
 import { createTourOverlay } from './tour/overlay';
@@ -135,7 +136,7 @@ function mountLandingHint(viewport: HTMLElement): void {
   hint.id = 'viewer-hint';
   hint.setAttribute('data-testid', 'viewer-hint');
   hint.setAttribute('role', 'status');
-  hint.textContent = 'Tap any part of the car';
+  hint.textContent = 'Tap any part of the car · press ? for help';
   viewport.appendChild(hint);
 
   let done = false;
@@ -204,6 +205,20 @@ async function main() {
     onTourRequest: (id) => tourPlayer.play(id),
   });
 
+  // Help overlay: toolbar button, the "?" key, and a once-per-browser
+  // first-visit greeting (fired below, after data-ready).
+  const help = mountHelp({
+    root: document.body,
+    store,
+    scenarios: scenarios.map((s) => ({ id: s.id, title: s.title })),
+    onStartTour: (scenarioId) => {
+      const id = scenarioId ?? scenarios[0]?.id;
+      if (!id) return;
+      store.set({ tour: true });
+      tourPlayer.play(id);
+    },
+  });
+
   initUrlSync(store);
 
   // Landing state: gentle idle rotation until the first interaction.
@@ -218,6 +233,10 @@ async function main() {
 
   hideLoading();
   document.body.setAttribute('data-ready', 'true');
+
+  // Only greet a first-time visitor once the app is actually usable behind
+  // the dialog; deep links and `?e2e` opt out (see shouldAutoOpenHelp).
+  help.maybeAutoOpen();
 
   if (import.meta.env.DEV || new URLSearchParams(location.search).has('e2e')) { (window as any).__store = store; (window as any).__viewer = viewer; }
 }

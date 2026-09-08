@@ -1,7 +1,9 @@
 // Toolbar: title, Tour dropdown (hidden when no scenarios are supplied),
-// X-ray toggle, Explode slider, Terms toggle, Theme toggle — all two-way
-// bound to the store.
+// X-ray toggle, Explode slider, Terms toggle, Theme toggle, Help — all
+// two-way bound to the store (Help is stateless: it just fires HELP_EVENT,
+// which src/ui/help.ts listens for).
 import { h, clear } from './dom';
+import { HELP_EVENT } from './help';
 import type { AppState, Store } from '../state/store';
 
 export interface ToolbarOptions {
@@ -95,7 +97,22 @@ export function mountToolbar(toolbar: HTMLElement, store: Store, opts: ToolbarOp
     'Theme',
   ) as HTMLButtonElement;
 
-  const controls = h('div', { class: 'toolbar-group toolbar-controls' }, explodeLabel, xrayBtn, tourEl, termsBtn, themeBtn);
+  const helpBtn = h(
+    'button',
+    {
+      type: 'button',
+      id: 'help',
+      'data-testid': 'help',
+      class: 'btn btn-help',
+      'aria-label': 'How to use this page',
+      title: 'How to use this page (?)',
+      on: { click: () => document.dispatchEvent(new CustomEvent(HELP_EVENT)) },
+    },
+    h('span', { class: 'help-glyph', 'aria-hidden': 'true' }, '?'),
+    h('span', { class: 'help-word' }, 'Help'),
+  ) as HTMLButtonElement;
+
+  const controls = h('div', { class: 'toolbar-group toolbar-controls' }, explodeLabel, xrayBtn, tourEl, termsBtn, themeBtn, helpBtn);
   toolbar.append(brand, controls);
 
   function sync(state: AppState) {
