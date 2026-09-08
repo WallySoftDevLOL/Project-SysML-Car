@@ -184,6 +184,179 @@ export function buildFixtureModel(): ModelJson {
 }
 
 /**
+ * `buildFixtureModel()` plus contract section 6 behavior/parametrics data,
+ * for `behavior.test.ts` / `parametrics.test.ts`. Built by deep-cloning the
+ * base fixture and layering the additive keys on top, so the base fixture's
+ * own tests are unaffected by anything added here.
+ *
+ * Adds: one state machine (`SM_PARTA`, context `PARTA`, with a fault state
+ * reachable via a `SIG_FAULT` signal trigger), one activity (`ACT_1`, which
+ * branches from `N_A` into `N_B`/`N_C` and merges at `N_FINAL`, to exercise
+ * `activityOutline`'s branch handling), one interaction (`SEQ_1`, `PARTA` ->
+ * `PARTB` -> `PARTA`, one operation call and one signal send), one
+ * parametric (`PARAM_1`, `F = m * a` over `PARTA`'s new `values`), a
+ * composition entry for `PARTA` (one clickable sub-part reusing
+ * `PARTA_CHILD`, one non-clickable `PARTA_SENSOR`), and a `REQ_PT_3`
+ * ("fault") requirement satisfied by `PARTA` so the state-machine heuristic
+ * in `relatedRequirementsForBehavior` has something to find. `REQ_PT_1` and
+ * `REQ_PT_2` each gain an `acceptance` sentence with a numeric threshold
+ * (">=" and "no more than" phrasing respectively) for `thresholdsFor`.
+ */
+export function buildBehaviorFixtureModel(): ModelJson {
+  const model = buildFixtureModel();
+
+  const partA = model.elements.find((e) => e.id === 'PARTA');
+  if (partA) {
+    partA.subParts = ['PARTA_CHILD', 'PARTA_SENSOR'];
+    partA.operations = [{ id: 'OP_A', name: 'doThing' }];
+    partA.receptions = [{ id: 'RCP_A', name: 'onStart', signal: 'SIG_START' }];
+    partA.values = [
+      { id: 'VAL_MASS', name: 'mass', default: 1800, type: 'Real' },
+      { id: 'VAL_ACCEL', name: 'acceleration', default: 4, type: 'Real' },
+      { id: 'VAL_FORCE', name: 'force', default: null, type: 'Real' },
+    ];
+    partA.ports = [{ id: 'PORT_A', name: 'outPort', kind: 'ProxyPort', interface: { id: 'IF_A', name: 'WidgetInterface' } }];
+  }
+
+  const reqPt1 = model.elements.find((e) => e.id === 'REQ_PT_1');
+  if (reqPt1) reqPt1.acceptance = 'Calculated force is >= 7000 N.';
+  const reqPt2 = model.elements.find((e) => e.id === 'REQ_PT_2');
+  if (reqPt2) reqPt2.acceptance = 'Efficiency loss shall be no more than 0.20 kWh per km.';
+
+  model.elements.push(
+    {
+      id: 'REQ_PT_3',
+      kind: 'Requirement',
+      displayId: 'PT-3',
+      category: 'PT',
+      name: 'Part A Fault Detection',
+      text: 'Part A shall detect a fault condition and enter a safe state.',
+      authoritative: true,
+    },
+    {
+      id: 'PARTA_SENSOR',
+      kind: 'Block',
+      name: 'FaultSensorPart',
+      role: 'faultSensor',
+      parent: 'PARTA',
+    },
+  );
+  model.relationships.push({ id: 'SAT_PARTA_3', type: 'Satisfy', source: 'PARTA', target: 'REQ_PT_3' });
+  model.composition = { PARTA: ['PARTA_CHILD', 'PARTA_SENSOR'] };
+  model.signals = [
+    { id: 'SIG_START', name: 'StartCommand' },
+    { id: 'SIG_FAULT', name: 'FaultDetected' },
+  ];
+
+  model.behavior = {
+    stateMachines: [
+      {
+        id: 'SM_PARTA',
+        name: 'Part A Operating Modes',
+        context: 'PARTA',
+        states: [
+          { id: 'ST_INIT', name: 'Initial', kind: 'initial' },
+          { id: 'ST_OFF', name: 'Off', kind: 'state' },
+          { id: 'ST_ON', name: 'On', kind: 'state' },
+          { id: 'ST_FAULT', name: 'Fault', kind: 'state' },
+          { id: 'ST_DONE', name: 'Done', kind: 'final' },
+        ],
+        transitions: [
+          { id: 'T0', source: 'ST_INIT', target: 'ST_OFF' },
+          { id: 'T1', source: 'ST_OFF', target: 'ST_ON', trigger: { kind: 'signal', id: 'SIG_START', name: 'StartCommand' } },
+          { id: 'T2', source: 'ST_ON', target: 'ST_FAULT', trigger: { kind: 'signal', id: 'SIG_FAULT', name: 'FaultDetected' } },
+          { id: 'T3', source: 'ST_ON', target: 'ST_DONE' },
+        ],
+      },
+    ],
+    activities: [
+      {
+        id: 'ACT_1',
+        name: 'Do The Thing',
+        refines: ['REQ_PT_1'],
+        nodes: [
+          { id: 'N_INIT', name: 'Start', kind: 'initial' },
+          { id: 'N_A', name: 'Step A', kind: 'action', body: 'doStepA()' },
+          { id: 'N_B', name: 'Step B', kind: 'action', body: 'doStepB()' },
+          { id: 'N_C', name: 'Step C', kind: 'action', body: 'doStepC()' },
+          { id: 'N_FINAL', name: 'End', kind: 'final' },
+        ],
+        edges: [
+          { id: 'E1', source: 'N_INIT', target: 'N_A', kind: 'ControlFlow' },
+          { id: 'E2', source: 'N_A', target: 'N_B', kind: 'ControlFlow' },
+          { id: 'E3', source: 'N_A', target: 'N_C', kind: 'ControlFlow' },
+          { id: 'E4', source: 'N_B', target: 'N_FINAL', kind: 'ControlFlow' },
+          { id: 'E5', source: 'N_C', target: 'N_FINAL', kind: 'ControlFlow' },
+        ],
+      },
+    ],
+    interactions: [
+      {
+        id: 'SEQ_1',
+        name: 'Start Sequence',
+        context: 'PARTA',
+        lifelines: [
+          { id: 'LL_A', name: 'partA', block: 'PARTA' },
+          { id: 'LL_B', name: 'partB', block: 'PARTB' },
+        ],
+        messages: [
+          {
+            id: 'M1',
+            order: 1,
+            name: 'kickoff',
+            sort: 'SynchCall',
+            from: 'LL_A',
+            to: 'LL_B',
+            signature: { kind: 'operation', id: 'OP_A', name: 'doThing' },
+          },
+          {
+            id: 'M2',
+            order: 2,
+            name: 'ack',
+            sort: 'AsynchSignal',
+            from: 'LL_B',
+            to: 'LL_A',
+            signature: { kind: 'signal', id: 'SIG_START', name: 'StartCommand' },
+          },
+        ],
+        invariants: [{ lifeline: 'LL_A', order: 3, constraint: 'ready == true' }],
+      },
+    ],
+  };
+
+  model.parametrics = [
+    {
+      id: 'PARAM_1',
+      name: 'MassForceAnalysis',
+      constraint: 'CB_1',
+      expression: 'F = m * a',
+      output: 'F',
+      refines: ['REQ_PT_1'],
+      parameters: [
+        { parameter: 'm', value: 'VAL_MASS', name: 'mass', default: 1800, unit: 'kg' },
+        { parameter: 'a', value: 'VAL_ACCEL', name: 'acceleration', default: 4, unit: 'm/s^2' },
+        { parameter: 'F', value: 'VAL_FORCE', name: 'force', default: null, unit: 'N' },
+      ],
+    },
+    {
+      id: 'PARAM_2',
+      name: 'EfficiencyAnalysis',
+      constraint: 'CB_1',
+      expression: 'E = m / a',
+      output: 'E',
+      refines: ['REQ_PT_2'],
+      parameters: [
+        { parameter: 'm', value: 'VAL_MASS', name: 'mass', default: 20, unit: 'kWh' },
+        { parameter: 'a', value: 'VAL_ACCEL', name: 'distance', default: 100, unit: 'km' },
+        { parameter: 'E', value: 'VAL_EFF', name: 'consumption', default: null, unit: 'kWh/km' },
+      ],
+    },
+  ];
+
+  return model;
+}
+
+/**
  * A minimal model whose DeriveRequirement edges form a 3-cycle:
  * REQ_A -> REQ_B -> REQ_C -> REQ_A (source = derived/child, target = parent,
  * so this reads as "A derived from B derived from C derived from A").

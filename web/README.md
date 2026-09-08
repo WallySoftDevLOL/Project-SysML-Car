@@ -122,7 +122,12 @@ rather than scanning `model.elements` / `model.relationships` by hand.
   child's own children immediately after it). `model.hierarchy`'s child
   lists are alphabetically sorted by the converter, so `index.ts` restores
   the authored order via a small hardcoded id table; an id outside that
-  table just sorts after the known ones.
+  table just sorts after the known ones. `displayName(id)` falls back to a
+  humanised `role` (contract section 6, e.g. `tractionMotor` -> "Traction
+  motor") for a Block with no `label` — i.e. a composition sub-part — before
+  falling back to `name`. `idx.behavior` is `behaviorIndex(model)` (see
+  `model/behavior.ts` below) and `idx.parametrics`/`idx.parametricById` are a
+  pass-through/map of `model.parametrics` (`[]`/empty map if absent).
 - **`model/trace.ts`** — traceability queries on top of `ModelIndex`:
   `parentsOf`/`childrenOf` (one DeriveRequirement hop), `ancestors`/
   `descendants` (BFS, cycle-safe), and the four "give me everything about
@@ -137,6 +142,42 @@ rather than scanning `model.elements` / `model.relationships` by hand.
 - **`model/search.ts`** — `search(idx, query, { category?, includeCopies? })`
   is a simple all-tokens-must-match substring search over requirements,
   blocks, and test cases, ranked displayId-prefix match > name match > other.
+- **`model/behavior.ts`** — queries over contract section 6's behavior data
+  (state machines, activities, interactions) and the Block extras
+  (`role`/`subParts`/`operations`/`receptions`/`values`/`ports`).
+  `behaviorIndex(model): BehaviorIndex` exposes `stateMachinesFor(blockId)`,
+  `activities`/`activityById`, `interactions`/`interactionsInvolving(blockId)`,
+  `signalsReceivedBy(blockId)`/`signalsSentBy(blockId)`, `subPartsOf(blockId)`
+  (each tagged `{ element, clickable }` — `clickable` iff the sub-part is one
+  of the 13 meshed blocks), `portsOf`/`operationsOf`/`valuesOf(blockId)`,
+  `messageSequence(interactionId)` (ordered, lifelines resolved to leaf block
+  ids), `activityOutline(activityId)` (nodes in `ControlFlow` traversal order
+  from the `initial` node; cycle-safe), and `transitionsFrom(stateId)`.
+  `relatedRequirementsForBehavior(idx, id)` takes either an activity or a
+  state machine id: for an activity it returns its declared `refines`
+  (`reason: 'refines'`); for a state machine it returns requirements the
+  context block `Satisfy`s whose text matches a small hardcoded word list
+  (`fault`/`start`/`charg`/`drive`) — a heuristic, not authoritative
+  traceability. All of this is a no-op-safe pass-through of `[]`/`undefined`
+  when `model.behavior`/`.signals`/`.composition` are absent (i.e. before the
+  converter emits contract section 6), so it's safe to call unconditionally.
+- **`model/parametrics.ts`** — a tiny recursive-descent arithmetic parser and
+  evaluator for SysML parametrics, deliberately not `eval`/`Function`.
+  `parseExpression("F = m * a")` → `{ output, rhs }` (numbers, identifiers,
+  `+ - * /` with standard precedence, unary minus, parentheses).
+  `evaluate(parametric, overrides?)` → `{ value, inputs, unit }`, resolving
+  each non-output parameter from `overrides[symbol] ?? parameter.default`
+  (throws if neither is present, or if the expression references an
+  undeclared identifier). `formatWithUnits(value, unit)` rounds `N`/`km` to 0
+  decimal places, renders `W` as `kW` (1 decimal place) once the value
+  reaches 1000, `ratio` to 2 decimal places, and falls back to a generic
+  2-decimal rounding otherwise. `thresholdsFor(idx, parametric)` parses a
+  `{ requirementId, comparator: '>='|'<=', value, unit?, phrase }` threshold
+  out of the first `parametric.refines` requirement whose `acceptance` (tried
+  first) or `text` contains a recognizable comparator phrase (`">= N unit"`,
+  `"at least N unit"`, `"no more than N unit"`, `"N unit or less"`, etc.), or
+  `null` if none parse. `passes(evalResult, threshold)` compares them,
+  converting between known-equivalent units (e.g. `W` vs `kW`) first.
 
 ```ts
 import { loadModel } from './model/load';

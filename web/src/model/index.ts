@@ -1,7 +1,8 @@
 // Builds an in-memory index over a parsed ModelJson so the rest of the app
 // (scene + ui, and model/trace.ts, model/highlight.ts, model/search.ts in
 // this module) never has to linear-scan `elements`/`relationships` itself.
-import type { Category, Element, Flow, ModelJson, Relationship } from './schema';
+import type { Category, Element, Flow, ModelJson, Parametric, Relationship } from './schema';
+import { behaviorIndex, type BehaviorIndex } from './behavior';
 
 /**
  * The 13 real, clickable car parts (docs/model-contract.md section 1),
@@ -70,8 +71,20 @@ export interface ModelIndex {
   /** All Requirement elements; `authoritativeOnly` (default true) excludes VER-category copies. */
   requirements(authoritativeOnly?: boolean): Element[];
 
-  /** Display label: a block's plain-language `label`, a requirement's "SYS-002 Propulsion Delivery", else `name`. */
+  /**
+   * Display label: a block's plain-language `label` (or, for a sub-part
+   * block with no `label` — contract section 6 — its `role` humanised, e.g.
+   * `tractionMotor` -> "Traction motor"), a requirement's
+   * "SYS-002 Propulsion Delivery", else `name`.
+   */
   displayName(id: string): string;
+
+  /** Behavior queries (state machines, activities, interactions) over this model — see `model/behavior.ts`. */
+  behavior: BehaviorIndex;
+  /** `model.parametrics`, pass-through (`[]` if the converter hasn't emitted section 6 yet). */
+  parametrics: Parametric[];
+  /** `model.parametrics` keyed by id. */
+  parametricById: Map<string, Parametric>;
 }
 
 export function buildIndex(model: ModelJson): ModelIndex {
@@ -170,13 +183,27 @@ export function buildIndex(model: ModelJson): ModelIndex {
     return authoritativeOnly ? reqs.filter((r) => r.authoritative !== false) : reqs;
   }
 
+  /** `tractionMotor` -> "Traction motor" (contract section 6 `role`, used as a display fallback for label-less sub-part blocks). */
+  function humanizeRole(role: string): string {
+    const spaced = role.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase();
+    return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+  }
+
   function displayName(id: string): string {
     const el = byId.get(id);
     if (!el) return id;
-    if (el.kind === 'Block') return typeof el.label === 'string' ? el.label : el.name;
+    if (el.kind === 'Block') {
+      if (typeof el.label === 'string') return el.label;
+      if (typeof el.role === 'string') return humanizeRole(el.role);
+      return el.name;
+    }
     if (el.kind === 'Requirement') return el.displayId ? `${el.displayId} ${el.name}` : el.name;
     return el.name;
   }
+
+  const parametrics = model.parametrics ?? [];
+  const parametricById = new Map<string, Parametric>();
+  for (const p of parametrics) parametricById.set(p.id, p);
 
   return {
     model,
@@ -195,5 +222,8 @@ export function buildIndex(model: ModelJson): ModelIndex {
     childrenOf,
     requirements,
     displayName,
+    behavior: behaviorIndex(model),
+    parametrics,
+    parametricById,
   };
 }
