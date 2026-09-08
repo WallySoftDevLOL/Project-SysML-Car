@@ -175,6 +175,13 @@ export function mountPanel(deps: PanelDeps): PanelHandle {
 
   function renderDetail(state: AppState) {
     clear(detailArea);
+    // A new selection should be read from the top of the card, not from
+    // wherever the list happened to be scrolled.
+    if (state.selection && prev?.selection !== state.selection) {
+      const scroller = (root.closest('.panel') as HTMLElement | null) ?? root;
+      scroller.scrollTop = 0;
+      panelBody.scrollTop = 0;
+    }
     backBtn.hidden = state.selection === null;
     const sel = state.selection;
     const el = sel ? idx.byId.get(sel.id) : undefined;

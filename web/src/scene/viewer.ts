@@ -91,8 +91,8 @@ const EXPLODE_FIT_DURATION = 320;
 const HOME_TARGET = new THREE.Vector3(0, 0.6, 0);
 /** Pan is allowed, but only inside this box, so the car can't be lost offscreen. */
 /** Focus framing: minimum box extent (m), extra distance, and minimum view elevation (unit y). */
-const FOCUS_MIN_EXTENT = 2.6;
-const FOCUS_CONTEXT_SCALE = 1.25;
+const FOCUS_MIN_EXTENT = 1.8;
+const FOCUS_CONTEXT_SCALE = 1.0;
 const FOCUS_MIN_ELEVATION = 0.42;
 
 const PAN_LIMIT = new THREE.Box3(
