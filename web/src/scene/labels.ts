@@ -38,14 +38,20 @@ function injectStyle(): void {
 }
 
 export interface Labels {
-  /** Park the label above `sphere` with `text`, or hide it when text is null. */
-  show(text: string | null, sphere: THREE.Sphere | null): void;
+  /**
+   * Show `text` at `anchor` (the point under the pointer, lifted a little) when
+   * given, otherwise above `sphere`; hide when text is null.
+   */
+  show(text: string | null, sphere: THREE.Sphere | null, anchor?: THREE.Vector3 | null): void;
   hide(): void;
   visible(): boolean;
   render(scene: THREE.Scene, camera: THREE.Camera): void;
   setSize(width: number, height: number): void;
   dispose(): void;
 }
+
+/** Metres above the hovered point the label floats. */
+const ANCHOR_LIFT = 0.12;
 
 export function createLabels(container: HTMLElement, scene: THREE.Scene): Labels {
   injectStyle();
@@ -79,13 +85,17 @@ export function createLabels(container: HTMLElement, scene: THREE.Scene): Labels
   }
 
   return {
-    show(text, sphere) {
-      if (!text || !sphere) {
+    show(text, sphere, anchor) {
+      if (!text || (!sphere && !anchor)) {
         hide();
         return;
       }
       if (el.textContent !== text) el.textContent = text;
-      object.position.set(sphere.center.x, sphere.center.y + sphere.radius, sphere.center.z);
+      if (anchor) {
+        object.position.set(anchor.x, anchor.y + ANCHOR_LIFT, anchor.z);
+      } else if (sphere) {
+        object.position.set(sphere.center.x, sphere.center.y + sphere.radius, sphere.center.z);
+      }
       el.hidden = false;
       shown = true;
     },

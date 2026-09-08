@@ -301,12 +301,21 @@ export function createViewer(container: HTMLElement, opts: ViewerOptions = {}): 
   raf = requestAnimationFrame(tick);
 
   // --- hover plumbing ---------------------------------------------------
-  function applyHover(id: BlockId | null) {
+  const hoverAnchor = new THREE.Vector3();
+  let hoverHasAnchor = false;
+  function applyHover(id: BlockId | null, point: THREE.Vector3 | null = null) {
+    const sameId = id === hoveredId;
     hoveredId = id;
-    highlighter?.setHover(id);
+    if (!sameId) highlighter?.setHover(id);
+    hoverHasAnchor = !!(id && point);
+    if (point) hoverAnchor.copy(point);
     if (showLabels) {
       const entry = id ? assets?.blocks.get(id) : null;
-      labels.show(entry ? (labelText.get(entry.id) ?? entry.id) : null, entry?.sphere ?? null);
+      labels.show(
+        entry ? (labelText.get(entry.id) ?? entry.id) : null,
+        entry?.sphere ?? null,
+        hoverHasAnchor ? hoverAnchor : null,
+      );
     }
     requestRender();
   }
@@ -345,9 +354,10 @@ export function createViewer(container: HTMLElement, opts: ViewerOptions = {}): 
         meshes: () => assets?.pickMeshes ?? [],
         meshToBlock: assets.meshToBlock,
         onPick: (id) => emit('pick', id),
-        onHover: (id) => {
-          applyHover(id);
-          emit('hover', id);
+        onHover: (id, point) => {
+          const changed = id !== hoveredId;
+          applyHover(id, point);
+          if (changed) emit('hover', id);
         },
       });
 

@@ -22,7 +22,8 @@ export interface PickerOptions {
   meshes: () => THREE.Mesh[];
   meshToBlock: Map<THREE.Mesh, BlockId>;
   onPick: (id: BlockId | null) => void;
-  onHover: (id: BlockId | null) => void;
+  /** `point` is the world-space hit under the pointer (null when nothing is hovered or the hover came from elsewhere). */
+  onHover: (id: BlockId | null, point: THREE.Vector3 | null) => void;
 }
 
 export interface Picker {
@@ -42,6 +43,8 @@ export function createPicker(opts: PickerOptions): Picker {
   const hits: THREE.Intersection[] = [];
 
   let hovered: BlockId | null = null;
+  const hoverPoint = new THREE.Vector3();
+  let hoverHasPoint = false;
   let pointerInside = false;
   let lastX = 0;
   let lastY = 0;
@@ -51,7 +54,7 @@ export function createPicker(opts: PickerOptions): Picker {
   let downT = 0;
   let downId = -1;
 
-  function raycastAt(clientX: number, clientY: number): BlockId | null {
+  function raycastAt(clientX: number, clientY: number, outPoint?: THREE.Vector3): BlockId | null {
     const rect = container.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return null;
     ndc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
@@ -64,29 +67,40 @@ export function createPicker(opts: PickerOptions): Picker {
     // only pickable block from most angles. Prefer the nearest real part and
     // fall back to the shell only when nothing solid is behind the cursor.
     let shell: BlockId | null = null;
+    let shellPoint: THREE.Vector3 | null = null;
     for (const hit of hits) {
       const id = meshToBlock.get(hit.object as THREE.Mesh);
       if (!id) continue;
       if (id === SHELL_BLOCK_ID) {
-        shell ??= id;
+        if (shell === null) {
+          shell = id;
+          shellPoint = hit.point;
+        }
         continue;
       }
+      outPoint?.copy(hit.point);
       return id;
     }
+    if (shell && shellPoint) outPoint?.copy(shellPoint);
     return shell;
   }
 
-  function emitHover(id: BlockId | null) {
-    if (id === hovered) return;
+  function emitHover(id: BlockId | null, hasPoint: boolean) {
+    // Same block, new spot: the label follows the pointer across a part that
+    // spans the car (brakes, sensors), so re-emit even when the id is unchanged.
+    const moved = hasPoint && hoverHasPoint && id === hovered && id !== null;
+    if (id === hovered && !moved) return;
     hovered = id;
+    hoverHasPoint = hasPoint && id !== null;
     domElement.style.cursor = id ? 'pointer' : '';
-    onHover(id);
+    onHover(id, hoverHasPoint ? hoverPoint : null);
   }
 
   function runHover() {
     moveRaf = 0;
     if (!pointerInside) return;
-    emitHover(raycastAt(lastX, lastY));
+    const id = raycastAt(lastX, lastY, hoverPoint);
+    emitHover(id, id !== null);
   }
 
   function scheduleHover() {
@@ -121,7 +135,7 @@ export function createPicker(opts: PickerOptions): Picker {
   function onPointerLeave() {
     pointerInside = false;
     downId = -1;
-    emitHover(null);
+    emitHover(null, false);
   }
 
   function onPointerCancel() {
