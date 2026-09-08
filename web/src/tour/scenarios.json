@@ -1,0 +1,237 @@
+{
+  "scenarios": [
+    {
+      "id": "accel-battery",
+      "title": "Why does the battery care about 0-100 km/h?",
+      "blurb": "Trace one driving expectation from a customer wish down to the two subsystems that deliver it, and the test that proves it.",
+      "steps": [
+        {
+          "caption": "A customer says: \"I want brisk acceleration, 0 to 100 km/h.\" That's stakeholder requirement STK-003, Responsive Acceleration.",
+          "selection": { "kind": "requirement", "id": "REQ_STK_003" },
+          "focus": "VEH",
+          "xray": true,
+          "explode": 0
+        },
+        {
+          "caption": "Engineering turns that wish into a system-level requirement: SYS-002, Propulsion Delivery. The whole drivetrain has to deliver that response.",
+          "selection": { "kind": "requirement", "id": "REQ_SYS_002" },
+          "focus": "VEH"
+        },
+        {
+          "caption": "Propulsion Delivery breaks into measurable requirements the powertrain must hit, including PERF-001, Tractive Force.",
+          "selection": { "kind": "requirement", "id": "REQ_PERF_001" },
+          "focus": "POWERTRAIN"
+        },
+        {
+          "caption": "PERF-001 and its sibling PERF-002 (Electrical Traction Power) are both satisfied by the powertrain: the motor and gearbox that push the car forward.",
+          "selection": { "kind": "block", "id": "POWERTRAIN" },
+          "focus": "POWERTRAIN",
+          "explode": 0.25
+        },
+        {
+          "caption": "Electrical Traction Power also derives a battery requirement: BAT-004, Traction Power Capability. The battery has to deliver that power on demand.",
+          "selection": { "kind": "requirement", "id": "REQ_BAT_004" },
+          "focus": "ENERGY",
+          "explode": 0.25
+        },
+        {
+          "caption": "That's why 0-100 km/h is a battery concern, not just a motor one: the energy block satisfies BAT-004 right alongside the powertrain's requirements.",
+          "selection": { "kind": "block", "id": "ENERGY" },
+          "focus": "ENERGY",
+          "explode": 0.35
+        },
+        {
+          "caption": "One test proves the whole chain: TC_ACCEL, Acceleration / Force / Power Verification, verifies the stakeholder wish and every requirement beneath it.",
+          "selection": { "kind": "test", "id": "TC_ACCEL" },
+          "explode": 0,
+          "camera": { "position": [4, 2.4, 5.6], "target": [0, 0.6, 0] }
+        }
+      ]
+    },
+    {
+      "id": "brake-pedal",
+      "title": "What happens when you press the brake pedal?",
+      "blurb": "Follow one driver action from the pedal to the wheels, and to the battery that quietly recovers energy along the way.",
+      "steps": [
+        {
+          "caption": "You press the brake pedal. Physically, that command starts in the driver interface: the HMI block.",
+          "selection": { "kind": "block", "id": "HMI" },
+          "focus": "HMI",
+          "xray": true,
+          "explode": 0
+        },
+        {
+          "caption": "The pedal signal has to reach the right places correctly: IF-004, Brake Command Interface, is met jointly by the vehicle controller and the brakes.",
+          "selection": { "kind": "requirement", "id": "REQ_IF_004" },
+          "focus": "VCONTROL",
+          "explode": 0.2
+        },
+        {
+          "caption": "That's part of a bigger promise: SYS-004, Controlled Braking, derived from the stakeholder need for safe, controlled transportation.",
+          "selection": { "kind": "requirement", "id": "REQ_SYS_004" },
+          "focus": "BRAKES",
+          "explode": 0.35
+        },
+        {
+          "caption": "Controlled Braking is satisfied directly by the brakes, and also depends on the vehicle controller, powertrain, and battery working together.",
+          "selection": { "kind": "block", "id": "BRAKES" },
+          "focus": "BRAKES",
+          "explode": 0.35
+        },
+        {
+          "caption": "Some of that braking is \"blended\": PERF-004, Regenerative Braking, is satisfied by the powertrain and the battery pack recovering energy instead of wasting it as heat.",
+          "selection": { "kind": "requirement", "id": "REQ_PERF_004" },
+          "focus": "POWERTRAIN",
+          "explode": 0.35
+        },
+        {
+          "caption": "BRK-002, Blended Braking, is the brake system's job: mix friction braking and regeneration so the pedal still feels smooth and predictable.",
+          "selection": { "kind": "requirement", "id": "REQ_BRK_002" },
+          "focus": "BRAKES",
+          "explode": 0.35
+        },
+        {
+          "caption": "Two tests confirm it works: TC_BRAKE proves the friction brakes, TC_REGEN proves the energy recovery. One press, two systems, one confident stop.",
+          "selection": { "kind": "test", "id": "TC_REGEN" },
+          "explode": 0
+        }
+      ]
+    },
+    {
+      "id": "safe-charging",
+      "title": "How do we know it is safe to charge?",
+      "blurb": "One customer wish, convenient charging, turns out to depend on three separate subsystems working together.",
+      "steps": [
+        {
+          "caption": "Customers want charging to be quick and hassle-free: STK-004, Convenient Charging.",
+          "selection": { "kind": "requirement", "id": "REQ_STK_004" },
+          "focus": "CHARGE",
+          "xray": true,
+          "explode": 0
+        },
+        {
+          "caption": "That becomes SYS-008, Charge Management, owned by the charging port hardware itself.",
+          "selection": { "kind": "requirement", "id": "REQ_SYS_008" },
+          "focus": "CHARGE"
+        },
+        {
+          "caption": "Here's the charging port: the physical connection between the car and the wall.",
+          "selection": { "kind": "block", "id": "CHARGE" },
+          "focus": "CHARGE",
+          "explode": 0.2
+        },
+        {
+          "caption": "But safety during charging isn't just the plug. The Battery Management System has to guard the cells: BAT-003, Battery Protection.",
+          "selection": { "kind": "requirement", "id": "REQ_BAT_003" },
+          "focus": "BMS",
+          "explode": 0.3
+        },
+        {
+          "caption": "And the cooling system has to keep the battery at a safe temperature while it charges: THM-001, Battery Temperature Control.",
+          "selection": { "kind": "requirement", "id": "REQ_THM_001" },
+          "focus": "THERMAL",
+          "explode": 0.3
+        },
+        {
+          "caption": "TC_CHARGE proves charging itself performs as promised: speed, connection, everything the driver experiences.",
+          "selection": { "kind": "test", "id": "TC_CHARGE" },
+          "focus": "CHARGE",
+          "explode": 0
+        },
+        {
+          "caption": "TC_SAFETY proves the whole system is safe end to end, plug to pack. Three parts, one confident \"safe to charge.\"",
+          "selection": { "kind": "test", "id": "TC_SAFETY" },
+          "explode": 0
+        }
+      ]
+    },
+    {
+      "id": "one-wish-many-parts",
+      "title": "One customer wish, many parts",
+      "blurb": "A single stakeholder requirement, safe controlled transportation, fans out across four different subsystems.",
+      "steps": [
+        {
+          "caption": "One simple customer wish: STK-001, Safe Controlled Transportation. Let's see how many parts of the car that actually touches.",
+          "selection": { "kind": "requirement", "id": "REQ_STK_001" },
+          "focus": "VEH",
+          "xray": true,
+          "explode": 0
+        },
+        {
+          "caption": "It means the brakes must work reliably: SYS-004, Controlled Braking, satisfied by the brake block.",
+          "selection": { "kind": "requirement", "id": "REQ_SYS_004" },
+          "focus": "BRAKES",
+          "explode": 0.3
+        },
+        {
+          "caption": "It also means the battery must never overheat: SYS-005, Thermal Control, satisfied by the cooling system.",
+          "selection": { "kind": "requirement", "id": "REQ_SYS_005" },
+          "focus": "THERMAL",
+          "explode": 0.3
+        },
+        {
+          "caption": "It means high-voltage electricity must stay safely isolated: SYS-010, High-Voltage Isolation, satisfied by the energy storage block.",
+          "selection": { "kind": "requirement", "id": "REQ_SYS_010" },
+          "focus": "ENERGY",
+          "explode": 0.3
+        },
+        {
+          "caption": "And if anything goes wrong, the vehicle controller must catch it: SYS-011, Fault Management.",
+          "selection": { "kind": "requirement", "id": "REQ_SYS_011" },
+          "focus": "VCONTROL",
+          "explode": 0.3
+        },
+        {
+          "caption": "Zoom out: one stakeholder wish became four system requirements, satisfied by four different subsystems: brakes, thermal, energy, and vehicle control.",
+          "selection": { "kind": "requirement", "id": "REQ_STK_001" },
+          "explode": 0.2,
+          "camera": { "position": [4.2, 2.6, 5.4], "target": [0, 0.6, 0] }
+        },
+        {
+          "caption": "Every one of those requirements still traces straight back to this same starting wish. Nothing is disconnected, that's the trace ladder in action.",
+          "selection": { "kind": "requirement", "id": "REQ_STK_001" },
+          "focus": "VEH",
+          "explode": 0
+        }
+      ]
+    },
+    {
+      "id": "nothing-forgotten",
+      "title": "Nothing is forgotten",
+      "blurb": "Pick any part of the car at random: every one of them has requirements to meet and tests that prove it.",
+      "steps": [
+        {
+          "caption": "Start with the whole vehicle: 168 modeled elements and 13 physical parts, all traced from customer wishes to verification tests.",
+          "selection": { "kind": "block", "id": "VEH" },
+          "focus": "VEH",
+          "xray": true,
+          "explode": 0
+        },
+        {
+          "caption": "Take the diagnostics port, easy to overlook. It still owns 4 requirements, including SRV-001, Service Data Access, and 1 verification test, TC_DIAG.",
+          "selection": { "kind": "block", "id": "DIAG" },
+          "focus": "DIAG",
+          "explode": 0.25
+        },
+        {
+          "caption": "The sensor suite: 4 requirements, SNS-001, SNS-002, IF-003, and SYS-006, verified by 2 tests, TC_INTERFACE and TC_STATE.",
+          "selection": { "kind": "block", "id": "SENSORS" },
+          "focus": "SENSORS",
+          "explode": 0.25
+        },
+        {
+          "caption": "The charging port again: 4 requirements, 1 test, TC_CHARGE. Same pattern, every time, on every part.",
+          "selection": { "kind": "block", "id": "CHARGE" },
+          "focus": "CHARGE",
+          "explode": 0.25
+        },
+        {
+          "caption": "Every part has an owner. Every requirement has a test.",
+          "selection": { "kind": "block", "id": "VEH" },
+          "focus": null,
+          "explode": 0
+        }
+      ]
+    }
+  ]
+}

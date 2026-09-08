@@ -13,6 +13,12 @@ import { store } from './state/store';
 import { initUrlSync } from './state/url';
 import { paletteFromModel } from './palette';
 import { mountUI } from './ui';
+import scenariosFile from './tour/scenarios.json';
+import { createTourPlayer } from './tour/player';
+import { createTourOverlay } from './tour/overlay';
+import type { ScenariosFile } from './tour/player';
+
+const scenarios = (scenariosFile as ScenariosFile).scenarios;
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -142,6 +148,9 @@ async function main() {
 
   bindViewerToStore(viewer, idx);
 
+  const tourPlayer = createTourPlayer({ store, viewer, scenarios });
+  createTourOverlay(viewport, tourPlayer);
+
   mountUI({
     root: panelRoot,
     toolbar,
@@ -149,6 +158,8 @@ async function main() {
     idx,
     palette,
     onFocusBlock: (id) => viewer.focus(id),
+    scenarios: scenarios.map((s) => ({ id: s.id, title: s.title })),
+    onTourRequest: (id) => tourPlayer.play(id),
   });
 
   initUrlSync(store);
