@@ -30,6 +30,7 @@ export const SECONDARY_OPACITY = 0.95;
  * part still jumps out (it is fully opaque, emissive and outlined).
  */
 export const DIM_OPACITY = 0.2;
+const DECOR_DIM_OPACITY = 0.35;
 /** A dimmed block still lifts a little under the pointer so hover reads. */
 export const DIM_HOVER_OPACITY = 0.4;
 export const HOVER_EMISSIVE = 0.12;
@@ -133,10 +134,19 @@ export function createHighlighter(
   const canopyMesh = assets.decor.get(CANOPY_NAME);
   const canopyStates = canopyMesh ? materialsOf(canopyMesh).map(makeState) : [];
 
+  // Structural and cosmetic decor (chassis, suspension, wheels, lights...)
+  // recedes while a part is selected so the highlighted system stands out.
+  const decorStates: MatState[] = [];
+  for (const [name, mesh] of assets.decor) {
+    if (name === CANOPY_NAME) continue;
+    decorStates.push(...materialsOf(mesh).map(makeState));
+  }
+
   const allStates: MatState[] = [
     ...[...blockStates.values()].flat(),
     ...[...flowStates.values()].flat(),
     ...canopyStates,
+    ...decorStates,
   ];
 
   // --- inverted-hull outlines, pooled ------------------------------------
@@ -289,6 +299,14 @@ export function createHighlighter(
       s.tgtOpacity = canopyOpacity;
       s.tgtTransparent = true;
       s.tgtDepthWrite = false;
+    }
+
+    for (const s of decorStates) {
+      s.tgtEmissive.copy(s.base.emissive);
+      s.tgtIntensity = s.base.emissiveIntensity;
+      s.tgtOpacity = hasSelection ? Math.min(s.base.opacity, DECOR_DIM_OPACITY) : s.base.opacity;
+      s.tgtTransparent = hasSelection ? true : s.base.transparent;
+      s.tgtDepthWrite = s.base.depthWrite;
     }
 
     refreshOutlines(primary);
