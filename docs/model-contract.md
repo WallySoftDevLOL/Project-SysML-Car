@@ -115,3 +115,56 @@ Decor colors (glass `#BFE3F5` alpha 0.25, tire `#2B2B2B`, rim `#C8C8C8`, seat `#
 | ItemFlow | "Sends" / "Receives" |
 | Allocate | "Used in" |
 | Block / Requirement / TestCase / UseCase | "Part" / "Requirement" / "Test" / "Scenario" |
+
+## 6. Full model source: the Cameo model script (added 2026-09-08)
+
+`data/source/Connected_EV_COMPLETE_SYSML_ALL_9_FAMILIES_v7_IMPORT_SAFE.groovy` is the **source of truth**. It is a
+`modelScript('''<JSON>''')` wrapper around one JSON document: `{ source_namespace, operations[], diagrams[] }`.
+Operation ops: `element`, `relationship`, `connector`, `item_flow`, `binding`, `activity`, `activity_node`,
+`activity_edge`, `state_machine`, `region`, `vertex`, `transition`, `interaction`, `lifeline`, `occurrence`,
+`message`, `execution`, `state_invariant`, `parametric_metadata`. References carry a `handle:` prefix
+(`"owner": "handle:PKG_REQ"`); `$root` is the model root. The workbook in the same folder is a derived export
+of the requirement/relationship subset and is kept only for cross-checking (its 271 relationships must equal
+the script's `relationship` + `connector` + `item_flow` + `binding` ops).
+
+`tools/model_script_to_json.py` replaces `tools/xlsx_to_json.py` as the producer of `data/model.json`.
+Everything in section 2 stays exactly as it is (same ids, same direction rule, same `flows`, `hierarchy`,
+`stats`), and the following keys are ADDED:
+
+```jsonc
+"behavior": {
+  "stateMachines": [ { "id": "SM_VEH", "name": "Vehicle Operating Modes", "context": "VEH",
+      "states": [ { "id": "SV_OFF", "name": "Off", "kind": "state" } ],          // kind: initial | state | final
+      "transitions": [ { "id": "TR_1", "source": "SV_OFF", "target": "SV_START",
+                         "trigger": { "kind": "signal", "id": "SIG_START", "name": "StartCommand" } } ] } ],
+  "activities": [ { "id": "ACT_START", "name": "Start Vehicle", "refines": ["REQ_SYS_001"],
+      "nodes": [ { "id": "START_ACCEPT", "name": "Accept Start Command", "kind": "action", "body": "captureStartCommand()" } ],
+      // node kind: initial | action | call | final ; call nodes carry "calls": "<activity id>"
+      "edges": [ { "id": "E1", "source": "START_INIT", "target": "START_ACCEPT", "kind": "ControlFlow" } ] } ],
+  "interactions": [ { "id": "SEQ_START", "name": "Vehicle Startup Sequence", "context": "VEH",
+      "lifelines": [ { "id": "LL_HMI", "name": "driverInterface", "block": "HMI" } ],   // block = resolved leaf block id
+      "messages": [ { "id": "MSG_1", "order": 1, "name": "startVehicle", "sort": "SynchCall",
+                      "from": "LL_HMI", "to": "LL_CTRL",
+                      "signature": { "kind": "operation", "id": "OP_START", "name": "startVehicle" } } ],
+      "invariants": [ { "lifeline": "LL_CTRL", "order": 7, "constraint": "vehicleReady == true" } ] } ]
+},
+"parametrics": [ { "id": "FORCE_ANALYSIS", "name": "TractiveForceAnalysis", "constraint": "CB_FORCE",
+    "expression": "F = m * a", "output": "F", "refines": ["REQ_PERF_001"],
+    "parameters": [ { "parameter": "m", "value": "A_FORCE_MASS", "name": "mass", "default": 1800, "unit": "kg" },
+                    { "parameter": "a", "value": "A_FORCE_ACCEL", "name": "acceleration", "default": 4.0, "unit": "m/s^2" },
+                    { "parameter": "F", "value": "A_FORCE_OUT", "name": "tractiveForce", "default": null, "unit": "N" } ] } ],
+"signals": [ { "id": "SIG_START", "name": "StartCommand" } ],
+"composition": { "POWERTRAIN": ["INVERTER", "MOTOR"], "ENERGY": ["BAT_MODULE", "BMS"], /* ... */ }
+```
+
+Block elements (the 13 clickable ones AND the new non-clickable sub-parts) gain optional fields:
+`role` (part-property name, e.g. `tractionMotor`), `subParts: [id]`, `operations: [{id,name}]`,
+`receptions: [{id,name,signal}]`, `values: [{id,name,default,type}]`, `ports: [{id,name,kind,interface:{id,name}}]`.
+Sub-part blocks have `parent` = owning block, no `mesh`, no `color` (viewer uses the parent's colour).
+`FLEET` and its two vehicle parts are excluded. Units are not in the script; the converter owns a small
+`UNIT_HINTS` table keyed by value-property name (mass kg, acceleration m/s^2, tractiveForce/forceInput N,
+targetSpeed m/s, conversionEfficiency ratio, electricalPower W, usableEnergy kWh, energyConsumption kWh/km,
+estimatedRange km, stateOfChargePercent %, vehicleSpeedKph km/h).
+`stats` gains `stateMachines`, `activities`, `interactions`, `parametrics`, `signals`, `subParts`.
+Expressions are simple infix arithmetic over parameter names (`+ - * /`, parentheses); the viewer evaluates
+them with its own tiny parser, never `eval`.
