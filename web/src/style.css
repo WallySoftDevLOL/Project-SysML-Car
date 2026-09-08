@@ -521,7 +521,8 @@ button {
 }
 
 .legend-chip:hover,
-.legend-chip.is-selected {
+.legend-chip.is-selected,
+.legend-chip.is-hover {
   border-color: var(--color-accent);
 }
 
@@ -577,6 +578,51 @@ button {
 
 .list-row.is-hover {
   border-color: var(--color-accent);
+}
+
+/* Component rows in the parts tree: further-indented under their system,
+   with a smaller/tinted dot and a muted (lighter-weight) label — a visual
+   "one step down" cue distinct from a sibling system's own row. */
+.parts-row.is-component .row-label {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.dot-sm {
+  width: 7px;
+  height: 7px;
+}
+
+/* Per-system expand/collapse caret in the parts tree. */
+.caret-btn {
+  flex: none;
+  width: 1.1em;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-muted);
+  font-size: 0.75em;
+  line-height: 1;
+  cursor: pointer;
+  text-align: center;
+}
+
+.caret-btn:hover {
+  color: var(--color-text);
+}
+
+.caret-btn:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+/* Hollow/outlined chip: a value borrowed from elsewhere (e.g. a component's
+   requirement count, inherited from its parent system) rather than counted
+   for this row itself. */
+.chip.is-outline {
+  background: transparent;
+  border-style: dashed;
+  color: var(--color-muted);
 }
 
 .req-dots {
@@ -670,6 +716,19 @@ button {
 
 .detail-sentence {
   margin: 0 0 10px;
+}
+
+/* Component card: the "Part of {parent}" link under the title, and the "via
+   {parent}" tag on a flow borrowed from the parent system. */
+.detail-part-of {
+  display: block;
+  padding: 0;
+  margin-top: 2px;
+}
+
+.via-parent-tag {
+  flex: none;
+  font-size: 0.75em;
 }
 
 .detail-section {

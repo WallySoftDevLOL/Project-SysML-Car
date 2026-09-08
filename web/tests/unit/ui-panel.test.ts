@@ -29,15 +29,24 @@ function setup() {
 }
 
 describe('mountUI', () => {
-  it('renders 13 part rows from the real model.json', () => {
+  it('renders 23 part rows (13 systems + 10 components) from the real model.json', () => {
     const { root, idx } = setup();
-    expect(idx.blocks.length).toBe(13);
+    expect(idx.blocks.length).toBe(23);
+    expect(idx.systems.length).toBe(13);
+    expect(idx.components.length).toBe(10);
 
     const rows = root.querySelectorAll('[data-testid="part-row"]');
-    expect(rows.length).toBe(13);
+    expect(rows.length).toBe(23);
     const ids = Array.from(rows).map((r) => r.getAttribute('data-id'));
-    expect(new Set(ids).size).toBe(13);
+    expect(new Set(ids).size).toBe(23);
     expect(ids).toContain('POWERTRAIN');
+    expect(ids).toContain('MOTOR');
+
+    const systemRows = root.querySelectorAll('[data-testid="part-row"][data-tier="system"]');
+    const componentRows = root.querySelectorAll('[data-testid="part-row"][data-tier="component"]');
+    expect(systemRows.length).toBe(13);
+    expect(componentRows.length).toBe(10);
+    expect(root.querySelector('[data-testid="part-row"][data-id="MOTOR"]')?.getAttribute('data-tier')).toBe('component');
   });
 
   it('renders the toolbar controls with their documented data-testids', () => {

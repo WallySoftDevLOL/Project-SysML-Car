@@ -1,17 +1,29 @@
-// Block detail card: header, plain summary sentence, the five trace sections
-// ("Responsible for", "Talks to", "Used in scenarios", "Proven by tests",
-// "Contains / Part of"), and then what the model says the part actually *is*
-// and *does* — its state machine, sub-parts, ports, signals, operations and
-// tracked values. Every one of those renders only when the data is there,
-// so the card is unchanged for a model.json without contract section 6.
+// Block detail card. Two layouts, chosen by `traceForBlock`'s `isInherited`
+// flag (docs/model-contract.md section 1: a `tier: "component"` block
+// satisfies nothing directly, so its requirements/tests/flows are its parent
+// system's):
+//   - system: header, plain summary sentence, the five trace sections
+//     ("Responsible for", "Talks to", "Used in scenarios", "Proven by
+//     tests", "Contains / Part of"), then what the model says the part
+//     actually *is* and *does* (state machine, sub-parts, ports, signals,
+//     operations, tracked values).
+//   - component: header + a "Part of {parent}" link, a sentence that reads
+//     against the parent, "Inherited responsibilities" (the parent's own
+//     requirements), "Talks to" via the parent (flows tagged `viaParent`),
+//     then the component's own ports/signals/operations/values, and
+//     "Siblings" (the parent's other components).
+// Every section renders only when the data is there, so both cards are
+// unchanged for a model.json without contract section 6.
 import { h } from './dom';
 import { traceForBlock, traceForRequirement } from '../model/trace';
+import type { BlockTrace } from '../model/trace';
 import type { ModelIndex } from '../model/index';
+import type { Category, Element } from '../model/schema';
 import { colorChip, textChip } from './chips';
 import { label } from '../plain';
 import { renderLadder } from './ladder';
 import { renderStateDiagram, renderTransitionList, humanise } from './state-diagram';
-import { behaviorIndex } from '../model/behavior';
+import { behaviorIndex, type BehaviorIndex } from '../model/behavior';
 import type { Terms } from '../state/store';
 
 export interface DetailBlockOptions {
@@ -50,42 +62,32 @@ function section(testid: string, term: string, terms: Terms, body: HTMLElement[]
   return h('section', { class: 'detail-section', 'data-testid': testid }, sectionHeading(term, terms), ...body);
 }
 
-export function renderBlockDetail(idx: ModelIndex, blockId: string, opts: DetailBlockOptions): HTMLElement {
-  const trace = traceForBlock(idx, blockId);
-  const block = trace.block;
-  const color = opts.palette[block.id] ?? (typeof block.color === 'string' ? block.color : '#94A3B8');
-  const name = block.label ?? block.name;
+function colorOf(opts: DetailBlockOptions, block: Element): string {
+  return opts.palette[block.id] ?? (typeof block.color === 'string' ? block.color : '#94A3B8');
+}
 
-  const header = h(
-    'div',
-    { class: 'detail-header' },
-    colorChip(color, block.id),
-    h(
-      'div',
-      { class: 'detail-header-text' },
-      h('h2', { class: 'detail-title', id: 'detail-title', 'data-testid': 'detail-title' }, name),
-      opts.terms === 'sysml' ? h('div', { class: 'muted detail-formal' }, block.name) : null,
-    ),
-  );
+function nameOf(block: Element): string {
+  return block.label ?? block.name;
+}
 
-  const sentence = h(
-    'p',
-    { class: 'detail-sentence' },
-    `The ${name} is responsible for ${trace.reqCount} requirement${trace.reqCount === 1 ? '' : 's'} and is proven by ${trace.testCount} test${trace.testCount === 1 ? '' : 's'}.`,
-  );
-
-  const reqCountChip = h(
-    'span',
-    { id: 'req-count', class: 'chip req-count', 'data-testid': 'req-count' },
-    `${trace.reqCount} requirement${trace.reqCount === 1 ? '' : 's'}`,
-  );
-
-  const respSection = h('section', { class: 'detail-section' }, h('h3', {}, label('Satisfy', opts.terms, 'partCard')));
-  if (trace.reqsByCategory.length === 0) {
-    respSection.append(h('p', { class: 'muted' }, 'No requirements recorded.'));
+/**
+ * A requirement list grouped by category, each row expandable into its trace
+ * ladder — shared by a system's own "Responsible for" section and a
+ * component's "Inherited responsibilities" section (which groups its
+ * parent's requirements the same way).
+ */
+function renderReqGroups(
+  idx: ModelIndex,
+  groups: Array<{ category: Category; reqs: Element[] }>,
+  opts: DetailBlockOptions,
+): HTMLElement {
+  const wrap = h('div', { class: 'req-groups' });
+  if (groups.length === 0) {
+    wrap.append(h('p', { class: 'muted' }, 'No requirements recorded.'));
+    return wrap;
   }
-  for (const group of trace.reqsByCategory) {
-    respSection.append(h('h4', { class: 'req-group-header' }, opts.terms === 'sysml' ? group.category.name : group.category.plain));
+  for (const group of groups) {
+    wrap.append(h('h4', { class: 'req-group-header' }, opts.terms === 'sysml' ? group.category.name : group.category.plain));
     const list = h('ul', { class: 'list' });
     for (const req of group.reqs) {
       const row = h('li', { class: 'list-row expandable-row', 'data-testid': 'expandable-req-row' });
@@ -141,8 +143,143 @@ export function renderBlockDetail(idx: ModelIndex, blockId: string, opts: Detail
 
       list.append(row);
     }
-    respSection.append(list);
+    wrap.append(list);
   }
+  return wrap;
+}
+
+/**
+ * The "what this part is and does" sections (contract section 6): ports,
+ * signals it listens for/sends, operations, tracked values. Identical
+ * regardless of tier — a component queries these against its own id, same as
+ * a system — so both `renderBlockDetail` branches share this.
+ */
+function renderBehaviorDataSections(
+  behavior: BehaviorIndex,
+  targetId: string,
+  opts: DetailBlockOptions,
+): { portsSection: HTMLElement | null; signalsSection: HTMLElement | null; operationsSection: HTMLElement | null; valuesSection: HTMLElement | null } {
+  const ports = behavior.portsOf(targetId);
+  const portsSection = section(
+    'connections',
+    'Port',
+    opts.terms,
+    ports.length > 0
+      ? [
+          h(
+            'ul',
+            { class: 'list' },
+            ...ports.map((port) =>
+              h(
+                'li',
+                { class: 'list-row flow-row', title: port.kind ? `SysML ${port.kind}` : undefined },
+                h('span', { class: 'row-label' }, port.name),
+                h('span', { class: 'muted' }, port.interface ? `→ ${humanise(port.interface.name)}` : ''),
+              ),
+            ),
+          ),
+        ]
+      : [],
+  );
+
+  // signalsSentBy walks the sequence diagrams, so the same signal can come
+  // back once per message; the chips are a set, not a tally.
+  const received = behavior.signalsReceivedBy(targetId).map((r) => r.signal);
+  const sent = dedupeById(behavior.signalsSentBy(targetId).map((s) => s.signal));
+  const signalBody: HTMLElement[] = [];
+  if (received.length > 0) {
+    signalBody.push(h('h4', { class: 'req-group-header' }, label('Reception', opts.terms)));
+    signalBody.push(h('div', { class: 'chip-row' }, ...received.map((s) => textChip(humanise(s.name), { title: s.name }))));
+  }
+  if (sent.length > 0) {
+    signalBody.push(h('h4', { class: 'req-group-header' }, opts.terms === 'sysml' ? 'Signal' : 'Sends'));
+    signalBody.push(h('div', { class: 'chip-row' }, ...sent.map((s) => textChip(humanise(s.name), { title: s.name }))));
+  }
+  const signalsSection = section('signals', 'Reception', opts.terms, signalBody);
+
+  const operations = behavior.operationsOf(targetId);
+  const operationsSection = section(
+    'operations',
+    'Operation',
+    opts.terms,
+    operations.length > 0
+      ? [h('ul', { class: 'list' }, ...operations.map((op) => h('li', { class: 'list-row flow-row', title: op.name }, humanise(op.name))))]
+      : [],
+  );
+
+  const values = behavior.valuesOf(targetId);
+  const valuesSection = section(
+    'values',
+    'ValueProperty',
+    opts.terms,
+    values.length > 0
+      ? [
+          h(
+            'ul',
+            { class: 'list' },
+            ...values.map((v) => {
+              const unit = UNIT_HINTS[v.name] ?? '';
+              return h(
+                'li',
+                { class: 'list-row flow-row', title: v.name },
+                h('span', { class: 'row-label' }, valueLabel(v.name, unit)),
+                h('span', { class: 'muted' }, `${v.default ?? '—'}${unit ? ` ${unit}` : ''}`),
+              );
+            }),
+          ),
+        ]
+      : [],
+  );
+
+  return { portsSection, signalsSection, operationsSection, valuesSection };
+}
+
+export function renderBlockDetail(idx: ModelIndex, blockId: string, opts: DetailBlockOptions): HTMLElement {
+  const trace = traceForBlock(idx, blockId);
+  const block = trace.block;
+  const behavior = behaviorIndex(idx.model);
+
+  if (trace.isInherited && trace.inherited) {
+    return renderComponentDetail(idx, trace, behavior, opts);
+  }
+  return renderSystemDetail(idx, trace, behavior, opts);
+}
+
+function renderSystemDetail(idx: ModelIndex, trace: BlockTrace, behavior: BehaviorIndex, opts: DetailBlockOptions): HTMLElement {
+  const block = trace.block;
+  const color = colorOf(opts, block);
+  const name = nameOf(block);
+
+  const header = h(
+    'div',
+    { class: 'detail-header' },
+    colorChip(color, block.id),
+    h(
+      'div',
+      { class: 'detail-header-text' },
+      h('h2', { class: 'detail-title', id: 'detail-title', 'data-testid': 'detail-title' }, name),
+      opts.terms === 'sysml' ? h('div', { class: 'muted detail-formal' }, block.name) : null,
+    ),
+  );
+
+  const sentence = h(
+    'p',
+    { class: 'detail-sentence' },
+    `The ${name} is responsible for ${trace.reqCount} requirement${trace.reqCount === 1 ? '' : 's'} and is proven by ${trace.testCount} test${trace.testCount === 1 ? '' : 's'}.`,
+  );
+
+  const reqCountChip = h(
+    'span',
+    { id: 'req-count', class: 'chip req-count', 'data-testid': 'req-count' },
+    `${trace.reqCount} requirement${trace.reqCount === 1 ? '' : 's'}`,
+  );
+
+  const respSection = h(
+    'section',
+    { class: 'detail-section' },
+    h('h3', {}, label('Satisfy', opts.terms, 'partCard')),
+    renderReqGroups(idx, trace.reqsByCategory, opts),
+  );
 
   const talksTo = h('section', { class: 'detail-section' }, h('h3', {}, 'Talks to'));
   const flowsList = h('ul', { class: 'list' });
@@ -203,6 +340,10 @@ export function renderBlockDetail(idx: ModelIndex, blockId: string, opts: Detail
     testsSection.append(h('p', { class: 'muted' }, 'No tests recorded.'));
   }
 
+  // Sibling systems (INVERTER under POWERTRAIN, etc.) live in this section;
+  // this block's *components* (tier: "component") get their own clickable
+  // chips below in "Contains" (subPartsSection) instead, so they aren't
+  // listed twice.
   const containment = h('section', { class: 'detail-section' }, h('h3', {}, 'Contains / Part of'));
   const containList = h('ul', { class: 'list' });
   if (trace.parent) {
@@ -211,41 +352,40 @@ export function renderBlockDetail(idx: ModelIndex, blockId: string, opts: Detail
       h(
         'li',
         { class: 'list-row', role: 'button', tabIndex: 0, on: { click: () => opts.onSelectBlock(parent.id) } },
-        `Part of ${parent.label ?? parent.name}`,
+        `Part of ${nameOf(parent)}`,
       ),
     );
   }
-  for (const child of trace.children) {
+  const childSystems = trace.children.filter((c) => c.tier !== 'component');
+  for (const child of childSystems) {
     containList.append(
-      h('li', { class: 'list-row', role: 'button', tabIndex: 0, on: { click: () => opts.onSelectBlock(child.id) } }, `Contains ${child.label ?? child.name}`),
+      h('li', { class: 'list-row', role: 'button', tabIndex: 0, on: { click: () => opts.onSelectBlock(child.id) } }, `Contains ${nameOf(child)}`),
     );
   }
-  if (!trace.parent && trace.children.length === 0) {
+  if (!trace.parent && childSystems.length === 0) {
     containList.append(h('li', { class: 'muted' }, 'Top-level part.'));
   }
   containment.append(containList);
 
   // --- contract section 6: what this part is and does ------------------
-  const behavior = behaviorIndex(idx.model);
-
   const behaviorBody: HTMLElement[] = [];
-  for (const sm of behavior.stateMachinesFor(blockId)) {
+  for (const sm of behavior.stateMachinesFor(block.id)) {
     behaviorBody.push(h('h4', { class: 'req-group-header' }, sm.name));
     behaviorBody.push(h('div', { class: 'state-diagram-wrap' }, renderStateDiagram(sm)));
     behaviorBody.push(renderTransitionList(sm));
   }
   const behaviorSection = section('section-behavior', 'StateMachine', opts.terms, behaviorBody);
 
-  const subParts = behavior.subPartsOf(blockId);
+  const subParts = behavior.subPartsOf(block.id);
   const subPartRow = h('div', { class: 'chip-row subpart-row' });
   for (const part of subParts) {
     const child = part.element;
-    const name = child.label ?? child.name;
+    const name = nameOf(child);
     const description = typeof child.blurb === 'string' ? child.blurb : '';
     const role = typeof child.role === 'string' ? child.role : child.name;
     const roleLine = `${role}${description ? ` — ${description}` : ''}`;
     if (part.clickable) {
-      const color = opts.palette[child.id] ?? (typeof child.color === 'string' ? child.color : '#94A3B8');
+      const color = colorOf(opts, child);
       const chip = colorChip(color, name, { title: roleLine, className: 'subpart-chip is-clickable' });
       chip.setAttribute('role', 'button');
       chip.setAttribute('tabindex', '0');
@@ -264,81 +404,11 @@ export function renderBlockDetail(idx: ModelIndex, blockId: string, opts: Detail
   }
   const subPartsSection = section('subparts', 'PartProperty', opts.terms, subParts.length > 0 ? [subPartRow] : []);
 
-  const ports = behavior.portsOf(blockId);
-  const portsSection = section(
-    'connections',
-    'Port',
-    opts.terms,
-    ports.length > 0
-      ? [
-          h(
-            'ul',
-            { class: 'list' },
-            ...ports.map((port) =>
-              h(
-                'li',
-                { class: 'list-row flow-row', title: port.kind ? `SysML ${port.kind}` : undefined },
-                h('span', { class: 'row-label' }, port.name),
-                h('span', { class: 'muted' }, port.interface ? `→ ${humanise(port.interface.name)}` : ''),
-              ),
-            ),
-          ),
-        ]
-      : [],
-  );
-
-  // signalsSentBy walks the sequence diagrams, so the same signal can come
-  // back once per message; the chips are a set, not a tally.
-  const received = behavior.signalsReceivedBy(blockId).map((r) => r.signal);
-  const sent = dedupeById(behavior.signalsSentBy(blockId).map((s) => s.signal));
-  const signalBody: HTMLElement[] = [];
-  if (received.length > 0) {
-    signalBody.push(h('h4', { class: 'req-group-header' }, label('Reception', opts.terms)));
-    signalBody.push(h('div', { class: 'chip-row' }, ...received.map((s) => textChip(humanise(s.name), { title: s.name }))));
-  }
-  if (sent.length > 0) {
-    signalBody.push(h('h4', { class: 'req-group-header' }, opts.terms === 'sysml' ? 'Signal' : 'Sends'));
-    signalBody.push(h('div', { class: 'chip-row' }, ...sent.map((s) => textChip(humanise(s.name), { title: s.name }))));
-  }
-  const signalsSection = section('signals', 'Reception', opts.terms, signalBody);
-
-  const operations = behavior.operationsOf(blockId);
-  const operationsSection = section(
-    'operations',
-    'Operation',
-    opts.terms,
-    operations.length > 0
-      ? [h('ul', { class: 'list' }, ...operations.map((op) => h('li', { class: 'list-row flow-row', title: op.name }, humanise(op.name))))]
-      : [],
-  );
-
-  const values = behavior.valuesOf(blockId);
-  const valuesSection = section(
-    'values',
-    'ValueProperty',
-    opts.terms,
-    values.length > 0
-      ? [
-          h(
-            'ul',
-            { class: 'list' },
-            ...values.map((v) => {
-              const unit = UNIT_HINTS[v.name] ?? '';
-              return h(
-                'li',
-                { class: 'list-row flow-row', title: v.name },
-                h('span', { class: 'row-label' }, valueLabel(v.name, unit)),
-                h('span', { class: 'muted' }, `${v.default ?? '—'}${unit ? ` ${unit}` : ''}`),
-              );
-            }),
-          ),
-        ]
-      : [],
-  );
+  const { portsSection, signalsSection, operationsSection, valuesSection } = renderBehaviorDataSections(behavior, block.id, opts);
 
   return h(
     'div',
-    { class: 'card detail-card block-detail' },
+    { class: 'card detail-card block-detail', 'data-tier': 'system' },
     header,
     typeof block.blurb === 'string' ? h('p', { class: 'muted' }, block.blurb) : null,
     sentence,
@@ -354,6 +424,129 @@ export function renderBlockDetail(idx: ModelIndex, blockId: string, opts: Detail
     signalsSection,
     operationsSection,
     valuesSection,
+  );
+}
+
+function renderComponentDetail(idx: ModelIndex, trace: BlockTrace, behavior: BehaviorIndex, opts: DetailBlockOptions): HTMLElement {
+  const block = trace.block;
+  const parent = trace.inherited!.from;
+  const color = colorOf(opts, block);
+  const name = nameOf(block);
+  const parentName = nameOf(parent);
+
+  const header = h(
+    'div',
+    { class: 'detail-header' },
+    colorChip(color, block.id),
+    h(
+      'div',
+      { class: 'detail-header-text' },
+      h('h2', { class: 'detail-title', id: 'detail-title', 'data-testid': 'detail-title' }, name),
+      opts.terms === 'sysml' ? h('div', { class: 'muted detail-formal' }, block.name) : null,
+      h(
+        'button',
+        {
+          type: 'button',
+          class: 'btn btn-link detail-part-of',
+          'data-testid': 'part-of-link',
+          on: { click: () => opts.onSelectBlock(parent.id) },
+        },
+        `Part of ${parentName}`,
+      ),
+    ),
+  );
+
+  const sentence = h(
+    'p',
+    { class: 'detail-sentence' },
+    `The ${name} is part of the ${parentName}, which is responsible for ${trace.reqCount} requirement${trace.reqCount === 1 ? '' : 's'} and is proven by ${trace.testCount} test${trace.testCount === 1 ? '' : 's'}.`,
+  );
+
+  const reqCountChip = h(
+    'span',
+    { id: 'req-count', class: 'chip req-count', 'data-testid': 'req-count' },
+    `${trace.reqCount} requirement${trace.reqCount === 1 ? '' : 's'}`,
+  );
+
+  // The parent is a system, so its own traceForBlock groups its requirements
+  // by category the same way a system's "Responsible for" section does —
+  // reused rather than re-deriving the grouping here.
+  const parentTrace = traceForBlock(idx, parent.id);
+  const inheritedSection = h(
+    'section',
+    { class: 'detail-section', 'data-testid': 'inherited-responsibilities' },
+    h('h3', {}, 'Inherited responsibilities'),
+    h('p', { class: 'muted' }, `Requirements are written against the ${parentName}; this component is how it meets them.`),
+    renderReqGroups(idx, parentTrace.reqsByCategory, opts),
+  );
+
+  const talksTo = h('section', { class: 'detail-section' }, h('h3', {}, 'Talks to'));
+  const flowsList = h('ul', { class: 'list' });
+  for (const flow of trace.flows.out) {
+    const target = idx.byId.get(flow.target);
+    flowsList.append(
+      h(
+        'li',
+        { class: 'list-row flow-row' },
+        h('span', { class: 'muted' }, `${label('ItemFlow', opts.terms, 'flowOut')} ${flow.label} → `),
+        h('button', { type: 'button', class: 'btn btn-link', on: { click: () => opts.onSelectBlock(flow.target) } }, target?.label ?? target?.name ?? flow.target),
+        textChip(`via ${parentName}`, { className: 'via-parent-tag' }),
+      ),
+    );
+  }
+  for (const flow of trace.flows.in) {
+    const source = idx.byId.get(flow.source);
+    flowsList.append(
+      h(
+        'li',
+        { class: 'list-row flow-row' },
+        h('span', { class: 'muted' }, `${label('ItemFlow', opts.terms, 'flowIn')} ${flow.label} ← `),
+        h('button', { type: 'button', class: 'btn btn-link', on: { click: () => opts.onSelectBlock(flow.source) } }, source?.label ?? source?.name ?? flow.source),
+        textChip(`via ${parentName}`, { className: 'via-parent-tag' }),
+      ),
+    );
+  }
+  if (trace.flows.out.length === 0 && trace.flows.in.length === 0) {
+    flowsList.append(h('li', { class: 'muted' }, 'No connections recorded.'));
+  }
+  talksTo.append(flowsList);
+
+  const { portsSection, signalsSection, operationsSection, valuesSection } = renderBehaviorDataSections(behavior, block.id, opts);
+
+  const siblings = idx.components.filter((c) => c.id !== block.id && c.parent === parent.id);
+  let siblingsSection: HTMLElement | null = null;
+  if (siblings.length > 0) {
+    const chipRow = h('div', { class: 'chip-row' });
+    for (const sibling of siblings) {
+      const sibColor = colorOf(opts, sibling);
+      const chip = colorChip(sibColor, nameOf(sibling), { className: 'subpart-chip is-clickable' });
+      chip.setAttribute('role', 'button');
+      chip.setAttribute('tabindex', '0');
+      chip.addEventListener('click', () => opts.onSelectBlock(sibling.id));
+      chip.addEventListener('keydown', (e) => {
+        if ((e as KeyboardEvent).key === 'Enter') opts.onSelectBlock(sibling.id);
+      });
+      chip.addEventListener('mouseenter', () => opts.onHoverBlock(sibling.id));
+      chip.addEventListener('mouseleave', () => opts.onHoverBlock(null));
+      chipRow.append(chip);
+    }
+    siblingsSection = h('section', { class: 'detail-section', 'data-testid': 'siblings' }, h('h3', {}, 'Siblings'), chipRow);
+  }
+
+  return h(
+    'div',
+    { class: 'card detail-card block-detail is-component', 'data-tier': 'component' },
+    header,
+    typeof block.blurb === 'string' ? h('p', { class: 'muted' }, block.blurb) : null,
+    sentence,
+    h('div', { class: 'panel-meta' }, reqCountChip),
+    inheritedSection,
+    talksTo,
+    signalsSection,
+    portsSection,
+    operationsSection,
+    valuesSection,
+    siblingsSection,
   );
 }
 

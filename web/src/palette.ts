@@ -2,14 +2,28 @@
 // second fetch of data/blocks.json (docs/model-contract.md section 4) — the
 // same colors are already on each Block element in model.json.
 import type { BlockId, ModelJson } from './model/schema';
+// The hand-authored 23-block catalog (docs/model-contract.md section 1: 13
+// `tier: "system"` + 10 `tier: "component"`). `data/model.json`'s own Block
+// elements already carry the same `color` for all 23, but this stays as an
+// explicit fallback/cross-check per the contract ("BOTH the Blender material
+// and the UI chips" read `data/blocks.json`'s color) rather than trusting the
+// converter's copy alone. Statically importing the JSON (rather than
+// fetching) mirrors `tests/unit/fixtures.ts`'s `loadRealModel` and needs no
+// runtime asset copy.
+import blocksCatalogJson from '../../data/blocks.json';
 
-/** Block id -> hex color (e.g. "#F97316"), read from each Block element's `color` field. */
+const CATALOG = blocksCatalogJson as Array<{ id: string; color: string }>;
+
+/** Block id -> hex color (e.g. "#F97316"), read from each Block element's `color` field, filled in from `data/blocks.json` for any id still missing one. */
 export function paletteFromModel(model: ModelJson): Map<BlockId, string> {
   const map = new Map<BlockId, string>();
   for (const el of model.elements) {
     if (el.kind === 'Block' && typeof el.color === 'string') {
       map.set(el.id, el.color);
     }
+  }
+  for (const entry of CATALOG) {
+    if (!map.has(entry.id)) map.set(entry.id, entry.color);
   }
   return map;
 }

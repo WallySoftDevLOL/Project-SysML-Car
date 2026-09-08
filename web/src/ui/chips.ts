@@ -30,3 +30,12 @@ export function idChip(displayId: string): HTMLElement {
 export function textChip(text: string, opts: { className?: string; title?: string } = {}): HTMLElement {
   return h('span', { class: `chip ${opts.className ?? ''}`.trim(), title: opts.title }, text);
 }
+
+/**
+ * A hollow/outlined chip — e.g. a component part-list row's requirement
+ * count, which is its parent system's count, not its own (components satisfy
+ * nothing directly; contract section 1).
+ */
+export function outlineChip(text: string, opts: { className?: string; title?: string } = {}): HTMLElement {
+  return h('span', { class: `chip is-outline ${opts.className ?? ''}`.trim(), title: opts.title }, text);
+}
