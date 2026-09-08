@@ -1,0 +1,3503 @@
+{
+  "meta": {
+    "schema": 1,
+    "sourceFile": "C:/Users/Austi/OneDrive/Desktop/Claude Projects/Project SysML Car/data/source/Connected_EV_SysML_Requirements_and_Relationships_v7.xlsx",
+    "sourceSha256": "9c8798c97cad2ece182185536ac52735f9540606e11ca18b070299e2cf85717c",
+    "converter": "tools/xlsx_to_json.py"
+  },
+  "categories": [
+    {
+      "id": "STK",
+      "name": "Stakeholder / Mission",
+      "plain": "What customers and the mission need",
+      "level": 0
+    },
+    {
+      "id": "IF",
+      "name": "Interface",
+      "plain": "How parts talk to each other",
+      "level": 1
+    },
+    {
+      "id": "PERF",
+      "name": "Performance",
+      "plain": "How well it must do it",
+      "level": 1
+    },
+    {
+      "id": "SYS",
+      "name": "System",
+      "plain": "What the car must do",
+      "level": 1
+    },
+    {
+      "id": "BAT",
+      "name": "Subsystem - Energy Storage",
+      "plain": "What the battery pack must do",
+      "level": 2,
+      "block": "ENERGY"
+    },
+    {
+      "id": "BRK",
+      "name": "Subsystem - Brake System",
+      "plain": "What the brakes must do",
+      "level": 2,
+      "block": "BRAKES"
+    },
+    {
+      "id": "CHG",
+      "name": "Subsystem - Charging",
+      "plain": "What the charging system must do",
+      "level": 2,
+      "block": "CHARGE"
+    },
+    {
+      "id": "CTRL",
+      "name": "Subsystem - Vehicle Control",
+      "plain": "What the vehicle controller must do",
+      "level": 2,
+      "block": "VCONTROL"
+    },
+    {
+      "id": "HMI",
+      "name": "Subsystem - Driver Interface",
+      "plain": "What the driver interface must do",
+      "level": 2,
+      "block": "HMI"
+    },
+    {
+      "id": "PT",
+      "name": "Subsystem - Powertrain",
+      "plain": "What the powertrain must do",
+      "level": 2,
+      "block": "POWERTRAIN"
+    },
+    {
+      "id": "SNS",
+      "name": "Subsystem - Vehicle Sensors",
+      "plain": "What the sensors must do",
+      "level": 2,
+      "block": "SENSORS"
+    },
+    {
+      "id": "SRV",
+      "name": "Subsystem - Service / Diagnostics",
+      "plain": "What service and diagnostics must do",
+      "level": 2,
+      "block": "DIAG"
+    },
+    {
+      "id": "THM",
+      "name": "Subsystem - Thermal Management",
+      "plain": "What the cooling system must do",
+      "level": 2,
+      "block": "THERMAL"
+    },
+    {
+      "id": "VER",
+      "name": "Verification View Copy",
+      "plain": "Copies kept for the verification view",
+      "level": 3
+    }
+  ],
+  "elements": [
+    {
+      "id": "A_FORCE_ACCEL",
+      "kind": "BindingEndpoint",
+      "name": "acceleration"
+    },
+    {
+      "id": "A_FORCE_MASS",
+      "kind": "BindingEndpoint",
+      "name": "mass"
+    },
+    {
+      "id": "A_FORCE_OUT",
+      "kind": "BindingEndpoint",
+      "name": "tractiveForce"
+    },
+    {
+      "id": "A_POWER_EFF",
+      "kind": "BindingEndpoint",
+      "name": "conversionEfficiency"
+    },
+    {
+      "id": "A_POWER_FORCE",
+      "kind": "BindingEndpoint",
+      "name": "forceInput"
+    },
+    {
+      "id": "A_POWER_OUT",
+      "kind": "BindingEndpoint",
+      "name": "electricalPower"
+    },
+    {
+      "id": "A_POWER_SPEED",
+      "kind": "BindingEndpoint",
+      "name": "targetSpeed"
+    },
+    {
+      "id": "A_RANGE_C",
+      "kind": "BindingEndpoint",
+      "name": "energyConsumption"
+    },
+    {
+      "id": "A_RANGE_E",
+      "kind": "BindingEndpoint",
+      "name": "usableEnergy"
+    },
+    {
+      "id": "A_RANGE_OUT",
+      "kind": "BindingEndpoint",
+      "name": "estimatedRange"
+    },
+    {
+      "id": "BMS",
+      "kind": "Block",
+      "name": "BatteryManagementSystem",
+      "label": "Battery management",
+      "blurb": "Watches every cell: charge level, temperature, and protection limits.",
+      "category": "Energy",
+      "mesh": "BMS",
+      "parent": "ENERGY",
+      "color": "#86EFAC",
+      "alpha": 1.0,
+      "explode": [
+        0.6,
+        -0.3,
+        0.3
+      ]
+    },
+    {
+      "id": "BRAKES",
+      "kind": "Block",
+      "name": "BrakeSystem",
+      "label": "Brakes",
+      "blurb": "Discs and calipers at each wheel, blended with motor regeneration.",
+      "category": "Chassis",
+      "mesh": "BRAKES",
+      "parent": "VEH",
+      "color": "#EF4444",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        -0.6,
+        0
+      ]
+    },
+    {
+      "id": "BRAKE_CMD",
+      "kind": "Port",
+      "name": "brakeCommandIn",
+      "owner": "BRAKES",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "CB_FORCE",
+      "kind": "ConstraintBlock",
+      "name": "TractiveForceEquation"
+    },
+    {
+      "id": "CB_POWER",
+      "kind": "ConstraintBlock",
+      "name": "ElectricalPowerEquation"
+    },
+    {
+      "id": "CB_RANGE",
+      "kind": "ConstraintBlock",
+      "name": "RangeEquation"
+    },
+    {
+      "id": "CHARGE",
+      "kind": "Block",
+      "name": "ChargingSystem",
+      "label": "Charging port",
+      "blurb": "Charge door and socket. Manages the handshake with a charging station.",
+      "category": "Charging",
+      "mesh": "CHARGE",
+      "parent": "VEH",
+      "color": "#EAB308",
+      "alpha": 1.0,
+      "explode": [
+        1,
+        0.3,
+        -0.5
+      ]
+    },
+    {
+      "id": "CHARGE_EXT",
+      "kind": "Port",
+      "name": "externalChargeIn",
+      "owner": "CHARGE",
+      "portKind": "FullPort"
+    },
+    {
+      "id": "CHARGE_OUT",
+      "kind": "Port",
+      "name": "chargePowerOut",
+      "owner": "CHARGE",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "CPROP_FORCE / CF_A",
+      "kind": "BindingEndpoint",
+      "name": "forceConstraint / a"
+    },
+    {
+      "id": "CPROP_FORCE / CF_F",
+      "kind": "BindingEndpoint",
+      "name": "forceConstraint / F"
+    },
+    {
+      "id": "CPROP_FORCE / CF_M",
+      "kind": "BindingEndpoint",
+      "name": "forceConstraint / m"
+    },
+    {
+      "id": "CPROP_POWER / CP_ETA",
+      "kind": "BindingEndpoint",
+      "name": "powerConstraint / eta"
+    },
+    {
+      "id": "CPROP_POWER / CP_F",
+      "kind": "BindingEndpoint",
+      "name": "powerConstraint / F"
+    },
+    {
+      "id": "CPROP_POWER / CP_P",
+      "kind": "BindingEndpoint",
+      "name": "powerConstraint / P"
+    },
+    {
+      "id": "CPROP_POWER / CP_V",
+      "kind": "BindingEndpoint",
+      "name": "powerConstraint / v"
+    },
+    {
+      "id": "CPROP_RANGE / CR_C",
+      "kind": "BindingEndpoint",
+      "name": "rangeConstraint / c"
+    },
+    {
+      "id": "CPROP_RANGE / CR_E",
+      "kind": "BindingEndpoint",
+      "name": "rangeConstraint / E"
+    },
+    {
+      "id": "CPROP_RANGE / CR_R",
+      "kind": "BindingEndpoint",
+      "name": "rangeConstraint / R"
+    },
+    {
+      "id": "CTRL_BRAKE",
+      "kind": "Port",
+      "name": "brakeCommandOut",
+      "owner": "VCONTROL",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "CTRL_DIAG",
+      "kind": "Port",
+      "name": "diagnosticPort",
+      "owner": "VCONTROL",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "CTRL_DRIVER",
+      "kind": "Port",
+      "name": "driverCommandIn",
+      "owner": "VCONTROL",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "CTRL_SENSOR",
+      "kind": "Port",
+      "name": "sensorDataIn",
+      "owner": "VCONTROL",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "CTRL_TORQUE",
+      "kind": "Port",
+      "name": "torqueCommandOut",
+      "owner": "VCONTROL",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "DIAG",
+      "kind": "Block",
+      "name": "ServiceDiagnosticsSystem",
+      "label": "Diagnostics port",
+      "blurb": "The service connector a technician plugs into to read faults and telemetry.",
+      "category": "Service",
+      "mesh": "DIAG",
+      "parent": "VEH",
+      "color": "#0D9488",
+      "alpha": 1.0,
+      "explode": [
+        1,
+        0.2,
+        0.4
+      ]
+    },
+    {
+      "id": "DIAG_CTRL",
+      "kind": "Port",
+      "name": "controllerDiagnostic",
+      "owner": "DIAG",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "DIAG_SERVICE",
+      "kind": "Port",
+      "name": "serviceBoundary",
+      "owner": "DIAG",
+      "portKind": "FullPort"
+    },
+    {
+      "id": "DRIVER",
+      "kind": "Actor",
+      "name": "Driver"
+    },
+    {
+      "id": "ENERGY",
+      "kind": "Block",
+      "name": "EnergyStorageSystem",
+      "label": "Battery pack",
+      "blurb": "The skateboard battery under the floor. Stores the energy for range and acceleration.",
+      "category": "Energy",
+      "mesh": "ENERGY",
+      "parent": "VEH",
+      "color": "#22C55E",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "ENERGY_CHARGE",
+      "kind": "Port",
+      "name": "chargePowerIn",
+      "owner": "ENERGY",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "ENERGY_HV",
+      "kind": "Port",
+      "name": "highVoltageOut",
+      "owner": "ENERGY",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "ENERGY_THERM",
+      "kind": "Port",
+      "name": "thermalPort",
+      "owner": "ENERGY",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "HMI",
+      "kind": "Block",
+      "name": "DriverInterfaceSystem",
+      "label": "Driver interface",
+      "blurb": "Dashboard, steering wheel, pedals and screen. How the driver commands and observes the car.",
+      "category": "Driver interface",
+      "mesh": "HMI",
+      "parent": "VEH",
+      "color": "#EC4899",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        1,
+        0.5
+      ]
+    },
+    {
+      "id": "HMI_CTRL",
+      "kind": "Port",
+      "name": "commandOut",
+      "owner": "HMI",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "HMI_DRIVER",
+      "kind": "Port",
+      "name": "driverIn",
+      "owner": "HMI",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "INVERTER",
+      "kind": "Block",
+      "name": "TractionInverter",
+      "label": "Traction inverter",
+      "blurb": "Converts battery DC into the AC the motor needs, and sets how hard the motor pushes.",
+      "category": "Propulsion",
+      "mesh": "INVERTER",
+      "parent": "POWERTRAIN",
+      "color": "#FDBA74",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        1,
+        -1
+      ]
+    },
+    {
+      "id": "INV_CMD",
+      "kind": "Port",
+      "name": "torqueCommandIn",
+      "owner": "INVERTER",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "INV_HV",
+      "kind": "Port",
+      "name": "highVoltageIn",
+      "owner": "INVERTER",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "INV_MOTOR",
+      "kind": "Port",
+      "name": "motorPowerOut",
+      "owner": "INVERTER",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "MOTOR_POWER",
+      "kind": "Port",
+      "name": "motorPowerIn",
+      "owner": "POWERTRAIN",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "OP_BRAKE",
+      "kind": "Operation",
+      "name": "applyBraking"
+    },
+    {
+      "id": "OP_CHARGE",
+      "kind": "Operation",
+      "name": "beginChargeSession"
+    },
+    {
+      "id": "OP_START",
+      "kind": "Operation",
+      "name": "startVehicle"
+    },
+    {
+      "id": "OP_TORQUE",
+      "kind": "Operation",
+      "name": "computeTorqueCommand"
+    },
+    {
+      "id": "PKG_ANALYSIS",
+      "kind": "Package",
+      "name": "50 Parametrics and Analysis"
+    },
+    {
+      "id": "PKG_ARCH",
+      "kind": "Package",
+      "name": "30 Vehicle Architecture"
+    },
+    {
+      "id": "PKG_BEHAV",
+      "kind": "Package",
+      "name": "40 Behavior"
+    },
+    {
+      "id": "PKG_COMMON",
+      "kind": "Package",
+      "name": "00 Common Library"
+    },
+    {
+      "id": "PKG_REQ",
+      "kind": "Package",
+      "name": "10 Requirements and Verification"
+    },
+    {
+      "id": "PKG_UC",
+      "kind": "Package",
+      "name": "20 Operational Use Cases"
+    },
+    {
+      "id": "POWERTRAIN",
+      "kind": "Block",
+      "name": "PowertrainSystem",
+      "label": "Powertrain",
+      "blurb": "Electric motors, reduction gears and half-shafts that turn electricity into motion.",
+      "category": "Propulsion",
+      "mesh": "POWERTRAIN",
+      "parent": "VEH",
+      "color": "#F97316",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        0.2,
+        -1
+      ]
+    },
+    {
+      "id": "PT_HV",
+      "kind": "Port",
+      "name": "highVoltageIn",
+      "owner": "POWERTRAIN",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "PT_TORQUE",
+      "kind": "Port",
+      "name": "torqueCommandIn",
+      "owner": "POWERTRAIN",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "REQ_BAT_001",
+      "kind": "Requirement",
+      "displayId": "BAT-001",
+      "category": "BAT",
+      "name": "Usable Battery Energy",
+      "text": "The EnergyStorageSystem shall provide at least 82 kWh of usable battery energy at beginning of life.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Usable battery energy is >= 82 kWh.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_BAT_002",
+      "kind": "Requirement",
+      "displayId": "BAT-002",
+      "category": "BAT",
+      "name": "State-of-Charge Estimation",
+      "text": "The BatteryManagementSystem shall estimate state of charge with an error of no more than plus or minus 3 percentage points over the defined operating range.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "SOC estimate error is within +/-3 percentage points.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_BAT_003",
+      "kind": "Requirement",
+      "displayId": "BAT-003",
+      "category": "BAT",
+      "name": "Battery Protection",
+      "text": "The BatteryManagementSystem shall inhibit operation outside defined cell voltage and temperature safety limits.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Out-of-limit stimulus causes protective inhibit/isolation behavior.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_BAT_004",
+      "kind": "Requirement",
+      "displayId": "BAT-004",
+      "category": "BAT",
+      "name": "Traction Power Capability",
+      "text": "The EnergyStorageSystem shall supply at least 135 kW of traction electrical power for 10 seconds at the nominal performance test state of charge.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Delivered traction power is >= 135 kW for >= 10 s.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_BAT_005",
+      "kind": "Requirement",
+      "displayId": "BAT-005",
+      "category": "BAT",
+      "name": "Regenerative Charge Acceptance",
+      "text": "The EnergyStorageSystem shall accept regenerative charging power when state-of-charge, voltage, and temperature limits permit.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Regenerative power is accepted under permitted conditions and limited outside them.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_BRK_001",
+      "kind": "Requirement",
+      "displayId": "BRK-001",
+      "category": "BRK",
+      "name": "Brake Command Response",
+      "text": "The BrakeSystem shall begin producing commanded braking action within 100 ms of receiving a valid BrakeCommand.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Braking response begins <= 100 ms.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_BRK_002",
+      "kind": "Requirement",
+      "displayId": "BRK-002",
+      "category": "BRK",
+      "name": "Blended Braking",
+      "text": "The BrakeSystem shall support blended regenerative and friction braking commands provided by vehicle control.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Blended braking maintains requested deceleration while using available regeneration.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_BRK_003",
+      "kind": "Requirement",
+      "displayId": "BRK-003",
+      "category": "BRK",
+      "name": "Fail-Safe Friction Braking",
+      "text": "The BrakeSystem shall retain friction-braking capability when regenerative braking is unavailable.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Friction braking remains available with regenerative path disabled.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_CHG_001",
+      "kind": "Requirement",
+      "displayId": "CHG-001",
+      "category": "CHG",
+      "name": "DC Fast-Charge Coordination",
+      "text": "The ChargingSystem shall coordinate a compatible DC fast-charge session and request charging power only when battery and vehicle-state prerequisites permit.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Charge session starts only when prerequisites are valid and is inhibited otherwise.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_CTRL_001",
+      "kind": "Requirement",
+      "displayId": "CTRL-001",
+      "category": "CTRL",
+      "name": "Drive Request Validation",
+      "text": "The VehicleControlSystem shall validate driver acceleration requests against vehicle state and active limits before issuing a torque command.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Invalid/out-of-range requests are rejected or limited before torque command publication.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_CTRL_002",
+      "kind": "Requirement",
+      "displayId": "CTRL-002",
+      "category": "CTRL",
+      "name": "Control Command Latency",
+      "text": "The VehicleControlSystem shall publish a validated torque command within 50 ms of receiving the required driver and vehicle-state inputs.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Validated torque command publication latency is <= 50 ms.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_CTRL_003",
+      "kind": "Requirement",
+      "displayId": "CTRL-003",
+      "category": "CTRL",
+      "name": "Fault Detection and Derating",
+      "text": "The VehicleControlSystem shall detect configured critical faults and command defined derating or fault-state behavior.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Configured fault produces the required derating/fault command.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_CTRL_004",
+      "kind": "Requirement",
+      "displayId": "CTRL-004",
+      "category": "CTRL",
+      "name": "Brake Coordination",
+      "text": "The VehicleControlSystem shall coordinate regenerative and friction braking requests while preserving the requested total deceleration within system limits.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Combined braking tracks requested deceleration within defined tolerance.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_HMI_001",
+      "kind": "Requirement",
+      "displayId": "HMI-001",
+      "category": "HMI",
+      "name": "Driver Status Presentation",
+      "text": "The DriverInterfaceSystem shall display Ready state, vehicle speed, battery state of charge, active drive mode, and safety-relevant faults.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "All required status items are visible and correspond to model/runtime state.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_HMI_002",
+      "kind": "Requirement",
+      "displayId": "HMI-002",
+      "category": "HMI",
+      "name": "Start Command Capture",
+      "text": "The DriverInterfaceSystem shall capture a valid driver start request and provide it to VehicleControlSystem through the typed driver-command interface.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Valid start request produces a typed StartCommand input to vehicle control.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_IF_001",
+      "kind": "Requirement",
+      "displayId": "IF-001",
+      "category": "IF",
+      "name": "High-Voltage Power Interface",
+      "text": "The EnergyStorageSystem-to-PowertrainSystem high-voltage interface shall provide compatible voltage, current, isolation, and connector typing for traction power transfer.",
+      "rationale": "Controls an explicit subsystem boundary and enables integration/change-impact analysis.",
+      "acceptance": "Both interface ends use HighVoltagePowerInterface and the conveyed power item is compatible.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_IF_002",
+      "kind": "Requirement",
+      "displayId": "IF-002",
+      "category": "IF",
+      "name": "Torque Command Interface",
+      "text": "The VehicleControlSystem-to-PowertrainSystem torque-command interface shall convey a typed torque request without type mismatch.",
+      "rationale": "Controls an explicit subsystem boundary and enables integration/change-impact analysis.",
+      "acceptance": "Both endpoints use TorqueCommandInterface and the ItemFlow conveys TorqueCommandData.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_IF_003",
+      "kind": "Requirement",
+      "displayId": "IF-003",
+      "category": "IF",
+      "name": "Sensor Data Interface",
+      "text": "The VehicleSensorSystem-to-VehicleControlSystem interface shall convey typed vehicle-state sensor data.",
+      "rationale": "Controls an explicit subsystem boundary and enables integration/change-impact analysis.",
+      "acceptance": "Both endpoints use SensorDataInterface and the ItemFlow conveys SensorData.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_IF_004",
+      "kind": "Requirement",
+      "displayId": "IF-004",
+      "category": "IF",
+      "name": "Brake Command Interface",
+      "text": "The VehicleControlSystem-to-BrakeSystem interface shall convey a typed braking command.",
+      "rationale": "Controls an explicit subsystem boundary and enables integration/change-impact analysis.",
+      "acceptance": "Both endpoints use BrakeCommandInterface and the ItemFlow conveys BrakeCommandData.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_IF_005",
+      "kind": "Requirement",
+      "displayId": "IF-005",
+      "category": "IF",
+      "name": "Thermal Interface",
+      "text": "The EnergyStorageSystem and PowertrainSystem shall exchange thermal energy/coolant through interfaces compatible with ThermalFluidInterface.",
+      "rationale": "Controls an explicit subsystem boundary and enables integration/change-impact analysis.",
+      "acceptance": "Thermal connector endpoints use compatible ThermalFluidInterface typing.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_IF_006",
+      "kind": "Requirement",
+      "displayId": "IF-006",
+      "category": "IF",
+      "name": "Charging Power Interface",
+      "text": "The charging path shall use a typed ChargePowerInterface between vehicle boundary, ChargingSystem, and EnergyStorageSystem.",
+      "rationale": "Controls an explicit subsystem boundary and enables integration/change-impact analysis.",
+      "acceptance": "Charge path endpoints use compatible ChargePowerInterface typing.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_IF_007",
+      "kind": "Requirement",
+      "displayId": "IF-007",
+      "category": "IF",
+      "name": "Diagnostic Service Interface",
+      "text": "The vehicle service boundary, ServiceDiagnosticsSystem, and VehicleControlSystem shall use a typed DiagnosticServiceInterface.",
+      "rationale": "Controls an explicit subsystem boundary and enables integration/change-impact analysis.",
+      "acceptance": "Diagnostic connector endpoints use compatible DiagnosticServiceInterface typing.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_IF_008",
+      "kind": "Requirement",
+      "displayId": "IF-008",
+      "category": "IF",
+      "name": "Driver Command Interface",
+      "text": "The vehicle driver boundary, DriverInterfaceSystem, and VehicleControlSystem shall use a typed DriverCommandInterface.",
+      "rationale": "Controls an explicit subsystem boundary and enables integration/change-impact analysis.",
+      "acceptance": "Driver-command connector endpoints use compatible DriverCommandInterface typing.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_PERF_001",
+      "kind": "Requirement",
+      "displayId": "PERF-001",
+      "category": "PERF",
+      "name": "Tractive Force",
+      "text": "The propulsion system shall provide at least 4500 N of tractive force at the defined nominal launch analysis point.",
+      "rationale": "Provides a measurable engineering target traceable to architecture, analysis, and verification.",
+      "acceptance": "Calculated tractive force is >= 4500 N.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_PERF_002",
+      "kind": "Requirement",
+      "displayId": "PERF-002",
+      "category": "PERF",
+      "name": "Electrical Traction Power",
+      "text": "The propulsion system shall support at least 135 kW of electrical traction power at the defined nominal performance point.",
+      "rationale": "Provides a measurable engineering target traceable to architecture, analysis, and verification.",
+      "acceptance": "Calculated electrical traction power is >= 135 kW.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_PERF_003",
+      "kind": "Requirement",
+      "displayId": "PERF-003",
+      "category": "PERF",
+      "name": "Nominal Range Margin",
+      "text": "The vehicle energy architecture shall analytically demonstrate at least 400 km of nominal range using usable battery energy and nominal consumption.",
+      "rationale": "Provides a measurable engineering target traceable to architecture, analysis, and verification.",
+      "acceptance": "Range analysis result is >= 400 km.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_PERF_004",
+      "kind": "Requirement",
+      "displayId": "PERF-004",
+      "category": "PERF",
+      "name": "Regenerative Braking",
+      "text": "The propulsion and energy systems shall accept at least 50 kW of regenerative braking power when battery and traction limits permit.",
+      "rationale": "Provides a measurable engineering target traceable to architecture, analysis, and verification.",
+      "acceptance": "Accepted regenerative power is >= 50 kW under valid regen conditions.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_PERF_005",
+      "kind": "Requirement",
+      "displayId": "PERF-005",
+      "category": "PERF",
+      "name": "Top Speed",
+      "text": "The vehicle shall achieve at least 160 km/h under nominal mass, battery, tire, and environmental conditions.",
+      "rationale": "Provides a measurable engineering target traceable to architecture, analysis, and verification.",
+      "acceptance": "Measured top speed is >= 160 km/h.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_PERF_006",
+      "kind": "Requirement",
+      "displayId": "PERF-006",
+      "category": "PERF",
+      "name": "Gradeability",
+      "text": "The vehicle shall sustain 30 km/h on a 20 percent grade under nominal mass and battery conditions.",
+      "rationale": "Provides a measurable engineering target traceable to architecture, analysis, and verification.",
+      "acceptance": "Vehicle sustains >= 30 km/h on a 20% grade for the specified duration.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_PT_001",
+      "kind": "Requirement",
+      "displayId": "PT-001",
+      "category": "PT",
+      "name": "Torque Conversion",
+      "text": "The PowertrainSystem shall convert supplied high-voltage electrical power into commanded traction torque at the motor output.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Measured motor/wheel torque follows valid command.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_PT_002",
+      "kind": "Requirement",
+      "displayId": "PT-002",
+      "category": "PT",
+      "name": "Power Conversion Efficiency",
+      "text": "The traction inverter shall achieve at least 95 percent conversion efficiency at the nominal analysis point.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Inverter conversion efficiency is >= 95%.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_PT_003",
+      "kind": "Requirement",
+      "displayId": "PT-003",
+      "category": "PT",
+      "name": "Torque Command Response",
+      "text": "The PowertrainSystem shall begin responding to a new valid torque command within 20 ms.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Torque response begins <= 20 ms after command receipt.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_PT_004",
+      "kind": "Requirement",
+      "displayId": "PT-004",
+      "category": "PT",
+      "name": "Fault Torque Limiting",
+      "text": "The PowertrainSystem shall limit or remove propulsion torque after receipt of a confirmed critical propulsion fault.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Critical propulsion fault results in defined torque limit/removal.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_SNS_001",
+      "kind": "Requirement",
+      "displayId": "SNS-001",
+      "category": "SNS",
+      "name": "Vehicle Speed Accuracy",
+      "text": "The VehicleSensorSystem shall estimate vehicle speed with an error no greater than plus or minus 1 km/h over the defined operating range.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Speed estimate error is within +/-1 km/h.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_SNS_002",
+      "kind": "Requirement",
+      "displayId": "SNS-002",
+      "category": "SNS",
+      "name": "Sensor Plausibility Detection",
+      "text": "The VehicleSensorSystem shall identify configured implausible wheel-speed input conditions within 100 ms.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Configured implausible input is detected <= 100 ms.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_SRV_001",
+      "kind": "Requirement",
+      "displayId": "SRV-001",
+      "category": "SRV",
+      "name": "Service Data Access",
+      "text": "The ServiceDiagnosticsSystem shall provide authorized access to required DTCs and live telemetry through the typed diagnostic-service interface.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Authorized session reads required DTCs and telemetry; unauthorized session is rejected.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_STK_001",
+      "kind": "Requirement",
+      "displayId": "STK-001",
+      "category": "STK",
+      "name": "Safe Controlled Transportation",
+      "text": "The electric vehicle shall provide controlled transportation and shall transition to a safe operating state when a critical vehicle fault is detected.",
+      "rationale": "Safety is the governing stakeholder objective for all vehicle behavior.",
+      "acceptance": "Critical-fault injection results in a defined safe/degraded state without uncontrolled propulsion.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_STK_002",
+      "kind": "Requirement",
+      "displayId": "STK-002",
+      "category": "STK",
+      "name": "Nominal Driving Range",
+      "text": "The electric vehicle shall provide at least 400 km of nominal driving range on a fully usable battery under the defined nominal drive cycle.",
+      "rationale": "Range is a primary customer-value and sizing driver for the energy system.",
+      "acceptance": "Calculated or measured nominal range is >= 400 km.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_STK_003",
+      "kind": "Requirement",
+      "displayId": "STK-003",
+      "category": "STK",
+      "name": "Responsive Acceleration",
+      "text": "The electric vehicle shall accelerate from 0 to 100 km/h in 7.0 seconds or less at nominal mass, battery state, and environmental conditions.",
+      "rationale": "Acceleration sets the required tractive-force and power envelope.",
+      "acceptance": "0-100 km/h elapsed time is <= 7.0 s under nominal test conditions.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_STK_004",
+      "kind": "Requirement",
+      "displayId": "STK-004",
+      "category": "STK",
+      "name": "Convenient Charging",
+      "text": "The electric vehicle shall support compatible DC fast charging from 10 percent to 80 percent state of charge in 35 minutes or less under nominal battery temperature.",
+      "rationale": "Charging time materially affects vehicle availability and customer acceptance.",
+      "acceptance": "10%-80% SOC charge time is <= 35 minutes at nominal battery temperature.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_STK_005",
+      "kind": "Requirement",
+      "displayId": "STK-005",
+      "category": "STK",
+      "name": "Energy Efficiency",
+      "text": "The electric vehicle shall consume no more than 0.20 kWh per km over the defined nominal drive cycle.",
+      "rationale": "Energy efficiency drives range, battery sizing, and operating cost.",
+      "acceptance": "Nominal-cycle energy consumption is <= 0.20 kWh/km.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_STK_006",
+      "kind": "Requirement",
+      "displayId": "STK-006",
+      "category": "STK",
+      "name": "Intuitive Driver Operation",
+      "text": "The electric vehicle shall allow the driver to start, drive, brake, stop, and observe vehicle status using a consistent set of driver controls and indications.",
+      "rationale": "The vehicle must expose complex system behavior through a simple operating interface.",
+      "acceptance": "Driver can complete start-drive-brake-stop workflow and observe required status indications without service intervention.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_STK_007",
+      "kind": "Requirement",
+      "displayId": "STK-007",
+      "category": "STK",
+      "name": "Serviceability and Diagnostics",
+      "text": "The electric vehicle shall provide service personnel with diagnostic trouble codes, vehicle status, and subsystem telemetry through an authorized diagnostic interface.",
+      "rationale": "Fast fault isolation reduces maintenance time and lifecycle cost.",
+      "acceptance": "Authorized service session can read active/stored DTCs and required telemetry.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_STK_008",
+      "kind": "Requirement",
+      "displayId": "STK-008",
+      "category": "STK",
+      "name": "Resilient Degraded Operation",
+      "text": "The electric vehicle shall preserve controllability through defined degraded operating modes when a recoverable subsystem fault occurs.",
+      "rationale": "Graceful degradation prevents a single recoverable fault from becoming a hazardous loss of function.",
+      "acceptance": "Injected recoverable faults result in defined derating/degraded behavior while controllability is preserved.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_SYS_001",
+      "kind": "Requirement",
+      "displayId": "SYS-001",
+      "category": "SYS",
+      "name": "Commanded Startup",
+      "text": "The vehicle shall enter the Ready state within 2.0 seconds after receiving a valid StartCommand when startup prerequisites are satisfied.",
+      "rationale": "Predictable startup behavior connects driver intent to executable control behavior.",
+      "acceptance": "Ready state is reached <= 2.0 s after a valid command.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_SYS_002",
+      "kind": "Requirement",
+      "displayId": "SYS-002",
+      "category": "SYS",
+      "name": "Propulsion Delivery",
+      "text": "The vehicle shall deliver commanded positive and negative wheel torque within validated operating limits.",
+      "rationale": "This is the central traction function required to meet vehicle performance.",
+      "acceptance": "Measured wheel torque tracks validated command within defined operating limits.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_SYS_003",
+      "kind": "Requirement",
+      "displayId": "SYS-003",
+      "category": "SYS",
+      "name": "Energy Storage",
+      "text": "The vehicle shall provide at least 82 kWh of usable traction-energy storage at beginning of life.",
+      "rationale": "Usable battery energy establishes the analytical basis for the range requirement.",
+      "acceptance": "Usable traction energy is >= 82 kWh.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_SYS_004",
+      "kind": "Requirement",
+      "displayId": "SYS-004",
+      "category": "SYS",
+      "name": "Controlled Braking",
+      "text": "The vehicle shall initiate commanded braking within 100 ms of a valid driver or vehicle-control braking request.",
+      "rationale": "Brake response time is a direct controllability and safety requirement.",
+      "acceptance": "Brake-system response begins <= 100 ms after valid command receipt.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_SYS_005",
+      "kind": "Requirement",
+      "displayId": "SYS-005",
+      "category": "SYS",
+      "name": "Thermal Control",
+      "text": "The vehicle shall actively control battery, inverter, motor, and charging thermal conditions within their defined operating envelopes.",
+      "rationale": "Thermal control protects performance, battery life, and electrical safety.",
+      "acceptance": "Monitored component temperatures remain within specified operating envelopes.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_SYS_006",
+      "kind": "Requirement",
+      "displayId": "SYS-006",
+      "category": "SYS",
+      "name": "Vehicle State Estimation",
+      "text": "The vehicle shall provide control functions with valid estimates of vehicle speed, battery state of charge, and critical temperatures.",
+      "rationale": "Closed-loop control and fault management depend on trusted vehicle state data.",
+      "acceptance": "Required state estimates are available, plausible, and within specified accuracy limits.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_SYS_007",
+      "kind": "Requirement",
+      "displayId": "SYS-007",
+      "category": "SYS",
+      "name": "Driver Information and Controls",
+      "text": "The vehicle shall present drive state, speed, state of charge, active drive mode, and safety-relevant faults to the driver.",
+      "rationale": "Driver awareness is required for normal operation and fault response.",
+      "acceptance": "All required status items are visible and update when model/runtime values change.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_SYS_008",
+      "kind": "Requirement",
+      "displayId": "SYS-008",
+      "category": "SYS",
+      "name": "Charge Management",
+      "text": "The vehicle shall coordinate compatible AC/DC charging and shall inhibit traction propulsion while the vehicle is in an active charging state.",
+      "rationale": "Charging must be coordinated with vehicle state and high-voltage safety.",
+      "acceptance": "Compatible charging session is controlled and traction torque remains inhibited while Charging is active.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_SYS_009",
+      "kind": "Requirement",
+      "displayId": "SYS-009",
+      "category": "SYS",
+      "name": "Diagnostic Management",
+      "text": "The vehicle shall detect, timestamp, store, and report diagnostic trouble codes for monitored subsystem faults.",
+      "rationale": "Structured diagnostics enable rapid maintenance and traceable fault history.",
+      "acceptance": "Injected monitored faults create readable timestamped DTC records.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_SYS_010",
+      "kind": "Requirement",
+      "displayId": "SYS-010",
+      "category": "SYS",
+      "name": "High-Voltage Isolation",
+      "text": "The vehicle shall open the high-voltage traction path when a confirmed isolation fault or crash isolation request is present.",
+      "rationale": "High-voltage isolation protects occupants and service personnel.",
+      "acceptance": "HV traction path is de-energized after confirmed isolation/crash request within the defined safety time.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_SYS_011",
+      "kind": "Requirement",
+      "displayId": "SYS-011",
+      "category": "SYS",
+      "name": "Fault Management",
+      "text": "The vehicle shall transition to a defined Fault or Degraded state within 500 ms after confirmation of a critical monitored fault.",
+      "rationale": "A bounded reaction time makes fault behavior deterministic and verifiable.",
+      "acceptance": "Confirmed critical fault causes Fault/Degraded transition <= 500 ms.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_SYS_012",
+      "kind": "Requirement",
+      "displayId": "SYS-012",
+      "category": "SYS",
+      "name": "Interface Integrity",
+      "text": "The vehicle shall use typed and compatible interfaces for power, commands, sensor data, thermal exchange, charging, diagnostics, and driver input.",
+      "rationale": "Typed interfaces are the basis for integration control and model-based impact analysis.",
+      "acceptance": "All modeled connector endpoints use compatible typed interfaces and all ItemFlows resolve to their connectors.",
+      "authoritative": true,
+      "owner": "PKG_REQ_ENG"
+    },
+    {
+      "id": "REQ_THM_001",
+      "kind": "Requirement",
+      "displayId": "THM-001",
+      "category": "THM",
+      "name": "Battery Temperature Control",
+      "text": "The ThermalManagementSystem shall maintain battery temperature between 15 and 40 degrees Celsius during nominal propulsion and charging operation.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Battery temperature remains 15-40 C during nominal thermal test.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_THM_002",
+      "kind": "Requirement",
+      "displayId": "THM-002",
+      "category": "THM",
+      "name": "Power Electronics Cooling",
+      "text": "The ThermalManagementSystem shall maintain inverter and motor temperatures below their modeled operating limits during the nominal performance profile.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Inverter and motor temperatures remain below modeled limits.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "REQ_THM_003",
+      "kind": "Requirement",
+      "displayId": "THM-003",
+      "category": "THM",
+      "name": "Thermal Pump Control",
+      "text": "The ThermalController shall command coolant-pump operation as a function of modeled thermal load and component temperature.",
+      "rationale": "Allocates a system-level requirement to an implementable subsystem or component.",
+      "acceptance": "Pump command changes consistently with thermal-load/temperature conditions.",
+      "authoritative": true,
+      "owner": "PKG_REQ_SUB"
+    },
+    {
+      "id": "SENSORS",
+      "kind": "Block",
+      "name": "VehicleSensorSystem",
+      "label": "Sensors",
+      "blurb": "Wheel-speed sensors, front radar and camera that tell the controller what is happening.",
+      "category": "Sensing",
+      "mesh": "SENSORS",
+      "parent": "VEH",
+      "color": "#A855F7",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        1.2,
+        0
+      ]
+    },
+    {
+      "id": "SENS_DATA",
+      "kind": "Port",
+      "name": "sensorDataOut",
+      "owner": "SENSORS",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "STATION",
+      "kind": "Actor",
+      "name": "ChargingStation"
+    },
+    {
+      "id": "TC_ACCEL",
+      "kind": "TestCase",
+      "name": "Acceleration / Force / Power Verification"
+    },
+    {
+      "id": "TC_BRAKE",
+      "kind": "TestCase",
+      "name": "Brake Performance Verification"
+    },
+    {
+      "id": "TC_CHARGE",
+      "kind": "TestCase",
+      "name": "Charging Performance Verification"
+    },
+    {
+      "id": "TC_CTRL",
+      "kind": "TestCase",
+      "name": "Control Validation and Latency"
+    },
+    {
+      "id": "TC_DEGRADED",
+      "kind": "TestCase",
+      "name": "Degraded and Fault Management"
+    },
+    {
+      "id": "TC_DIAG",
+      "kind": "TestCase",
+      "name": "Diagnostics and Service Verification"
+    },
+    {
+      "id": "TC_EFF",
+      "kind": "TestCase",
+      "name": "Energy Efficiency Analysis"
+    },
+    {
+      "id": "TC_GRADE",
+      "kind": "TestCase",
+      "name": "Gradeability Verification"
+    },
+    {
+      "id": "TC_HMI",
+      "kind": "TestCase",
+      "name": "Driver Interface Demonstration"
+    },
+    {
+      "id": "TC_INTERFACE",
+      "kind": "TestCase",
+      "name": "Typed Interface Compatibility"
+    },
+    {
+      "id": "TC_PT_RESPONSE",
+      "kind": "TestCase",
+      "name": "Powertrain Dynamic Response"
+    },
+    {
+      "id": "TC_RANGE",
+      "kind": "TestCase",
+      "name": "Range and Energy Analysis"
+    },
+    {
+      "id": "TC_REGEN",
+      "kind": "TestCase",
+      "name": "Regenerative Braking Verification"
+    },
+    {
+      "id": "TC_SAFETY",
+      "kind": "TestCase",
+      "name": "Safety and High-Voltage Isolation"
+    },
+    {
+      "id": "TC_START",
+      "kind": "TestCase",
+      "name": "Commanded Startup Verification"
+    },
+    {
+      "id": "TC_STATE",
+      "kind": "TestCase",
+      "name": "Vehicle State Estimation Verification"
+    },
+    {
+      "id": "TC_THERMAL",
+      "kind": "TestCase",
+      "name": "Thermal Performance Verification"
+    },
+    {
+      "id": "TC_TOP_SPEED",
+      "kind": "TestCase",
+      "name": "Top-Speed Verification"
+    },
+    {
+      "id": "TECH",
+      "kind": "Actor",
+      "name": "ServiceTechnician"
+    },
+    {
+      "id": "THERMAL",
+      "kind": "Block",
+      "name": "ThermalManagementSystem",
+      "label": "Cooling system",
+      "blurb": "Radiator, fan and coolant loop that keep the battery and electronics at a safe temperature.",
+      "category": "Thermal",
+      "mesh": "THERMAL",
+      "parent": "VEH",
+      "color": "#22D3EE",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "THERM_CTRL",
+      "kind": "Block",
+      "name": "ThermalController",
+      "label": "Thermal controller",
+      "blurb": "Runs the coolant pump and fan based on temperatures.",
+      "category": "Thermal",
+      "mesh": "THERM_CTRL",
+      "parent": "THERMAL",
+      "color": "#A5F3FC",
+      "alpha": 1.0,
+      "explode": [
+        0.5,
+        0.6,
+        1
+      ]
+    },
+    {
+      "id": "THERM_ENERGY",
+      "kind": "Port",
+      "name": "batteryThermalPort",
+      "owner": "THERMAL",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "UC_BRAKE",
+      "kind": "UseCase",
+      "name": "Brake Vehicle"
+    },
+    {
+      "id": "UC_CHARGE",
+      "kind": "UseCase",
+      "name": "Charge Vehicle"
+    },
+    {
+      "id": "UC_DIAG",
+      "kind": "UseCase",
+      "name": "Diagnose Vehicle"
+    },
+    {
+      "id": "UC_DRIVE",
+      "kind": "UseCase",
+      "name": "Drive Vehicle"
+    },
+    {
+      "id": "UC_EMERGENCY",
+      "kind": "UseCase",
+      "name": "Emergency Stop"
+    },
+    {
+      "id": "UC_OPERATE",
+      "kind": "UseCase",
+      "name": "Operate Vehicle"
+    },
+    {
+      "id": "UC_START",
+      "kind": "UseCase",
+      "name": "Start Vehicle"
+    },
+    {
+      "id": "VCONTROL",
+      "kind": "Block",
+      "name": "VehicleControlSystem",
+      "label": "Vehicle controller",
+      "blurb": "The central brain. Reads the driver and sensors, then commands torque and braking.",
+      "category": "Control",
+      "mesh": "VCONTROL",
+      "parent": "VEH",
+      "color": "#3B82F6",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        1,
+        0.3
+      ]
+    },
+    {
+      "id": "VCOPY_PERF_001",
+      "kind": "Requirement",
+      "displayId": "VER-PERF-001",
+      "category": "VER",
+      "name": "Verification Copy — Tractive Force",
+      "text": "The propulsion system shall provide at least 4500 N of tractive force at the defined nominal launch analysis point.",
+      "rationale": null,
+      "acceptance": null,
+      "authoritative": false,
+      "owner": "PKG_VERIFY_VIEW",
+      "copyOf": "REQ_PERF_001"
+    },
+    {
+      "id": "VCOPY_PERF_003",
+      "kind": "Requirement",
+      "displayId": "VER-PERF-003",
+      "category": "VER",
+      "name": "Verification Copy — Nominal Range Margin",
+      "text": "The vehicle energy architecture shall analytically demonstrate at least 400 km of nominal range using usable battery energy and nominal consumption.",
+      "rationale": null,
+      "acceptance": null,
+      "authoritative": false,
+      "owner": "PKG_VERIFY_VIEW",
+      "copyOf": "REQ_PERF_003"
+    },
+    {
+      "id": "VCOPY_STK_001",
+      "kind": "Requirement",
+      "displayId": "VER-STK-001",
+      "category": "VER",
+      "name": "Verification Copy — Safe Controlled Transportation",
+      "text": "The electric vehicle shall provide controlled transportation and shall transition to a safe operating state when a critical vehicle fault is detected.",
+      "rationale": null,
+      "acceptance": null,
+      "authoritative": false,
+      "owner": "PKG_VERIFY_VIEW",
+      "copyOf": "REQ_STK_001"
+    },
+    {
+      "id": "VCOPY_STK_002",
+      "kind": "Requirement",
+      "displayId": "VER-STK-002",
+      "category": "VER",
+      "name": "Verification Copy — Nominal Driving Range",
+      "text": "The electric vehicle shall provide at least 400 km of nominal driving range on a fully usable battery under the defined nominal drive cycle.",
+      "rationale": null,
+      "acceptance": null,
+      "authoritative": false,
+      "owner": "PKG_VERIFY_VIEW",
+      "copyOf": "REQ_STK_002"
+    },
+    {
+      "id": "VCOPY_SYS_001",
+      "kind": "Requirement",
+      "displayId": "VER-SYS-001",
+      "category": "VER",
+      "name": "Verification Copy — Commanded Startup",
+      "text": "The vehicle shall enter the Ready state within 2.0 seconds after receiving a valid StartCommand when startup prerequisites are satisfied.",
+      "rationale": null,
+      "acceptance": null,
+      "authoritative": false,
+      "owner": "PKG_VERIFY_VIEW",
+      "copyOf": "REQ_SYS_001"
+    },
+    {
+      "id": "VCOPY_SYS_002",
+      "kind": "Requirement",
+      "displayId": "VER-SYS-002",
+      "category": "VER",
+      "name": "Verification Copy — Propulsion Delivery",
+      "text": "The vehicle shall deliver commanded positive and negative wheel torque within validated operating limits.",
+      "rationale": null,
+      "acceptance": null,
+      "authoritative": false,
+      "owner": "PKG_VERIFY_VIEW",
+      "copyOf": "REQ_SYS_002"
+    },
+    {
+      "id": "VCOPY_SYS_004",
+      "kind": "Requirement",
+      "displayId": "VER-SYS-004",
+      "category": "VER",
+      "name": "Verification Copy — Controlled Braking",
+      "text": "The vehicle shall initiate commanded braking within 100 ms of a valid driver or vehicle-control braking request.",
+      "rationale": null,
+      "acceptance": null,
+      "authoritative": false,
+      "owner": "PKG_VERIFY_VIEW",
+      "copyOf": "REQ_SYS_004"
+    },
+    {
+      "id": "VCOPY_SYS_010",
+      "kind": "Requirement",
+      "displayId": "VER-SYS-010",
+      "category": "VER",
+      "name": "Verification Copy — High-Voltage Isolation",
+      "text": "The vehicle shall open the high-voltage traction path when a confirmed isolation fault or crash isolation request is present.",
+      "rationale": null,
+      "acceptance": null,
+      "authoritative": false,
+      "owner": "PKG_VERIFY_VIEW",
+      "copyOf": "REQ_SYS_010"
+    },
+    {
+      "id": "VEH",
+      "kind": "Block",
+      "name": "ElectricVehicle",
+      "label": "Whole vehicle",
+      "blurb": "The car as a whole. Top-level promises to the customer live here.",
+      "category": "Vehicle",
+      "mesh": "VEH",
+      "parent": null,
+      "color": "#94A3B8",
+      "alpha": 0.35,
+      "explode": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "VEH_CHARGE",
+      "kind": "Port",
+      "name": "charge",
+      "owner": "VEH",
+      "portKind": "FullPort"
+    },
+    {
+      "id": "VEH_DRIVER",
+      "kind": "Port",
+      "name": "driverCommand",
+      "owner": "VEH",
+      "portKind": "ProxyPort"
+    },
+    {
+      "id": "VEH_SERVICE",
+      "kind": "Port",
+      "name": "service",
+      "owner": "VEH",
+      "portKind": "FullPort"
+    },
+    {
+      "id": "VEH_SUBSYSTEM",
+      "kind": "Block",
+      "name": "VehicleSubsystem",
+      "abstract": true
+    }
+  ],
+  "relationships": [
+    {
+      "id": "ALLOC_BRAKE",
+      "type": "Allocate",
+      "source": "UC_BRAKE",
+      "target": "BRAKES"
+    },
+    {
+      "id": "ALLOC_CHARGE",
+      "type": "Allocate",
+      "source": "UC_CHARGE",
+      "target": "CHARGE"
+    },
+    {
+      "id": "ALLOC_DIAG",
+      "type": "Allocate",
+      "source": "UC_DIAG",
+      "target": "DIAG"
+    },
+    {
+      "id": "ALLOC_DRIVE",
+      "type": "Allocate",
+      "source": "UC_DRIVE",
+      "target": "VCONTROL"
+    },
+    {
+      "id": "ALLOC_OPERATE",
+      "type": "Allocate",
+      "source": "UC_OPERATE",
+      "target": "VCONTROL"
+    },
+    {
+      "id": "B_FORCE_A",
+      "type": "BindingConnector",
+      "source": "A_FORCE_ACCEL",
+      "target": "CPROP_FORCE / CF_A"
+    },
+    {
+      "id": "B_FORCE_F",
+      "type": "BindingConnector",
+      "source": "A_FORCE_OUT",
+      "target": "CPROP_FORCE / CF_F"
+    },
+    {
+      "id": "B_FORCE_M",
+      "type": "BindingConnector",
+      "source": "A_FORCE_MASS",
+      "target": "CPROP_FORCE / CF_M"
+    },
+    {
+      "id": "B_POWER_ETA",
+      "type": "BindingConnector",
+      "source": "A_POWER_EFF",
+      "target": "CPROP_POWER / CP_ETA"
+    },
+    {
+      "id": "B_POWER_F",
+      "type": "BindingConnector",
+      "source": "A_POWER_FORCE",
+      "target": "CPROP_POWER / CP_F"
+    },
+    {
+      "id": "B_POWER_P",
+      "type": "BindingConnector",
+      "source": "A_POWER_OUT",
+      "target": "CPROP_POWER / CP_P"
+    },
+    {
+      "id": "B_POWER_V",
+      "type": "BindingConnector",
+      "source": "A_POWER_SPEED",
+      "target": "CPROP_POWER / CP_V"
+    },
+    {
+      "id": "B_RANGE_C",
+      "type": "BindingConnector",
+      "source": "A_RANGE_C",
+      "target": "CPROP_RANGE / CR_C"
+    },
+    {
+      "id": "B_RANGE_E",
+      "type": "BindingConnector",
+      "source": "A_RANGE_E",
+      "target": "CPROP_RANGE / CR_E"
+    },
+    {
+      "id": "B_RANGE_R",
+      "type": "BindingConnector",
+      "source": "A_RANGE_OUT",
+      "target": "CPROP_RANGE / CR_R"
+    },
+    {
+      "id": "CONN_CHARGE_BOUND",
+      "type": "Delegation",
+      "source": "VEH",
+      "target": "CHARGE",
+      "extra": {
+        "sourcePort": "VEH_CHARGE",
+        "targetPort": "CHARGE_EXT"
+      }
+    },
+    {
+      "id": "CONN_CHARGE_ENERGY",
+      "type": "Assembly",
+      "source": "CHARGE",
+      "target": "ENERGY",
+      "extra": {
+        "sourcePort": "CHARGE_OUT",
+        "targetPort": "ENERGY_CHARGE"
+      }
+    },
+    {
+      "id": "CONN_CTRL_BRAKE",
+      "type": "Assembly",
+      "source": "VCONTROL",
+      "target": "BRAKES",
+      "extra": {
+        "sourcePort": "CTRL_BRAKE",
+        "targetPort": "BRAKE_CMD"
+      }
+    },
+    {
+      "id": "CONN_CTRL_PT",
+      "type": "Assembly",
+      "source": "VCONTROL",
+      "target": "POWERTRAIN",
+      "extra": {
+        "sourcePort": "CTRL_TORQUE",
+        "targetPort": "PT_TORQUE"
+      }
+    },
+    {
+      "id": "CONN_DIAG_CTRL",
+      "type": "Assembly",
+      "source": "DIAG",
+      "target": "VCONTROL",
+      "extra": {
+        "sourcePort": "DIAG_CTRL",
+        "targetPort": "CTRL_DIAG"
+      }
+    },
+    {
+      "id": "CONN_DRIVER",
+      "type": "Delegation",
+      "source": "VEH",
+      "target": "HMI",
+      "extra": {
+        "sourcePort": "VEH_DRIVER",
+        "targetPort": "HMI_DRIVER"
+      }
+    },
+    {
+      "id": "CONN_ENERGY_PT",
+      "type": "Assembly",
+      "source": "ENERGY",
+      "target": "POWERTRAIN",
+      "extra": {
+        "sourcePort": "ENERGY_HV",
+        "targetPort": "PT_HV"
+      }
+    },
+    {
+      "id": "CONN_ENERGY_THERM",
+      "type": "Assembly",
+      "source": "ENERGY",
+      "target": "THERMAL",
+      "extra": {
+        "sourcePort": "ENERGY_THERM",
+        "targetPort": "THERM_ENERGY"
+      }
+    },
+    {
+      "id": "CONN_HMI_CTRL",
+      "type": "Assembly",
+      "source": "HMI",
+      "target": "VCONTROL",
+      "extra": {
+        "sourcePort": "HMI_CTRL",
+        "targetPort": "CTRL_DRIVER"
+      }
+    },
+    {
+      "id": "CONN_INV_MOTOR",
+      "type": "Assembly",
+      "source": "INVERTER",
+      "target": "POWERTRAIN",
+      "extra": {
+        "sourcePort": "INV_MOTOR",
+        "targetPort": "MOTOR_POWER"
+      }
+    },
+    {
+      "id": "CONN_PT_CMD",
+      "type": "Delegation",
+      "source": "POWERTRAIN",
+      "target": "INVERTER",
+      "extra": {
+        "sourcePort": "PT_TORQUE",
+        "targetPort": "INV_CMD"
+      }
+    },
+    {
+      "id": "CONN_PT_HV",
+      "type": "Delegation",
+      "source": "POWERTRAIN",
+      "target": "INVERTER",
+      "extra": {
+        "sourcePort": "PT_HV",
+        "targetPort": "INV_HV"
+      }
+    },
+    {
+      "id": "CONN_SENSOR_CTRL",
+      "type": "Assembly",
+      "source": "SENSORS",
+      "target": "VCONTROL",
+      "extra": {
+        "sourcePort": "SENS_DATA",
+        "targetPort": "CTRL_SENSOR"
+      }
+    },
+    {
+      "id": "CONN_SERVICE_BOUND",
+      "type": "Delegation",
+      "source": "VEH",
+      "target": "DIAG",
+      "extra": {
+        "sourcePort": "VEH_SERVICE",
+        "targetPort": "DIAG_SERVICE"
+      }
+    },
+    {
+      "id": "COPY_VCOPY_PERF_001",
+      "type": "Copy",
+      "source": "VCOPY_PERF_001",
+      "target": "REQ_PERF_001"
+    },
+    {
+      "id": "COPY_VCOPY_PERF_003",
+      "type": "Copy",
+      "source": "VCOPY_PERF_003",
+      "target": "REQ_PERF_003"
+    },
+    {
+      "id": "COPY_VCOPY_STK_001",
+      "type": "Copy",
+      "source": "VCOPY_STK_001",
+      "target": "REQ_STK_001"
+    },
+    {
+      "id": "COPY_VCOPY_STK_002",
+      "type": "Copy",
+      "source": "VCOPY_STK_002",
+      "target": "REQ_STK_002"
+    },
+    {
+      "id": "COPY_VCOPY_SYS_001",
+      "type": "Copy",
+      "source": "VCOPY_SYS_001",
+      "target": "REQ_SYS_001"
+    },
+    {
+      "id": "COPY_VCOPY_SYS_002",
+      "type": "Copy",
+      "source": "VCOPY_SYS_002",
+      "target": "REQ_SYS_002"
+    },
+    {
+      "id": "COPY_VCOPY_SYS_004",
+      "type": "Copy",
+      "source": "VCOPY_SYS_004",
+      "target": "REQ_SYS_004"
+    },
+    {
+      "id": "COPY_VCOPY_SYS_010",
+      "type": "Copy",
+      "source": "VCOPY_SYS_010",
+      "target": "REQ_SYS_010"
+    },
+    {
+      "id": "DER_BAT_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_BAT_001",
+      "target": "REQ_SYS_003"
+    },
+    {
+      "id": "DER_BAT_002",
+      "type": "DeriveRequirement",
+      "source": "REQ_BAT_002",
+      "target": "REQ_SYS_006"
+    },
+    {
+      "id": "DER_BAT_003",
+      "type": "DeriveRequirement",
+      "source": "REQ_BAT_003",
+      "target": "REQ_SYS_011"
+    },
+    {
+      "id": "DER_BAT_004",
+      "type": "DeriveRequirement",
+      "source": "REQ_BAT_004",
+      "target": "REQ_PERF_002"
+    },
+    {
+      "id": "DER_BAT_005",
+      "type": "DeriveRequirement",
+      "source": "REQ_BAT_005",
+      "target": "REQ_PERF_004"
+    },
+    {
+      "id": "DER_BRK_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_BRK_001",
+      "target": "REQ_SYS_004"
+    },
+    {
+      "id": "DER_BRK_002",
+      "type": "DeriveRequirement",
+      "source": "REQ_BRK_002",
+      "target": "REQ_PERF_004"
+    },
+    {
+      "id": "DER_BRK_003",
+      "type": "DeriveRequirement",
+      "source": "REQ_BRK_003",
+      "target": "REQ_SYS_011"
+    },
+    {
+      "id": "DER_CHG_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_CHG_001",
+      "target": "REQ_SYS_008"
+    },
+    {
+      "id": "DER_CTRL_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_CTRL_001",
+      "target": "REQ_SYS_002"
+    },
+    {
+      "id": "DER_CTRL_002",
+      "type": "DeriveRequirement",
+      "source": "REQ_CTRL_002",
+      "target": "REQ_IF_002"
+    },
+    {
+      "id": "DER_CTRL_003",
+      "type": "DeriveRequirement",
+      "source": "REQ_CTRL_003",
+      "target": "REQ_SYS_011"
+    },
+    {
+      "id": "DER_CTRL_004",
+      "type": "DeriveRequirement",
+      "source": "REQ_CTRL_004",
+      "target": "REQ_SYS_004"
+    },
+    {
+      "id": "DER_HMI_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_HMI_001",
+      "target": "REQ_SYS_007"
+    },
+    {
+      "id": "DER_HMI_002",
+      "type": "DeriveRequirement",
+      "source": "REQ_HMI_002",
+      "target": "REQ_SYS_001"
+    },
+    {
+      "id": "DER_IF_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_IF_001",
+      "target": "REQ_SYS_012"
+    },
+    {
+      "id": "DER_IF_002",
+      "type": "DeriveRequirement",
+      "source": "REQ_IF_002",
+      "target": "REQ_SYS_012"
+    },
+    {
+      "id": "DER_IF_003",
+      "type": "DeriveRequirement",
+      "source": "REQ_IF_003",
+      "target": "REQ_SYS_012"
+    },
+    {
+      "id": "DER_IF_004",
+      "type": "DeriveRequirement",
+      "source": "REQ_IF_004",
+      "target": "REQ_SYS_012"
+    },
+    {
+      "id": "DER_IF_005",
+      "type": "DeriveRequirement",
+      "source": "REQ_IF_005",
+      "target": "REQ_SYS_012"
+    },
+    {
+      "id": "DER_IF_006",
+      "type": "DeriveRequirement",
+      "source": "REQ_IF_006",
+      "target": "REQ_SYS_012"
+    },
+    {
+      "id": "DER_IF_007",
+      "type": "DeriveRequirement",
+      "source": "REQ_IF_007",
+      "target": "REQ_SYS_012"
+    },
+    {
+      "id": "DER_IF_008",
+      "type": "DeriveRequirement",
+      "source": "REQ_IF_008",
+      "target": "REQ_SYS_012"
+    },
+    {
+      "id": "DER_PERF_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_PERF_001",
+      "target": "REQ_SYS_002"
+    },
+    {
+      "id": "DER_PERF_002",
+      "type": "DeriveRequirement",
+      "source": "REQ_PERF_002",
+      "target": "REQ_SYS_002"
+    },
+    {
+      "id": "DER_PERF_003",
+      "type": "DeriveRequirement",
+      "source": "REQ_PERF_003",
+      "target": "REQ_SYS_003"
+    },
+    {
+      "id": "DER_PERF_004",
+      "type": "DeriveRequirement",
+      "source": "REQ_PERF_004",
+      "target": "REQ_SYS_004"
+    },
+    {
+      "id": "DER_PERF_005",
+      "type": "DeriveRequirement",
+      "source": "REQ_PERF_005",
+      "target": "REQ_SYS_002"
+    },
+    {
+      "id": "DER_PERF_006",
+      "type": "DeriveRequirement",
+      "source": "REQ_PERF_006",
+      "target": "REQ_SYS_002"
+    },
+    {
+      "id": "DER_PT_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_PT_001",
+      "target": "REQ_SYS_002"
+    },
+    {
+      "id": "DER_PT_002",
+      "type": "DeriveRequirement",
+      "source": "REQ_PT_002",
+      "target": "REQ_PERF_002"
+    },
+    {
+      "id": "DER_PT_003",
+      "type": "DeriveRequirement",
+      "source": "REQ_PT_003",
+      "target": "REQ_IF_002"
+    },
+    {
+      "id": "DER_PT_004",
+      "type": "DeriveRequirement",
+      "source": "REQ_PT_004",
+      "target": "REQ_SYS_011"
+    },
+    {
+      "id": "DER_SNS_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_SNS_001",
+      "target": "REQ_SYS_006"
+    },
+    {
+      "id": "DER_SNS_002",
+      "type": "DeriveRequirement",
+      "source": "REQ_SNS_002",
+      "target": "REQ_SYS_011"
+    },
+    {
+      "id": "DER_SRV_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_SRV_001",
+      "target": "REQ_SYS_009"
+    },
+    {
+      "id": "DER_SYS_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_001",
+      "target": "REQ_STK_006"
+    },
+    {
+      "id": "DER_SYS_002",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_002",
+      "target": "REQ_STK_003"
+    },
+    {
+      "id": "DER_SYS_003",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_003",
+      "target": "REQ_STK_002"
+    },
+    {
+      "id": "DER_SYS_004",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_004",
+      "target": "REQ_STK_001"
+    },
+    {
+      "id": "DER_SYS_005",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_005",
+      "target": "REQ_STK_001"
+    },
+    {
+      "id": "DER_SYS_006",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_006",
+      "target": "REQ_STK_008"
+    },
+    {
+      "id": "DER_SYS_007",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_007",
+      "target": "REQ_STK_006"
+    },
+    {
+      "id": "DER_SYS_008",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_008",
+      "target": "REQ_STK_004"
+    },
+    {
+      "id": "DER_SYS_009",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_009",
+      "target": "REQ_STK_007"
+    },
+    {
+      "id": "DER_SYS_010",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_010",
+      "target": "REQ_STK_001"
+    },
+    {
+      "id": "DER_SYS_011",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_011",
+      "target": "REQ_STK_008"
+    },
+    {
+      "id": "DER_SYS_012",
+      "type": "DeriveRequirement",
+      "source": "REQ_SYS_012",
+      "target": "REQ_STK_001"
+    },
+    {
+      "id": "DER_THM_001",
+      "type": "DeriveRequirement",
+      "source": "REQ_THM_001",
+      "target": "REQ_SYS_005"
+    },
+    {
+      "id": "DER_THM_002",
+      "type": "DeriveRequirement",
+      "source": "REQ_THM_002",
+      "target": "REQ_SYS_005"
+    },
+    {
+      "id": "DER_THM_003",
+      "type": "DeriveRequirement",
+      "source": "REQ_THM_003",
+      "target": "REQ_SYS_005"
+    },
+    {
+      "id": "FLOW_CHARGE_BOUND",
+      "type": "ItemFlow",
+      "source": "VEH",
+      "target": "CHARGE",
+      "extra": {
+        "sourcePort": "VEH_CHARGE",
+        "targetPort": "CHARGE_EXT",
+        "item": "ChargePowerData",
+        "connector": "CONN_CHARGE_BOUND"
+      }
+    },
+    {
+      "id": "FLOW_CHARGE_ENERGY",
+      "type": "ItemFlow",
+      "source": "CHARGE",
+      "target": "ENERGY",
+      "extra": {
+        "sourcePort": "CHARGE_OUT",
+        "targetPort": "ENERGY_CHARGE",
+        "item": "ChargePowerData",
+        "connector": "CONN_CHARGE_ENERGY"
+      }
+    },
+    {
+      "id": "FLOW_CTRL_BRAKE",
+      "type": "ItemFlow",
+      "source": "VCONTROL",
+      "target": "BRAKES",
+      "extra": {
+        "sourcePort": "CTRL_BRAKE",
+        "targetPort": "BRAKE_CMD",
+        "item": "BrakeCommandData",
+        "connector": "CONN_CTRL_BRAKE"
+      }
+    },
+    {
+      "id": "FLOW_CTRL_PT",
+      "type": "ItemFlow",
+      "source": "VCONTROL",
+      "target": "POWERTRAIN",
+      "extra": {
+        "sourcePort": "CTRL_TORQUE",
+        "targetPort": "PT_TORQUE",
+        "item": "TorqueCommandData",
+        "connector": "CONN_CTRL_PT"
+      }
+    },
+    {
+      "id": "FLOW_DIAG_CTRL",
+      "type": "ItemFlow",
+      "source": "DIAG",
+      "target": "VCONTROL",
+      "extra": {
+        "sourcePort": "DIAG_CTRL",
+        "targetPort": "CTRL_DIAG",
+        "item": "DiagnosticServiceData",
+        "connector": "CONN_DIAG_CTRL"
+      }
+    },
+    {
+      "id": "FLOW_DRIVER",
+      "type": "ItemFlow",
+      "source": "VEH",
+      "target": "HMI",
+      "extra": {
+        "sourcePort": "VEH_DRIVER",
+        "targetPort": "HMI_DRIVER",
+        "item": "DriverCommandData",
+        "connector": "CONN_DRIVER"
+      }
+    },
+    {
+      "id": "FLOW_ENERGY_PT",
+      "type": "ItemFlow",
+      "source": "ENERGY",
+      "target": "POWERTRAIN",
+      "extra": {
+        "sourcePort": "ENERGY_HV",
+        "targetPort": "PT_HV",
+        "item": "HighVoltagePowerData",
+        "connector": "CONN_ENERGY_PT"
+      }
+    },
+    {
+      "id": "FLOW_ENERGY_THERM",
+      "type": "ItemFlow",
+      "source": "ENERGY",
+      "target": "THERMAL",
+      "extra": {
+        "sourcePort": "ENERGY_THERM",
+        "targetPort": "THERM_ENERGY",
+        "item": "ThermalFlowData",
+        "connector": "CONN_ENERGY_THERM"
+      }
+    },
+    {
+      "id": "FLOW_HMI_CTRL",
+      "type": "ItemFlow",
+      "source": "HMI",
+      "target": "VCONTROL",
+      "extra": {
+        "sourcePort": "HMI_CTRL",
+        "targetPort": "CTRL_DRIVER",
+        "item": "DriverCommandData",
+        "connector": "CONN_HMI_CTRL"
+      }
+    },
+    {
+      "id": "FLOW_INV_MOTOR",
+      "type": "ItemFlow",
+      "source": "INVERTER",
+      "target": "POWERTRAIN",
+      "extra": {
+        "sourcePort": "INV_MOTOR",
+        "targetPort": "MOTOR_POWER",
+        "item": "MotorElectricalPowerData",
+        "connector": "CONN_INV_MOTOR"
+      }
+    },
+    {
+      "id": "FLOW_PT_CMD",
+      "type": "ItemFlow",
+      "source": "POWERTRAIN",
+      "target": "INVERTER",
+      "extra": {
+        "sourcePort": "PT_TORQUE",
+        "targetPort": "INV_CMD",
+        "item": "TorqueCommandData",
+        "connector": "CONN_PT_CMD"
+      }
+    },
+    {
+      "id": "FLOW_PT_HV",
+      "type": "ItemFlow",
+      "source": "POWERTRAIN",
+      "target": "INVERTER",
+      "extra": {
+        "sourcePort": "PT_HV",
+        "targetPort": "INV_HV",
+        "item": "HighVoltagePowerData",
+        "connector": "CONN_PT_HV"
+      }
+    },
+    {
+      "id": "FLOW_SENSOR_CTRL",
+      "type": "ItemFlow",
+      "source": "SENSORS",
+      "target": "VCONTROL",
+      "extra": {
+        "sourcePort": "SENS_DATA",
+        "targetPort": "CTRL_SENSOR",
+        "item": "SensorData",
+        "connector": "CONN_SENSOR_CTRL"
+      }
+    },
+    {
+      "id": "FLOW_SERVICE_BOUND",
+      "type": "ItemFlow",
+      "source": "VEH",
+      "target": "DIAG",
+      "extra": {
+        "sourcePort": "VEH_SERVICE",
+        "targetPort": "DIAG_SERVICE",
+        "item": "DiagnosticServiceData",
+        "connector": "CONN_SERVICE_BOUND"
+      }
+    },
+    {
+      "id": "GEN_BRAKES",
+      "type": "Generalization",
+      "source": "BRAKES",
+      "target": "VEH_SUBSYSTEM"
+    },
+    {
+      "id": "GEN_CHARGE",
+      "type": "Generalization",
+      "source": "CHARGE",
+      "target": "VEH_SUBSYSTEM"
+    },
+    {
+      "id": "GEN_DIAG",
+      "type": "Generalization",
+      "source": "DIAG",
+      "target": "VEH_SUBSYSTEM"
+    },
+    {
+      "id": "GEN_ENERGY",
+      "type": "Generalization",
+      "source": "ENERGY",
+      "target": "VEH_SUBSYSTEM"
+    },
+    {
+      "id": "GEN_HMI",
+      "type": "Generalization",
+      "source": "HMI",
+      "target": "VEH_SUBSYSTEM"
+    },
+    {
+      "id": "GEN_POWERTRAIN",
+      "type": "Generalization",
+      "source": "POWERTRAIN",
+      "target": "VEH_SUBSYSTEM"
+    },
+    {
+      "id": "GEN_SENSORS",
+      "type": "Generalization",
+      "source": "SENSORS",
+      "target": "VEH_SUBSYSTEM"
+    },
+    {
+      "id": "GEN_THERMAL",
+      "type": "Generalization",
+      "source": "THERMAL",
+      "target": "VEH_SUBSYSTEM"
+    },
+    {
+      "id": "GEN_VCONTROL",
+      "type": "Generalization",
+      "source": "VCONTROL",
+      "target": "VEH_SUBSYSTEM"
+    },
+    {
+      "id": "PKG_DEP_ANALYSIS_ARCH",
+      "type": "Dependency",
+      "source": "PKG_ANALYSIS",
+      "target": "PKG_ARCH"
+    },
+    {
+      "id": "PKG_DEP_BEHAV_ARCH",
+      "type": "Dependency",
+      "source": "PKG_BEHAV",
+      "target": "PKG_ARCH"
+    },
+    {
+      "id": "PKG_DEP_UC_REQ",
+      "type": "Dependency",
+      "source": "PKG_UC",
+      "target": "PKG_REQ"
+    },
+    {
+      "id": "PKG_IMPORT_COMMON",
+      "type": "PackageImport",
+      "source": "PKG_ARCH",
+      "target": "PKG_COMMON"
+    },
+    {
+      "id": "REF_BRAKE_OP",
+      "type": "Refine",
+      "source": "OP_BRAKE",
+      "target": "REQ_SYS_004"
+    },
+    {
+      "id": "REF_CHARGE_OP",
+      "type": "Refine",
+      "source": "OP_CHARGE",
+      "target": "REQ_SYS_008"
+    },
+    {
+      "id": "REF_FORCE",
+      "type": "Refine",
+      "source": "CB_FORCE",
+      "target": "REQ_PERF_001"
+    },
+    {
+      "id": "REF_POWER",
+      "type": "Refine",
+      "source": "CB_POWER",
+      "target": "REQ_PERF_002"
+    },
+    {
+      "id": "REF_RANGE",
+      "type": "Refine",
+      "source": "CB_RANGE",
+      "target": "REQ_PERF_003"
+    },
+    {
+      "id": "REF_START_OP",
+      "type": "Refine",
+      "source": "OP_START",
+      "target": "REQ_SYS_001"
+    },
+    {
+      "id": "REF_TORQUE_OP",
+      "type": "Refine",
+      "source": "OP_TORQUE",
+      "target": "REQ_SYS_002"
+    },
+    {
+      "id": "SAT_BAT_001_1",
+      "type": "Satisfy",
+      "source": "ENERGY",
+      "target": "REQ_BAT_001"
+    },
+    {
+      "id": "SAT_BAT_002_1",
+      "type": "Satisfy",
+      "source": "BMS",
+      "target": "REQ_BAT_002"
+    },
+    {
+      "id": "SAT_BAT_003_1",
+      "type": "Satisfy",
+      "source": "BMS",
+      "target": "REQ_BAT_003"
+    },
+    {
+      "id": "SAT_BAT_004_1",
+      "type": "Satisfy",
+      "source": "ENERGY",
+      "target": "REQ_BAT_004"
+    },
+    {
+      "id": "SAT_BAT_005_1",
+      "type": "Satisfy",
+      "source": "ENERGY",
+      "target": "REQ_BAT_005"
+    },
+    {
+      "id": "SAT_BRK_001_1",
+      "type": "Satisfy",
+      "source": "BRAKES",
+      "target": "REQ_BRK_001"
+    },
+    {
+      "id": "SAT_BRK_002_1",
+      "type": "Satisfy",
+      "source": "BRAKES",
+      "target": "REQ_BRK_002"
+    },
+    {
+      "id": "SAT_BRK_003_1",
+      "type": "Satisfy",
+      "source": "BRAKES",
+      "target": "REQ_BRK_003"
+    },
+    {
+      "id": "SAT_CHG_001_1",
+      "type": "Satisfy",
+      "source": "CHARGE",
+      "target": "REQ_CHG_001"
+    },
+    {
+      "id": "SAT_CTRL_001_1",
+      "type": "Satisfy",
+      "source": "VCONTROL",
+      "target": "REQ_CTRL_001"
+    },
+    {
+      "id": "SAT_CTRL_002_1",
+      "type": "Satisfy",
+      "source": "VCONTROL",
+      "target": "REQ_CTRL_002"
+    },
+    {
+      "id": "SAT_CTRL_003_1",
+      "type": "Satisfy",
+      "source": "VCONTROL",
+      "target": "REQ_CTRL_003"
+    },
+    {
+      "id": "SAT_CTRL_004_1",
+      "type": "Satisfy",
+      "source": "VCONTROL",
+      "target": "REQ_CTRL_004"
+    },
+    {
+      "id": "SAT_HMI_001_1",
+      "type": "Satisfy",
+      "source": "HMI",
+      "target": "REQ_HMI_001"
+    },
+    {
+      "id": "SAT_HMI_002_1",
+      "type": "Satisfy",
+      "source": "HMI",
+      "target": "REQ_HMI_002"
+    },
+    {
+      "id": "SAT_IF_001_1",
+      "type": "Satisfy",
+      "source": "ENERGY",
+      "target": "REQ_IF_001"
+    },
+    {
+      "id": "SAT_IF_001_2",
+      "type": "Satisfy",
+      "source": "POWERTRAIN",
+      "target": "REQ_IF_001"
+    },
+    {
+      "id": "SAT_IF_002_1",
+      "type": "Satisfy",
+      "source": "VCONTROL",
+      "target": "REQ_IF_002"
+    },
+    {
+      "id": "SAT_IF_002_2",
+      "type": "Satisfy",
+      "source": "POWERTRAIN",
+      "target": "REQ_IF_002"
+    },
+    {
+      "id": "SAT_IF_003_1",
+      "type": "Satisfy",
+      "source": "SENSORS",
+      "target": "REQ_IF_003"
+    },
+    {
+      "id": "SAT_IF_003_2",
+      "type": "Satisfy",
+      "source": "VCONTROL",
+      "target": "REQ_IF_003"
+    },
+    {
+      "id": "SAT_IF_004_1",
+      "type": "Satisfy",
+      "source": "VCONTROL",
+      "target": "REQ_IF_004"
+    },
+    {
+      "id": "SAT_IF_004_2",
+      "type": "Satisfy",
+      "source": "BRAKES",
+      "target": "REQ_IF_004"
+    },
+    {
+      "id": "SAT_IF_005_1",
+      "type": "Satisfy",
+      "source": "ENERGY",
+      "target": "REQ_IF_005"
+    },
+    {
+      "id": "SAT_IF_005_2",
+      "type": "Satisfy",
+      "source": "THERMAL",
+      "target": "REQ_IF_005"
+    },
+    {
+      "id": "SAT_IF_006_1",
+      "type": "Satisfy",
+      "source": "CHARGE",
+      "target": "REQ_IF_006"
+    },
+    {
+      "id": "SAT_IF_006_2",
+      "type": "Satisfy",
+      "source": "ENERGY",
+      "target": "REQ_IF_006"
+    },
+    {
+      "id": "SAT_IF_007_1",
+      "type": "Satisfy",
+      "source": "DIAG",
+      "target": "REQ_IF_007"
+    },
+    {
+      "id": "SAT_IF_007_2",
+      "type": "Satisfy",
+      "source": "VCONTROL",
+      "target": "REQ_IF_007"
+    },
+    {
+      "id": "SAT_IF_008_1",
+      "type": "Satisfy",
+      "source": "HMI",
+      "target": "REQ_IF_008"
+    },
+    {
+      "id": "SAT_IF_008_2",
+      "type": "Satisfy",
+      "source": "VCONTROL",
+      "target": "REQ_IF_008"
+    },
+    {
+      "id": "SAT_PERF_001_1",
+      "type": "Satisfy",
+      "source": "POWERTRAIN",
+      "target": "REQ_PERF_001"
+    },
+    {
+      "id": "SAT_PERF_002_1",
+      "type": "Satisfy",
+      "source": "POWERTRAIN",
+      "target": "REQ_PERF_002"
+    },
+    {
+      "id": "SAT_PERF_003_1",
+      "type": "Satisfy",
+      "source": "VEH",
+      "target": "REQ_PERF_003"
+    },
+    {
+      "id": "SAT_PERF_004_1",
+      "type": "Satisfy",
+      "source": "POWERTRAIN",
+      "target": "REQ_PERF_004"
+    },
+    {
+      "id": "SAT_PERF_004_2",
+      "type": "Satisfy",
+      "source": "ENERGY",
+      "target": "REQ_PERF_004"
+    },
+    {
+      "id": "SAT_PERF_005_1",
+      "type": "Satisfy",
+      "source": "POWERTRAIN",
+      "target": "REQ_PERF_005"
+    },
+    {
+      "id": "SAT_PERF_006_1",
+      "type": "Satisfy",
+      "source": "POWERTRAIN",
+      "target": "REQ_PERF_006"
+    },
+    {
+      "id": "SAT_PT_001_1",
+      "type": "Satisfy",
+      "source": "POWERTRAIN",
+      "target": "REQ_PT_001"
+    },
+    {
+      "id": "SAT_PT_002_1",
+      "type": "Satisfy",
+      "source": "INVERTER",
+      "target": "REQ_PT_002"
+    },
+    {
+      "id": "SAT_PT_003_1",
+      "type": "Satisfy",
+      "source": "POWERTRAIN",
+      "target": "REQ_PT_003"
+    },
+    {
+      "id": "SAT_PT_004_1",
+      "type": "Satisfy",
+      "source": "POWERTRAIN",
+      "target": "REQ_PT_004"
+    },
+    {
+      "id": "SAT_SNS_001_1",
+      "type": "Satisfy",
+      "source": "SENSORS",
+      "target": "REQ_SNS_001"
+    },
+    {
+      "id": "SAT_SNS_002_1",
+      "type": "Satisfy",
+      "source": "SENSORS",
+      "target": "REQ_SNS_002"
+    },
+    {
+      "id": "SAT_SRV_001_1",
+      "type": "Satisfy",
+      "source": "DIAG",
+      "target": "REQ_SRV_001"
+    },
+    {
+      "id": "SAT_STK_001_1",
+      "type": "Satisfy",
+      "source": "VEH",
+      "target": "REQ_STK_001"
+    },
+    {
+      "id": "SAT_STK_002_1",
+      "type": "Satisfy",
+      "source": "VEH",
+      "target": "REQ_STK_002"
+    },
+    {
+      "id": "SAT_STK_003_1",
+      "type": "Satisfy",
+      "source": "VEH",
+      "target": "REQ_STK_003"
+    },
+    {
+      "id": "SAT_STK_004_1",
+      "type": "Satisfy",
+      "source": "CHARGE",
+      "target": "REQ_STK_004"
+    },
+    {
+      "id": "SAT_STK_005_1",
+      "type": "Satisfy",
+      "source": "VEH",
+      "target": "REQ_STK_005"
+    },
+    {
+      "id": "SAT_STK_006_1",
+      "type": "Satisfy",
+      "source": "HMI",
+      "target": "REQ_STK_006"
+    },
+    {
+      "id": "SAT_STK_007_1",
+      "type": "Satisfy",
+      "source": "DIAG",
+      "target": "REQ_STK_007"
+    },
+    {
+      "id": "SAT_STK_008_1",
+      "type": "Satisfy",
+      "source": "VEH",
+      "target": "REQ_STK_008"
+    },
+    {
+      "id": "SAT_SYS_001_1",
+      "type": "Satisfy",
+      "source": "VCONTROL",
+      "target": "REQ_SYS_001"
+    },
+    {
+      "id": "SAT_SYS_002_1",
+      "type": "Satisfy",
+      "source": "POWERTRAIN",
+      "target": "REQ_SYS_002"
+    },
+    {
+      "id": "SAT_SYS_003_1",
+      "type": "Satisfy",
+      "source": "ENERGY",
+      "target": "REQ_SYS_003"
+    },
+    {
+      "id": "SAT_SYS_004_1",
+      "type": "Satisfy",
+      "source": "BRAKES",
+      "target": "REQ_SYS_004"
+    },
+    {
+      "id": "SAT_SYS_005_1",
+      "type": "Satisfy",
+      "source": "THERMAL",
+      "target": "REQ_SYS_005"
+    },
+    {
+      "id": "SAT_SYS_006_1",
+      "type": "Satisfy",
+      "source": "SENSORS",
+      "target": "REQ_SYS_006"
+    },
+    {
+      "id": "SAT_SYS_007_1",
+      "type": "Satisfy",
+      "source": "HMI",
+      "target": "REQ_SYS_007"
+    },
+    {
+      "id": "SAT_SYS_008_1",
+      "type": "Satisfy",
+      "source": "CHARGE",
+      "target": "REQ_SYS_008"
+    },
+    {
+      "id": "SAT_SYS_009_1",
+      "type": "Satisfy",
+      "source": "DIAG",
+      "target": "REQ_SYS_009"
+    },
+    {
+      "id": "SAT_SYS_010_1",
+      "type": "Satisfy",
+      "source": "ENERGY",
+      "target": "REQ_SYS_010"
+    },
+    {
+      "id": "SAT_SYS_011_1",
+      "type": "Satisfy",
+      "source": "VCONTROL",
+      "target": "REQ_SYS_011"
+    },
+    {
+      "id": "SAT_SYS_012_1",
+      "type": "Satisfy",
+      "source": "VEH",
+      "target": "REQ_SYS_012"
+    },
+    {
+      "id": "SAT_THM_001_1",
+      "type": "Satisfy",
+      "source": "THERMAL",
+      "target": "REQ_THM_001"
+    },
+    {
+      "id": "SAT_THM_002_1",
+      "type": "Satisfy",
+      "source": "THERMAL",
+      "target": "REQ_THM_002"
+    },
+    {
+      "id": "SAT_THM_003_1",
+      "type": "Satisfy",
+      "source": "THERM_CTRL",
+      "target": "REQ_THM_003"
+    },
+    {
+      "id": "TRACE_BRAKE",
+      "type": "Trace",
+      "source": "UC_BRAKE",
+      "target": "REQ_SYS_004"
+    },
+    {
+      "id": "TRACE_CHARGE",
+      "type": "Trace",
+      "source": "UC_CHARGE",
+      "target": "REQ_SYS_008"
+    },
+    {
+      "id": "TRACE_DIAG",
+      "type": "Trace",
+      "source": "UC_DIAG",
+      "target": "REQ_SYS_009"
+    },
+    {
+      "id": "TRACE_DRIVE",
+      "type": "Trace",
+      "source": "UC_DRIVE",
+      "target": "REQ_SYS_002"
+    },
+    {
+      "id": "TRACE_EMERG",
+      "type": "Trace",
+      "source": "UC_EMERGENCY",
+      "target": "REQ_STK_001"
+    },
+    {
+      "id": "TRACE_START",
+      "type": "Trace",
+      "source": "UC_START",
+      "target": "REQ_SYS_001"
+    },
+    {
+      "id": "UC_A_DRIVER",
+      "type": "Association",
+      "source": "DRIVER",
+      "target": "UC_OPERATE"
+    },
+    {
+      "id": "UC_A_DRIVER_CHARGE",
+      "type": "Association",
+      "source": "DRIVER",
+      "target": "UC_CHARGE"
+    },
+    {
+      "id": "UC_A_STATION",
+      "type": "Association",
+      "source": "STATION",
+      "target": "UC_CHARGE"
+    },
+    {
+      "id": "UC_A_TECH",
+      "type": "Association",
+      "source": "TECH",
+      "target": "UC_DIAG"
+    },
+    {
+      "id": "UC_EXT_EMERG",
+      "type": "Extend",
+      "source": "UC_EMERGENCY",
+      "target": "UC_DRIVE"
+    },
+    {
+      "id": "UC_INC_BRAKE",
+      "type": "Include",
+      "source": "UC_OPERATE",
+      "target": "UC_BRAKE"
+    },
+    {
+      "id": "UC_INC_DRIVE",
+      "type": "Include",
+      "source": "UC_OPERATE",
+      "target": "UC_DRIVE"
+    },
+    {
+      "id": "UC_INC_START",
+      "type": "Include",
+      "source": "UC_OPERATE",
+      "target": "UC_START"
+    },
+    {
+      "id": "VERCOPY_VCOPY_PERF_001",
+      "type": "Verify",
+      "source": "TC_ACCEL",
+      "target": "VCOPY_PERF_001"
+    },
+    {
+      "id": "VERCOPY_VCOPY_PERF_003",
+      "type": "Verify",
+      "source": "TC_RANGE",
+      "target": "VCOPY_PERF_003"
+    },
+    {
+      "id": "VERCOPY_VCOPY_STK_001",
+      "type": "Verify",
+      "source": "TC_SAFETY",
+      "target": "VCOPY_STK_001"
+    },
+    {
+      "id": "VERCOPY_VCOPY_STK_002",
+      "type": "Verify",
+      "source": "TC_RANGE",
+      "target": "VCOPY_STK_002"
+    },
+    {
+      "id": "VERCOPY_VCOPY_SYS_001",
+      "type": "Verify",
+      "source": "TC_START",
+      "target": "VCOPY_SYS_001"
+    },
+    {
+      "id": "VERCOPY_VCOPY_SYS_002",
+      "type": "Verify",
+      "source": "TC_ACCEL",
+      "target": "VCOPY_SYS_002"
+    },
+    {
+      "id": "VERCOPY_VCOPY_SYS_004",
+      "type": "Verify",
+      "source": "TC_BRAKE",
+      "target": "VCOPY_SYS_004"
+    },
+    {
+      "id": "VERCOPY_VCOPY_SYS_010",
+      "type": "Verify",
+      "source": "TC_SAFETY",
+      "target": "VCOPY_SYS_010"
+    },
+    {
+      "id": "VER_BAT_001",
+      "type": "Verify",
+      "source": "TC_RANGE",
+      "target": "REQ_BAT_001"
+    },
+    {
+      "id": "VER_BAT_002",
+      "type": "Verify",
+      "source": "TC_STATE",
+      "target": "REQ_BAT_002"
+    },
+    {
+      "id": "VER_BAT_003",
+      "type": "Verify",
+      "source": "TC_SAFETY",
+      "target": "REQ_BAT_003"
+    },
+    {
+      "id": "VER_BAT_004",
+      "type": "Verify",
+      "source": "TC_ACCEL",
+      "target": "REQ_BAT_004"
+    },
+    {
+      "id": "VER_BAT_005",
+      "type": "Verify",
+      "source": "TC_REGEN",
+      "target": "REQ_BAT_005"
+    },
+    {
+      "id": "VER_BRK_001",
+      "type": "Verify",
+      "source": "TC_BRAKE",
+      "target": "REQ_BRK_001"
+    },
+    {
+      "id": "VER_BRK_002",
+      "type": "Verify",
+      "source": "TC_REGEN",
+      "target": "REQ_BRK_002"
+    },
+    {
+      "id": "VER_BRK_003",
+      "type": "Verify",
+      "source": "TC_BRAKE",
+      "target": "REQ_BRK_003"
+    },
+    {
+      "id": "VER_CHG_001",
+      "type": "Verify",
+      "source": "TC_CHARGE",
+      "target": "REQ_CHG_001"
+    },
+    {
+      "id": "VER_CTRL_001",
+      "type": "Verify",
+      "source": "TC_CTRL",
+      "target": "REQ_CTRL_001"
+    },
+    {
+      "id": "VER_CTRL_002",
+      "type": "Verify",
+      "source": "TC_CTRL",
+      "target": "REQ_CTRL_002"
+    },
+    {
+      "id": "VER_CTRL_003",
+      "type": "Verify",
+      "source": "TC_DEGRADED",
+      "target": "REQ_CTRL_003"
+    },
+    {
+      "id": "VER_CTRL_004",
+      "type": "Verify",
+      "source": "TC_BRAKE",
+      "target": "REQ_CTRL_004"
+    },
+    {
+      "id": "VER_HMI_001",
+      "type": "Verify",
+      "source": "TC_HMI",
+      "target": "REQ_HMI_001"
+    },
+    {
+      "id": "VER_HMI_002",
+      "type": "Verify",
+      "source": "TC_START",
+      "target": "REQ_HMI_002"
+    },
+    {
+      "id": "VER_IF_001",
+      "type": "Verify",
+      "source": "TC_INTERFACE",
+      "target": "REQ_IF_001"
+    },
+    {
+      "id": "VER_IF_002",
+      "type": "Verify",
+      "source": "TC_INTERFACE",
+      "target": "REQ_IF_002"
+    },
+    {
+      "id": "VER_IF_003",
+      "type": "Verify",
+      "source": "TC_INTERFACE",
+      "target": "REQ_IF_003"
+    },
+    {
+      "id": "VER_IF_004",
+      "type": "Verify",
+      "source": "TC_INTERFACE",
+      "target": "REQ_IF_004"
+    },
+    {
+      "id": "VER_IF_005",
+      "type": "Verify",
+      "source": "TC_THERMAL",
+      "target": "REQ_IF_005"
+    },
+    {
+      "id": "VER_IF_006",
+      "type": "Verify",
+      "source": "TC_CHARGE",
+      "target": "REQ_IF_006"
+    },
+    {
+      "id": "VER_IF_007",
+      "type": "Verify",
+      "source": "TC_DIAG",
+      "target": "REQ_IF_007"
+    },
+    {
+      "id": "VER_IF_008",
+      "type": "Verify",
+      "source": "TC_HMI",
+      "target": "REQ_IF_008"
+    },
+    {
+      "id": "VER_PERF_001",
+      "type": "Verify",
+      "source": "TC_ACCEL",
+      "target": "REQ_PERF_001"
+    },
+    {
+      "id": "VER_PERF_002",
+      "type": "Verify",
+      "source": "TC_ACCEL",
+      "target": "REQ_PERF_002"
+    },
+    {
+      "id": "VER_PERF_003",
+      "type": "Verify",
+      "source": "TC_RANGE",
+      "target": "REQ_PERF_003"
+    },
+    {
+      "id": "VER_PERF_004",
+      "type": "Verify",
+      "source": "TC_REGEN",
+      "target": "REQ_PERF_004"
+    },
+    {
+      "id": "VER_PERF_005",
+      "type": "Verify",
+      "source": "TC_TOP_SPEED",
+      "target": "REQ_PERF_005"
+    },
+    {
+      "id": "VER_PERF_006",
+      "type": "Verify",
+      "source": "TC_GRADE",
+      "target": "REQ_PERF_006"
+    },
+    {
+      "id": "VER_PT_001",
+      "type": "Verify",
+      "source": "TC_ACCEL",
+      "target": "REQ_PT_001"
+    },
+    {
+      "id": "VER_PT_002",
+      "type": "Verify",
+      "source": "TC_PT_RESPONSE",
+      "target": "REQ_PT_002"
+    },
+    {
+      "id": "VER_PT_003",
+      "type": "Verify",
+      "source": "TC_PT_RESPONSE",
+      "target": "REQ_PT_003"
+    },
+    {
+      "id": "VER_PT_004",
+      "type": "Verify",
+      "source": "TC_DEGRADED",
+      "target": "REQ_PT_004"
+    },
+    {
+      "id": "VER_SNS_001",
+      "type": "Verify",
+      "source": "TC_STATE",
+      "target": "REQ_SNS_001"
+    },
+    {
+      "id": "VER_SNS_002",
+      "type": "Verify",
+      "source": "TC_STATE",
+      "target": "REQ_SNS_002"
+    },
+    {
+      "id": "VER_SRV_001",
+      "type": "Verify",
+      "source": "TC_DIAG",
+      "target": "REQ_SRV_001"
+    },
+    {
+      "id": "VER_STK_001",
+      "type": "Verify",
+      "source": "TC_SAFETY",
+      "target": "REQ_STK_001"
+    },
+    {
+      "id": "VER_STK_002",
+      "type": "Verify",
+      "source": "TC_RANGE",
+      "target": "REQ_STK_002"
+    },
+    {
+      "id": "VER_STK_003",
+      "type": "Verify",
+      "source": "TC_ACCEL",
+      "target": "REQ_STK_003"
+    },
+    {
+      "id": "VER_STK_004",
+      "type": "Verify",
+      "source": "TC_CHARGE",
+      "target": "REQ_STK_004"
+    },
+    {
+      "id": "VER_STK_005",
+      "type": "Verify",
+      "source": "TC_EFF",
+      "target": "REQ_STK_005"
+    },
+    {
+      "id": "VER_STK_006",
+      "type": "Verify",
+      "source": "TC_HMI",
+      "target": "REQ_STK_006"
+    },
+    {
+      "id": "VER_STK_007",
+      "type": "Verify",
+      "source": "TC_DIAG",
+      "target": "REQ_STK_007"
+    },
+    {
+      "id": "VER_STK_008",
+      "type": "Verify",
+      "source": "TC_DEGRADED",
+      "target": "REQ_STK_008"
+    },
+    {
+      "id": "VER_SYS_001",
+      "type": "Verify",
+      "source": "TC_START",
+      "target": "REQ_SYS_001"
+    },
+    {
+      "id": "VER_SYS_002",
+      "type": "Verify",
+      "source": "TC_ACCEL",
+      "target": "REQ_SYS_002"
+    },
+    {
+      "id": "VER_SYS_003",
+      "type": "Verify",
+      "source": "TC_RANGE",
+      "target": "REQ_SYS_003"
+    },
+    {
+      "id": "VER_SYS_004",
+      "type": "Verify",
+      "source": "TC_BRAKE",
+      "target": "REQ_SYS_004"
+    },
+    {
+      "id": "VER_SYS_005",
+      "type": "Verify",
+      "source": "TC_THERMAL",
+      "target": "REQ_SYS_005"
+    },
+    {
+      "id": "VER_SYS_006",
+      "type": "Verify",
+      "source": "TC_STATE",
+      "target": "REQ_SYS_006"
+    },
+    {
+      "id": "VER_SYS_007",
+      "type": "Verify",
+      "source": "TC_HMI",
+      "target": "REQ_SYS_007"
+    },
+    {
+      "id": "VER_SYS_008",
+      "type": "Verify",
+      "source": "TC_CHARGE",
+      "target": "REQ_SYS_008"
+    },
+    {
+      "id": "VER_SYS_009",
+      "type": "Verify",
+      "source": "TC_DIAG",
+      "target": "REQ_SYS_009"
+    },
+    {
+      "id": "VER_SYS_010",
+      "type": "Verify",
+      "source": "TC_SAFETY",
+      "target": "REQ_SYS_010"
+    },
+    {
+      "id": "VER_SYS_011",
+      "type": "Verify",
+      "source": "TC_DEGRADED",
+      "target": "REQ_SYS_011"
+    },
+    {
+      "id": "VER_SYS_012",
+      "type": "Verify",
+      "source": "TC_INTERFACE",
+      "target": "REQ_SYS_012"
+    },
+    {
+      "id": "VER_THM_001",
+      "type": "Verify",
+      "source": "TC_THERMAL",
+      "target": "REQ_THM_001"
+    },
+    {
+      "id": "VER_THM_002",
+      "type": "Verify",
+      "source": "TC_THERMAL",
+      "target": "REQ_THM_002"
+    },
+    {
+      "id": "VER_THM_003",
+      "type": "Verify",
+      "source": "TC_THERMAL",
+      "target": "REQ_THM_003"
+    }
+  ],
+  "flows": [
+    {
+      "id": "CONN_CHARGE_ENERGY",
+      "source": "CHARGE",
+      "target": "ENERGY",
+      "item": "ChargePowerData",
+      "label": "Charge power",
+      "meshName": "FLOW__CHARGE__ENERGY"
+    },
+    {
+      "id": "CONN_CTRL_BRAKE",
+      "source": "VCONTROL",
+      "target": "BRAKES",
+      "item": "BrakeCommandData",
+      "label": "Brake command",
+      "meshName": "FLOW__VCONTROL__BRAKES"
+    },
+    {
+      "id": "CONN_CTRL_PT",
+      "source": "VCONTROL",
+      "target": "POWERTRAIN",
+      "item": "TorqueCommandData",
+      "label": "Torque command",
+      "meshName": "FLOW__VCONTROL__POWERTRAIN"
+    },
+    {
+      "id": "CONN_DIAG_CTRL",
+      "source": "DIAG",
+      "target": "VCONTROL",
+      "item": "DiagnosticServiceData",
+      "label": "Diagnostic service",
+      "meshName": "FLOW__DIAG__VCONTROL"
+    },
+    {
+      "id": "CONN_ENERGY_PT",
+      "source": "ENERGY",
+      "target": "POWERTRAIN",
+      "item": "HighVoltagePowerData",
+      "label": "High voltage power",
+      "meshName": "FLOW__ENERGY__POWERTRAIN"
+    },
+    {
+      "id": "CONN_ENERGY_THERM",
+      "source": "ENERGY",
+      "target": "THERMAL",
+      "item": "ThermalFlowData",
+      "label": "Thermal flow",
+      "meshName": "FLOW__ENERGY__THERMAL"
+    },
+    {
+      "id": "CONN_HMI_CTRL",
+      "source": "HMI",
+      "target": "VCONTROL",
+      "item": "DriverCommandData",
+      "label": "Driver command",
+      "meshName": "FLOW__HMI__VCONTROL"
+    },
+    {
+      "id": "CONN_INV_MOTOR",
+      "source": "INVERTER",
+      "target": "POWERTRAIN",
+      "item": "MotorElectricalPowerData",
+      "label": "Motor electrical power",
+      "meshName": "FLOW__INVERTER__POWERTRAIN"
+    },
+    {
+      "id": "CONN_SENSOR_CTRL",
+      "source": "SENSORS",
+      "target": "VCONTROL",
+      "item": "SensorData",
+      "label": "Sensor",
+      "meshName": "FLOW__SENSORS__VCONTROL"
+    }
+  ],
+  "hierarchy": {
+    "VEH": [
+      "BRAKES",
+      "CHARGE",
+      "DIAG",
+      "ENERGY",
+      "HMI",
+      "POWERTRAIN",
+      "SENSORS",
+      "THERMAL",
+      "VCONTROL"
+    ],
+    "POWERTRAIN": [
+      "INVERTER"
+    ],
+    "ENERGY": [
+      "BMS"
+    ],
+    "THERMAL": [
+      "THERM_CTRL"
+    ]
+  },
+  "stats": {
+    "requirements": 59,
+    "copies": 8,
+    "traceRelationships": 207,
+    "allRelationships": 271,
+    "blocks": 13,
+    "flows": 9
+  }
+}

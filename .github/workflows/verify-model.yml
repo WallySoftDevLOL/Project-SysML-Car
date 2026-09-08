@@ -1,0 +1,126 @@
+name: Verify model build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'model/**'
+      - 'tools/**'
+      - 'data/blocks.json'
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install openpyxl pytest
+
+      - name: Check for required files
+        id: guard
+        run: |
+          has_xlsx_tool=false
+          [ -f tools/xlsx_to_json.py ] && has_xlsx_tool=true
+          has_model_json=false
+          [ -f data/model.json ] && has_model_json=true
+          has_source_xlsx=false
+          ls data/source/*.xlsx >/dev/null 2>&1 && has_source_xlsx=true
+          has_build_car=false
+          [ -f model/build_car.py ] && has_build_car=true
+          has_validate=false
+          [ -f tools/validate_glb.py ] && has_validate=true
+          has_report=false
+          [ -f dist/build-report.json ] && has_report=true
+
+          echo "has_xlsx_tool=$has_xlsx_tool" >> "$GITHUB_OUTPUT"
+          echo "has_model_json=$has_model_json" >> "$GITHUB_OUTPUT"
+          echo "has_source_xlsx=$has_source_xlsx" >> "$GITHUB_OUTPUT"
+          echo "has_build_car=$has_build_car" >> "$GITHUB_OUTPUT"
+          echo "has_validate=$has_validate" >> "$GITHUB_OUTPUT"
+          echo "has_report=$has_report" >> "$GITHUB_OUTPUT"
+
+          if [ "$has_xlsx_tool" = false ] || [ "$has_model_json" = false ] || [ "$has_source_xlsx" = false ]; then
+            echo "::notice::Skipping xlsx-to-json reproducibility check: tools/xlsx_to_json.py, data/source/*.xlsx, or data/model.json is not present yet."
+          fi
+          if [ "$has_build_car" = false ]; then
+            echo "::notice::Skipping Blender build and downstream checks: model/build_car.py is not present yet."
+          fi
+          if [ "$has_validate" = false ]; then
+            echo "::notice::Skipping glb contract validation: tools/validate_glb.py is not present yet."
+          fi
+          if [ "$has_report" = false ]; then
+            echo "::notice::Skipping build-report comparison: dist/build-report.json is not present yet."
+          fi
+
+      - name: Regenerate model.json and diff against committed copy
+        if: steps.guard.outputs.has_xlsx_tool == 'true' && steps.guard.outputs.has_model_json == 'true' && steps.guard.outputs.has_source_xlsx == 'true'
+        run: |
+          python tools/xlsx_to_json.py data/source/*.xlsx data/blocks.json /tmp/model.json
+          diff data/model.json /tmp/model.json
+
+      - name: Cache Blender
+        if: steps.guard.outputs.has_build_car == 'true'
+        id: cache-blender
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender
+          key: blender-5.2.1-linux-x64
+
+      - name: Download Blender
+        if: steps.guard.outputs.has_build_car == 'true' && steps.cache-blender.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/blender"
+          curl -fL -o /tmp/blender.tar.xz https://download.blender.org/release/Blender5.2/blender-5.2.1-linux-x64.tar.xz
+          tar -xJf /tmp/blender.tar.xz -C "$RUNNER_TEMP/blender" --strip-components=1
+
+      - name: Install Blender runtime dependencies
+        if: steps.guard.outputs.has_build_car == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libxkbcommon0 libsm6 libice6
+
+      - name: Build car.glb with Blender
+        if: steps.guard.outputs.has_build_car == 'true'
+        run: |
+          "$RUNNER_TEMP/blender/blender" --background --factory-startup --python-exit-code 1 --python model/build_car.py -- --data data/model.json --blocks data/blocks.json --out /tmp/car.glb --report /tmp/build-report.json
+
+      - name: Validate glb contract
+        if: steps.guard.outputs.has_build_car == 'true' && steps.guard.outputs.has_validate == 'true'
+        run: python tools/validate_glb.py /tmp/car.glb data/model.json data/blocks.json | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Compare build report against committed copy
+        if: steps.guard.outputs.has_build_car == 'true' && steps.guard.outputs.has_report == 'true'
+        run: |
+          python - <<'PY'
+          import json
+          import sys
+
+          with open("/tmp/build-report.json") as f:
+              got = json.load(f)
+          with open("dist/build-report.json") as f:
+              want = json.load(f)
+
+          if got != want:
+              print("build-report.json differs from committed dist/build-report.json")
+              sys.exit(1)
+
+          print("build-report.json matches committed dist/build-report.json")
+          PY
+
+      - name: Upload car.glb artifact
+        if: steps.guard.outputs.has_build_car == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: car-glb
+          path: /tmp/car.glb
+          if-no-files-found: ignore

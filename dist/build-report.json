@@ -1,0 +1,495 @@
+{
+  "schema": 1,
+  "glb": "car.glb",
+  "totals": {
+    "objects": 30,
+    "triangles": 1532,
+    "materials": 17,
+    "blocks": 13,
+    "decor": 8,
+    "flows": 9
+  },
+  "warnings": [],
+  "objects": [
+    {
+      "name": "BMS",
+      "kind": "Block",
+      "triangles": 12,
+      "material": "M_BMS",
+      "bbox_min": [
+        0.15,
+        0.58,
+        0.36
+      ],
+      "bbox_max": [
+        0.45,
+        0.82,
+        0.43
+      ]
+    },
+    {
+      "name": "BRAKES",
+      "kind": "Block",
+      "triangles": 304,
+      "material": "M_BRAKES",
+      "bbox_min": [
+        -0.735,
+        -1.51,
+        0.18
+      ],
+      "bbox_max": [
+        0.735,
+        1.51,
+        0.5
+      ]
+    },
+    {
+      "name": "CHARGE",
+      "kind": "Block",
+      "triangles": 12,
+      "material": "M_CHARGE",
+      "bbox_min": [
+        0.785,
+        1.8,
+        0.76
+      ],
+      "bbox_max": [
+        0.985,
+        2.0,
+        0.8
+      ]
+    },
+    {
+      "name": "DECOR_canopy",
+      "kind": "Decor",
+      "triangles": 12,
+      "material": "M_DECOR_glass",
+      "bbox_min": [
+        -0.8,
+        -0.95,
+        0.95
+      ],
+      "bbox_max": [
+        0.8,
+        1.35,
+        1.45
+      ]
+    },
+    {
+      "name": "DECOR_seat_L",
+      "kind": "Decor",
+      "triangles": 12,
+      "material": "M_DECOR_seat",
+      "bbox_min": [
+        0.14,
+        -0.4,
+        0.4
+      ],
+      "bbox_max": [
+        0.62,
+        0.1,
+        1.0
+      ]
+    },
+    {
+      "name": "DECOR_seat_R",
+      "kind": "Decor",
+      "triangles": 12,
+      "material": "M_DECOR_seat",
+      "bbox_min": [
+        -0.62,
+        -0.4,
+        0.4
+      ],
+      "bbox_max": [
+        -0.14,
+        0.1,
+        1.0
+      ]
+    },
+    {
+      "name": "DECOR_seat_rear",
+      "kind": "Decor",
+      "triangles": 12,
+      "material": "M_DECOR_seat",
+      "bbox_min": [
+        -0.65,
+        0.375,
+        0.4
+      ],
+      "bbox_max": [
+        0.65,
+        0.825,
+        0.96
+      ]
+    },
+    {
+      "name": "DECOR_wheel_FL",
+      "kind": "Decor",
+      "triangles": 92,
+      "material": "M_DECOR_tire",
+      "bbox_min": [
+        0.6825,
+        -1.69,
+        0.0
+      ],
+      "bbox_max": [
+        0.9175,
+        -1.01,
+        0.68
+      ]
+    },
+    {
+      "name": "DECOR_wheel_FR",
+      "kind": "Decor",
+      "triangles": 92,
+      "material": "M_DECOR_tire",
+      "bbox_min": [
+        -0.9175,
+        -1.69,
+        0.0
+      ],
+      "bbox_max": [
+        -0.6825,
+        -1.01,
+        0.68
+      ]
+    },
+    {
+      "name": "DECOR_wheel_RL",
+      "kind": "Decor",
+      "triangles": 92,
+      "material": "M_DECOR_tire",
+      "bbox_min": [
+        0.6825,
+        1.01,
+        0.0
+      ],
+      "bbox_max": [
+        0.9175,
+        1.69,
+        0.68
+      ]
+    },
+    {
+      "name": "DECOR_wheel_RR",
+      "kind": "Decor",
+      "triangles": 92,
+      "material": "M_DECOR_tire",
+      "bbox_min": [
+        -0.9175,
+        1.01,
+        0.0
+      ],
+      "bbox_max": [
+        -0.6825,
+        1.69,
+        0.68
+      ]
+    },
+    {
+      "name": "DIAG",
+      "kind": "Block",
+      "triangles": 12,
+      "material": "M_DIAG",
+      "bbox_min": [
+        0.4,
+        -0.78,
+        0.66
+      ],
+      "bbox_max": [
+        0.5,
+        -0.72,
+        0.7
+      ]
+    },
+    {
+      "name": "ENERGY",
+      "kind": "Block",
+      "triangles": 12,
+      "material": "M_ENERGY",
+      "bbox_min": [
+        -0.62,
+        -1.0,
+        0.22
+      ],
+      "bbox_max": [
+        0.62,
+        1.0,
+        0.36
+      ]
+    },
+    {
+      "name": "FLOW__CHARGE__ENERGY",
+      "kind": "Flow",
+      "triangles": 60,
+      "material": "M_FLOW",
+      "bbox_min": [
+        0.2736,
+        0.9302,
+        0.3286
+      ],
+      "bbox_max": [
+        0.8716,
+        1.8878,
+        0.7489
+      ]
+    },
+    {
+      "name": "FLOW__DIAG__VCONTROL",
+      "kind": "Flow",
+      "triangles": 44,
+      "material": "M_FLOW",
+      "bbox_min": [
+        0.0915,
+        -0.7712,
+        0.4281
+      ],
+      "bbox_max": [
+        0.4493,
+        -0.5993,
+        0.6674
+      ]
+    },
+    {
+      "name": "FLOW__ENERGY__POWERTRAIN",
+      "kind": "Flow",
+      "triangles": 60,
+      "material": "M_FLOW",
+      "bbox_min": [
+        -0.0064,
+        0.9099,
+        0.3283
+      ],
+      "bbox_max": [
+        0.2304,
+        1.3311,
+        0.4119
+      ]
+    },
+    {
+      "name": "FLOW__ENERGY__THERMAL",
+      "kind": "Flow",
+      "triangles": 60,
+      "material": "M_FLOW",
+      "bbox_min": [
+        -0.4718,
+        -1.9507,
+        0.3082
+      ],
+      "bbox_max": [
+        -0.1959,
+        -0.8954,
+        0.5311
+      ]
+    },
+    {
+      "name": "FLOW__HMI__VCONTROL",
+      "kind": "Flow",
+      "triangles": 44,
+      "material": "M_FLOW",
+      "bbox_min": [
+        -0.0115,
+        -0.8314,
+        0.5093
+      ],
+      "bbox_max": [
+        0.0714,
+        -0.6132,
+        0.7843
+      ]
+    },
+    {
+      "name": "FLOW__INVERTER__POWERTRAIN",
+      "kind": "Flow",
+      "triangles": 44,
+      "material": "M_FLOW",
+      "bbox_min": [
+        -0.1516,
+        1.3083,
+        0.4132
+      ],
+      "bbox_max": [
+        -0.0898,
+        1.3608,
+        0.5565
+      ]
+    },
+    {
+      "name": "FLOW__SENSORS__VCONTROL",
+      "kind": "Flow",
+      "triangles": 60,
+      "material": "M_FLOW",
+      "bbox_min": [
+        -0.1716,
+        -2.1269,
+        0.3883
+      ],
+      "bbox_max": [
+        0.0107,
+        -0.6209,
+        0.5991
+      ]
+    },
+    {
+      "name": "FLOW__VCONTROL__BRAKES",
+      "kind": "Flow",
+      "triangles": 60,
+      "material": "M_FLOW",
+      "bbox_min": [
+        -0.7291,
+        -1.3473,
+        0.3384
+      ],
+      "bbox_max": [
+        0.0057,
+        -0.6083,
+        0.5907
+      ]
+    },
+    {
+      "name": "FLOW__VCONTROL__POWERTRAIN",
+      "kind": "Flow",
+      "triangles": 60,
+      "material": "M_FLOW",
+      "bbox_min": [
+        -0.0114,
+        -0.586,
+        0.3881
+      ],
+      "bbox_max": [
+        0.1318,
+        1.3053,
+        0.6008
+      ]
+    },
+    {
+      "name": "HMI",
+      "kind": "Block",
+      "triangles": 12,
+      "material": "M_HMI",
+      "bbox_min": [
+        -0.775,
+        -1.025,
+        0.75
+      ],
+      "bbox_max": [
+        0.775,
+        -0.575,
+        0.97
+      ]
+    },
+    {
+      "name": "INVERTER",
+      "kind": "Block",
+      "triangles": 12,
+      "material": "M_INVERTER",
+      "bbox_min": [
+        -0.17,
+        1.21,
+        0.5
+      ],
+      "bbox_max": [
+        0.17,
+        1.49,
+        0.6
+      ]
+    },
+    {
+      "name": "POWERTRAIN",
+      "kind": "Block",
+      "triangles": 12,
+      "material": "M_POWERTRAIN",
+      "bbox_min": [
+        -0.45,
+        1.13,
+        0.21
+      ],
+      "bbox_max": [
+        0.45,
+        1.57,
+        0.51
+      ]
+    },
+    {
+      "name": "SENSORS",
+      "kind": "Block",
+      "triangles": 188,
+      "material": "M_SENSORS",
+      "bbox_min": [
+        -0.675,
+        -2.195,
+        0.27
+      ],
+      "bbox_max": [
+        0.675,
+        1.38,
+        0.65
+      ]
+    },
+    {
+      "name": "THERMAL",
+      "kind": "Block",
+      "triangles": 12,
+      "material": "M_THERMAL",
+      "bbox_min": [
+        -0.45,
+        -1.975,
+        0.35
+      ],
+      "bbox_max": [
+        0.45,
+        -1.925,
+        0.75
+      ]
+    },
+    {
+      "name": "THERM_CTRL",
+      "kind": "Block",
+      "triangles": 12,
+      "material": "M_THERM_CTRL",
+      "bbox_min": [
+        0.33,
+        -1.85,
+        0.67
+      ],
+      "bbox_max": [
+        0.47,
+        -1.75,
+        0.73
+      ]
+    },
+    {
+      "name": "VCONTROL",
+      "kind": "Block",
+      "triangles": 12,
+      "material": "M_VCONTROL",
+      "bbox_min": [
+        -0.13,
+        -0.7,
+        0.58
+      ],
+      "bbox_max": [
+        0.13,
+        -0.5,
+        0.66
+      ]
+    },
+    {
+      "name": "VEH",
+      "kind": "Block",
+      "triangles": 12,
+      "material": "M_VEH",
+      "bbox_min": [
+        -0.9,
+        -2.2,
+        0.3
+      ],
+      "bbox_max": [
+        0.9,
+        2.2,
+        1.0
+      ]
+    }
+  ]
+}
