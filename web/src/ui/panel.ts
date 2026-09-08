@@ -241,15 +241,20 @@ export function mountPanel(deps: PanelDeps): PanelHandle {
   const unsubscribe = store.subscribe(onStateChange);
   onStateChange(store.get());
 
+  // Escape clears the selection from anywhere -- including the 3D view, which
+  // is where you are when you want it. Listening on the document (rather than
+  // on #panel) is what makes that work; panel keydowns still bubble up here.
   function onKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') clearSelection();
+    if (e.key !== 'Escape') return;
+    if (!store.get().selection) return;
+    clearSelection();
   }
-  root.addEventListener('keydown', onKeydown as EventListener);
+  document.addEventListener('keydown', onKeydown as EventListener);
 
   return {
     destroy() {
       unsubscribe();
-      root.removeEventListener('keydown', onKeydown as EventListener);
+      document.removeEventListener('keydown', onKeydown as EventListener);
       clear(root);
     },
   };

@@ -4,6 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SysML Car - Systems Engineering, Explained</title>
+    <!--
+      Theme, applied before first paint so reloading in light mode never
+      flashes the dark shell. Mirrors readInitialTheme() in
+      src/state/store.ts: an explicit stored choice wins, otherwise follow the
+      OS. Kept inline (and tiny) on purpose - a module import would run after
+      the first paint.
+    -->
+    <script>
+      (function () {
+        var theme = 'dark';
+        try {
+          var stored = window.localStorage.getItem('sysml-car:theme');
+          if (stored === 'dark' || stored === 'light') theme = stored;
+          else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) theme = 'light';
+        } catch (err) {
+          /* private mode / storage disabled: fall back to the default */
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
@@ -24,7 +44,7 @@
             Tour
           </button>
           <button type="button" id="terms" data-testid="terms" class="btn btn-toggle" aria-pressed="false">
-            Plain / SysML
+            Plain
           </button>
           <button type="button" id="theme" data-testid="theme" class="btn btn-toggle" aria-pressed="false">
             Theme

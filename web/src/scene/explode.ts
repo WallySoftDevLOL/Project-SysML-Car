@@ -13,8 +13,15 @@ import type { BlockId } from '../model/schema';
 import type { SceneAssets } from './load-glb';
 import { SHELL_BLOCK_ID } from './load-glb';
 
-/** Metres a block travels at t = 1 along a unit explode vector. */
-export const EXPLODE_DISTANCE = 1.6;
+/**
+ * Metres a block travels at t = 1 along a unit explode vector.
+ *
+ * Tuned against the default framing: at 1.6 the outermost parts left the
+ * viewport well before the slider reached the end, which read as a bug. 1.15
+ * still separates every part clearly, and the viewer's debounced re-fit (see
+ * `setExplode` in viewer.ts) covers the rest.
+ */
+export const EXPLODE_DISTANCE = 1.15;
 /** How much of its own vector a nested block adds on top of its parent's. */
 const CHILD_SCALE = 0.5;
 

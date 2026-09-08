@@ -79,9 +79,22 @@ const THEME_FALLBACK_BG: Record<ViewerTheme, string> = {
   light: '#f1f5f9',
 };
 
+/**
+ * How long after the last explode change the camera re-frames, and how long
+ * that re-frame takes. Long enough that dragging the slider never triggers a
+ * tween mid-drag; short enough that letting go feels immediate.
+ */
+const EXPLODE_FIT_DELAY = 160;
+const EXPLODE_FIT_DURATION = 320;
+
 /** Target pan/orbit centre: roughly the middle of the car's body. */
 const HOME_TARGET = new THREE.Vector3(0, 0.6, 0);
 /** Pan is allowed, but only inside this box, so the car can't be lost offscreen. */
+/** Focus framing: minimum box extent (m), extra distance, and minimum view elevation (unit y). */
+const FOCUS_MIN_EXTENT = 2.6;
+const FOCUS_CONTEXT_SCALE = 1.25;
+const FOCUS_MIN_ELEVATION = 0.42;
+
 const PAN_LIMIT = new THREE.Box3(
   new THREE.Vector3(-2.5, -0.2, -3.5),
   new THREE.Vector3(2.5, 2.2, 3.5),
@@ -200,6 +213,42 @@ export function createViewer(container: HTMLElement, opts: ViewerOptions = {}): 
     requestRender();
   }
   applyTheme(theme);
+
+  // --- explode re-framing -------------------------------------------------
+  // Exploded parts travel outside the default framing, so once the slider
+  // settles we re-fit the camera to where the parts actually are. Only when
+  // nothing is focused: a selection's own framing always wins, and any
+  // focus()/flyTo() cancels a pending fit so a tour step is never overridden.
+  const _explodedBox = new THREE.Box3();
+  const _focusBox = new THREE.Box3();
+  const _focusSize = new THREE.Vector3();
+  const _focusPad = new THREE.Vector3();
+  let explodeFitTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function cancelExplodeFit() {
+    if (explodeFitTimer === undefined) return;
+    clearTimeout(explodeFitTimer);
+    explodeFitTimer = undefined;
+  }
+
+  function explodedBounds(): THREE.Box3 | null {
+    if (!assets) return null;
+    _explodedBox.makeEmpty();
+    for (const entry of assets.blocks.values()) _explodedBox.union(entry.box);
+    if (_explodedBox.isEmpty()) _explodedBox.copy(assets.carBox);
+    return _explodedBox;
+  }
+
+  function scheduleExplodeFit() {
+    cancelExplodeFit();
+    explodeFitTimer = setTimeout(() => {
+      explodeFitTimer = undefined;
+      if (disposed || !assets) return;
+      if (lastHighlight.primary.size > 0) return; // a focused part owns the framing
+      const box = explodedBounds();
+      if (box) rig.frameBox(box, reducedMotion() ? 0 : EXPLODE_FIT_DURATION);
+    }, EXPLODE_FIT_DELAY);
+  }
 
   // --- resize -----------------------------------------------------------
   // True once the car has been framed at a real (non-zero) aspect ratio.
@@ -326,7 +375,9 @@ export function createViewer(container: HTMLElement, opts: ViewerOptions = {}): 
     },
 
     setExplode(t: number) {
-      explodeT = THREE.MathUtils.clamp(t, 0, 1);
+      const next = THREE.MathUtils.clamp(t, 0, 1);
+      const changed = Math.abs(next - explodeT) > 1e-4;
+      explodeT = next;
       exploder?.set(explodeT);
       highlighter?.setExplode(explodeT);
       lighting.setExplode(explodeT);
@@ -336,23 +387,39 @@ export function createViewer(container: HTMLElement, opts: ViewerOptions = {}): 
         labels.show(entry ? (labelText.get(hoveredId) ?? hoveredId) : null, entry?.sphere ?? null);
       }
       picker?.invalidate();
+      if (changed) scheduleExplodeFit();
       requestRender();
     },
 
     focus(blockId: BlockId | null, focusOpts?: FocusOptions) {
+      cancelExplodeFit();
       const duration = focusOpts?.duration ?? DEFAULT_DURATION;
       const scale = focusOpts?.distance ?? 1;
       if (!assets) return;
       if (blockId === null) {
-        rig.frameDefault(assets.carBox, duration, scale);
+        // Frame whatever is actually on screen: at explode > 0 the rest-pose
+        // carBox is too small and would clip the parts that have moved out.
+        rig.frameDefault(explodedBounds() ?? assets.carBox, duration, scale);
         return;
       }
       const entry = assets.blocks.get(blockId);
       if (!entry) return;
-      rig.frameBox(entry.box, duration, scale);
+      // An exact fit on a small part (an ECU, a charge port) loses all sense of
+      // where it sits in the car. Pad the box to a minimum extent so the
+      // surrounding structure stays in frame, and look slightly down at it.
+      _focusBox.copy(entry.box);
+      _focusBox.getSize(_focusSize);
+      _focusPad.set(
+        Math.max(0, (FOCUS_MIN_EXTENT - _focusSize.x) / 2),
+        Math.max(0, (FOCUS_MIN_EXTENT * 0.6 - _focusSize.y) / 2),
+        Math.max(0, (FOCUS_MIN_EXTENT - _focusSize.z) / 2),
+      );
+      _focusBox.expandByVector(_focusPad);
+      rig.frameBox(_focusBox, duration, scale * FOCUS_CONTEXT_SCALE, FOCUS_MIN_ELEVATION);
     },
 
     flyTo(pose: CameraPose, duration = DEFAULT_DURATION) {
+      cancelExplodeFit();
       rig.flyTo(pose, duration);
     },
 
@@ -381,6 +448,7 @@ export function createViewer(container: HTMLElement, opts: ViewerOptions = {}): 
     dispose() {
       if (disposed) return;
       disposed = true;
+      cancelExplodeFit();
       cancelAnimationFrame(raf);
       resizeObserver.disconnect();
       controls.removeEventListener('change', onControlsChange);

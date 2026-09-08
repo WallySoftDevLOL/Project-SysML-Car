@@ -25,6 +25,9 @@
   --color-muted: #9ca3af;
   --color-accent: #3b82f6;
   --color-accent-text: #ffffff;
+  /* Focus ring: brighter than --color-accent so it still reads on top of a
+     pressed (accent-filled) button. */
+  --color-focus: #7dd3fc;
 }
 
 html[data-theme='light'] {
@@ -35,6 +38,7 @@ html[data-theme='light'] {
   --color-muted: #64748b;
   --color-accent: #3b82f6;
   --color-accent-text: #ffffff;
+  --color-focus: #1d4ed8;
 }
 
 /* Only apply the light system-preference override when no explicit choice
@@ -46,6 +50,7 @@ html[data-theme='light'] {
     --color-border: #e2e8f0;
     --color-text: #0f172a;
     --color-muted: #64748b;
+    --color-focus: #1d4ed8;
   }
 }
 
@@ -79,20 +84,25 @@ button {
 
 #app {
   display: grid;
-  grid-template-columns: 1fr var(--panel-width);
-  grid-template-rows: var(--toolbar-height) 1fr;
+  /* minmax(0, ...) everywhere: a wide toolbar or a long label must never be
+     able to push a track past the viewport (that is what made the whole page
+     scroll sideways at 375px). "auto" on the toolbar row lets it grow when it
+     wraps instead of clipping the last button. */
+  grid-template-columns: minmax(0, 1fr) var(--panel-width);
+  grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     'toolbar toolbar'
     'viewport panel';
   height: 100vh;
-  width: 100vw;
+  width: 100%;
+  max-width: 100vw;
   overflow: hidden;
 }
 
 @media (max-width: 900px) {
   #app {
-    grid-template-columns: 1fr;
-    grid-template-rows: var(--toolbar-height) 1fr var(--sheet-height);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) var(--sheet-height);
     grid-template-areas:
       'toolbar'
       'viewport'
@@ -109,8 +119,10 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 0 16px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 6px 16px;
+  min-height: var(--toolbar-height);
   background: var(--color-panel);
   border-bottom: 1px solid var(--color-border);
 }
@@ -121,9 +133,23 @@ button {
   gap: 8px;
 }
 
+.toolbar-brand {
+  flex: 0 0 auto;
+}
+
+.toolbar-controls {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
 .brand-title {
   font-weight: 600;
   letter-spacing: 0.01em;
+  /* One line, always: "SysML Car" breaking in half was the single ugliest
+     thing about the 375px layout. */
+  white-space: nowrap;
 }
 
 .control {
@@ -134,8 +160,13 @@ button {
   color: var(--color-muted);
 }
 
+.control-label {
+  white-space: nowrap;
+}
+
 .control-slider input[type='range'] {
   width: 120px;
+  max-width: 100%;
 }
 
 .btn {
@@ -145,6 +176,7 @@ button {
   border-radius: var(--radius-sm);
   padding: 6px 10px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .btn:hover {
@@ -157,6 +189,66 @@ button {
   color: var(--color-accent-text);
 }
 
+/* Narrow phones: the toolbar keeps one row of [title ..... toggles] and
+   drops the Explode slider onto a full-width row of its own. `display:
+   contents` on the controls group is what lets the slider claim 100% of the
+   toolbar (a percentage basis inside the nested flex group would have had no
+   definite width to resolve against). */
+@media (max-width: 640px) {
+  .toolbar {
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 6px 10px;
+    /* Everything one notch smaller so the title and all four toggles share a
+       single row at 375px instead of stacking three deep. */
+    font-size: 0.92em;
+  }
+
+  .toolbar-controls {
+    display: contents;
+  }
+
+  .toolbar-brand {
+    margin-right: auto;
+  }
+
+  .control-slider {
+    order: 10;
+    flex: 1 0 100%;
+    gap: 8px;
+  }
+
+  .control-slider input[type='range'] {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+  }
+
+  .btn {
+    padding: 6px 8px;
+  }
+
+  .tour-select {
+    width: 5.6em;
+    padding: 6px 2px 6px 6px;
+  }
+}
+
+@media (max-width: 400px) {
+  .toolbar {
+    font-size: 0.88em;
+    padding: 6px 8px;
+  }
+
+  .btn {
+    padding: 5px 6px;
+  }
+
+  .tour-select {
+    padding: 5px 0 5px 5px;
+  }
+}
+
 /* ---------------------------------------------------------------------- */
 /* Viewport                                                                 */
 /* ---------------------------------------------------------------------- */
@@ -164,8 +256,13 @@ button {
 .viewport {
   grid-area: viewport;
   position: relative;
+  /* Its own stacking context, above the panel: the CSS2D hover label and the
+     landing hint live inside here, so nothing in the panel (the legend in
+     particular) can ever paint over them. */
+  z-index: 1;
   background: var(--color-bg);
   overflow: hidden;
+  min-width: 0;
 }
 
 .viewport canvas {
@@ -222,11 +319,14 @@ button {
 
 .panel {
   grid-area: panel;
+  position: relative;
+  z-index: 0;
   display: flex;
   flex-direction: column;
   background: var(--color-panel);
   border-left: 1px solid var(--color-border);
   overflow: hidden;
+  min-width: 0;
 }
 
 @media (max-width: 900px) {
@@ -417,11 +517,31 @@ button {
   padding: 3px 10px 3px 6px;
   font-size: 0.8em;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .legend-chip:hover,
 .legend-chip.is-selected {
   border-color: var(--color-accent);
+}
+
+/* Below 900px the panel is a bottom sheet and the 13 chips wrapped to four
+   rows, eating most of it. One swipeable row instead - same chips, one line.
+   (Desktop keeps the wrap: there is width to spare and no vertical budget
+   pressure.) */
+@media (max-width: 900px) {
+  .legend {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 12px 10px;
+  }
+
+  .legend-chip {
+    flex: 0 0 auto;
+  }
 }
 
 .dot {
@@ -584,6 +704,30 @@ button {
   justify-content: flex-start;
 }
 
+/* ---------------------------------------------------------------------- */
+/* Focus                                                                    */
+/* ---------------------------------------------------------------------- */
+
+/* One visible ring for every focusable thing, in both themes. :where() keeps
+   the specificity at zero so component rules can still override it, and
+   :focus-visible means mouse users never see it. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Rows and tabs sit flush against their container, so their ring goes inside
+   rather than bleeding into the scroll gutter. */
+.list-row:focus-visible,
+.ladder-rung:focus-visible {
+  outline-offset: -2px;
+}
+
+.tab-btn:focus-visible,
+.sheet-handle:focus-visible {
+  outline-offset: -3px;
+}
+
 /* Buttons */
 .btn-link {
   border: none;
@@ -618,7 +762,7 @@ button {
 
 /* Landing state */
 .landing {
-  padding: 4px 0 12px;
+  padding: 2px 0 0;
 }
 
 .landing-buttons {
@@ -643,18 +787,66 @@ button {
   border-color: var(--color-accent);
 }
 
-/* Panel layout: detail area above the list area */
+/* ---------------------------------------------------------------------- */
+/* Panel vertical rhythm                                                    */
+/* ---------------------------------------------------------------------- */
+/* One owner for the gaps between Back / detail / list: `gap` on the column,
+   and the pieces themselves carry no outer margin. A hidden Back button is
+   display:none, so it contributes no gap either. */
+
 .panel-body {
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
 .list-area {
-  margin-top: 8px;
+  margin-top: 0;
+}
+
+.btn-back {
+  margin-bottom: 0;
+}
+
+/* The detail area holds exactly one card; the card's own bottom margin would
+   double up with the column gap. */
+.detail-area > .card:last-child,
+.detail-area > .landing:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section:first-of-type {
+  margin-top: 10px;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section > .list:last-child > .list-row:last-child,
+.list-area .list > .list-row:last-child {
+  margin-bottom: 0;
+}
+
+/* Requirements tab: filters, the copies checkbox and the list on one rhythm. */
+.chip-row {
+  margin-bottom: 8px;
+}
+
+.copies-toggle {
+  margin-bottom: 8px;
+}
+
+.req-list-panel > .list {
+  margin-top: 0;
 }
 
 .tour-select {
   padding: 5px 8px;
+  /* A <select> sizes to its widest <option>, and the scenario titles are long
+     sentences -- left alone it claimed a whole toolbar row on a phone. */
+  max-width: 9em;
+  min-width: 0;
 }
 
 /* Mobile bottom-sheet drag handle */
@@ -682,6 +874,58 @@ button {
     height: 4px;
     border-radius: 999px;
     background: var(--color-border);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Landing hint (created by main.ts, lives inside #viewport)               */
+/* ---------------------------------------------------------------------- */
+
+.viewer-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  /* Above the canvas and the label layer, below the tour overlay (z 20). */
+  z-index: 12;
+  pointer-events: none;
+  max-width: calc(100% - 24px);
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-text);
+  font-size: 0.85em;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28);
+  opacity: 0.9;
+  animation: hint-pulse 2.6s ease-in-out infinite;
+  transition: opacity 0.25s ease;
+}
+
+.viewer-hint.is-leaving {
+  opacity: 0;
+  animation: none;
+}
+
+@keyframes hint-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewer-hint {
+    animation: none;
+    opacity: 0.9;
+  }
+
+  .spinner {
+    animation-duration: 2.4s;
   }
 }
 

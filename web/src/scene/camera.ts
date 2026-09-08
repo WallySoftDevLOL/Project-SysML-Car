@@ -28,7 +28,7 @@ interface Tween {
 
 export interface CameraRig {
   /** Frame a bounding box, keeping the current view direction. */
-  frameBox(box: THREE.Box3, duration: number, distanceScale?: number): void;
+  frameBox(box: THREE.Box3, duration: number, distanceScale?: number, minElevation?: number): void;
   /** Frame a box from the default three-quarter view. */
   frameDefault(box: THREE.Box3, duration: number, distanceScale?: number): void;
   flyTo(pose: CameraPose, duration: number): void;
@@ -144,10 +144,16 @@ export function createCameraRig(
   }
 
   return {
-    frameBox(box, duration, distanceScale = 1) {
+    frameBox(box, duration, distanceScale = 1, minElevation = 0) {
       _dir.copy(camera.position).sub(controls.target);
       if (_dir.lengthSq() < 1e-6) _dir.copy(DEFAULT_DIR);
       _dir.normalize();
+      // Looking at a single part from too low puts the camera inside the
+      // bodywork; lift the view direction to at least `minElevation` (unit y).
+      if (_dir.y < minElevation) {
+        _dir.y = minElevation;
+        _dir.normalize();
+      }
       frameFrom(_dir, box, duration, distanceScale);
     },
     frameDefault(box, duration, distanceScale = 1) {

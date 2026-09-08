@@ -10,7 +10,7 @@
 // Visual grammar:
 //   primary    emissive = the block's own palette color at 0.55, fully opaque
 //   secondary  same tint at 0.20, opacity 0.95
-//   dimmed     (something is selected and this is neither) opacity 0.12
+//   dimmed     (something is selected and this is neither) opacity 0.20
 //   nothing selected -> everything back to the as-authored look
 //   VEH shell  never dims -- its opacity is owned by x-ray + explode
 //   flow tubes light up when either endpoint is primary
@@ -23,13 +23,19 @@ import { CANOPY_NAME, SHELL_BLOCK_ID } from './load-glb';
 export const PRIMARY_EMISSIVE = 0.55;
 export const SECONDARY_EMISSIVE = 0.2;
 export const SECONDARY_OPACITY = 0.95;
-export const DIM_OPACITY = 0.12;
+/**
+ * Dimmed = "something else is selected". 0.12 read as invisible against the
+ * dark shell, so the car lost its silhouette the moment you picked anything;
+ * 0.20 keeps the outline of the untouched parts legible while the selected
+ * part still jumps out (it is fully opaque, emissive and outlined).
+ */
+export const DIM_OPACITY = 0.2;
 /** A dimmed block still lifts a little under the pointer so hover reads. */
 export const DIM_HOVER_OPACITY = 0.4;
 export const HOVER_EMISSIVE = 0.12;
 export const SHELL_PRIMARY_EMISSIVE = 0.15;
 export const FLOW_HOT_EMISSIVE = 1.2;
-export const FLOW_DIM_OPACITY = 0.25;
+export const FLOW_DIM_OPACITY = 0.28;
 
 /** X-ray on / off opacities for the shell and the glass canopy. */
 export const SHELL_OPACITY = { on: 0.35, off: 0.9 };

@@ -9,7 +9,7 @@ import { highlightFor } from './model/highlight';
 import { createViewer, type ViewerBlockDef } from './scene/viewer';
 import { createPlaceholderViewer } from './scene/placeholder';
 import type { Viewer } from './scene/viewer-api';
-import { store } from './state/store';
+import { store, persistTheme } from './state/store';
 import { initUrlSync } from './state/url';
 import { paletteFromModel } from './palette';
 import { mountUI } from './ui';
@@ -92,9 +92,13 @@ function bindViewerToStore(viewer: Viewer, idx: ModelIndex) {
       viewer.setExplode(s.explode);
     }
     if (s.theme !== lastTheme) {
+      const isUserChoice = lastTheme !== null; // the first pass is just the boot value
       lastTheme = s.theme;
-      viewer.setTheme(s.theme);
+      // Flip the <html> attribute *before* the viewer re-reads --color-bg,
+      // otherwise the canvas background lags one toggle behind the chrome.
       applyTheme(s.theme);
+      viewer.setTheme(s.theme);
+      if (isUserChoice) persistTheme(s.theme);
     }
   };
   store.subscribe(apply);
@@ -112,6 +116,44 @@ function bindViewerToStore(viewer: Viewer, idx: ModelIndex) {
   viewer.on('hover', ({ id }) => {
     if (store.get().hover !== id) store.set({ hover: id });
   });
+}
+
+/** How long the "tap the car" nudge sticks around if nobody touches anything. */
+const HINT_TIMEOUT_MS = 12_000;
+
+/**
+ * A one-time nudge for first-time visitors, parked at the bottom centre of the
+ * viewport. It leaves on the first pick, the first pointer-down in the 3D view,
+ * the start of a tour, or after HINT_TIMEOUT_MS -- whichever comes first. The
+ * pulse is CSS-only and is switched off under prefers-reduced-motion.
+ */
+function mountLandingHint(viewport: HTMLElement): void {
+  if (store.get().selection || store.get().tour) return;
+
+  const hint = document.createElement('div');
+  hint.className = 'viewer-hint';
+  hint.id = 'viewer-hint';
+  hint.setAttribute('data-testid', 'viewer-hint');
+  hint.setAttribute('role', 'status');
+  hint.textContent = 'Tap any part of the car';
+  viewport.appendChild(hint);
+
+  let done = false;
+  const dismiss = () => {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    unsubscribe();
+    viewport.removeEventListener('pointerdown', dismiss);
+    hint.classList.add('is-leaving');
+    setTimeout(() => hint.remove(), 300);
+  };
+
+  const timer = setTimeout(dismiss, HINT_TIMEOUT_MS);
+  const unsubscribe = store.subscribe((s) => {
+    if (s.selection || s.tour) dismiss();
+  });
+  viewport.addEventListener('pointerdown', dismiss);
 }
 
 async function main() {
@@ -172,8 +214,12 @@ async function main() {
   };
   viewport.addEventListener('pointerdown', stopIdle, { once: true });
 
+  mountLandingHint(viewport);
+
   hideLoading();
   document.body.setAttribute('data-ready', 'true');
+
+  if (import.meta.env.DEV || new URLSearchParams(location.search).has('e2e')) { (window as any).__store = store; (window as any).__viewer = viewer; }
 }
 
 main().catch((err) => {
