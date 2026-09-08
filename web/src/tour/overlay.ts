@@ -20,6 +20,17 @@ export function createTourOverlay(container: HTMLElement, player: TourPlayer): T
 
   const caption = h('p', { class: 'tour-caption', 'data-testid': 'tour-caption' }, '');
 
+  // A sequence-diagram message strip: "sender ── message() ──▶ receiver",
+  // monospace, with the UML message sort (SynchCall, AsyncSignal, ...) as a
+  // native tooltip. Hidden unless the current step resolved a message
+  // (src/tour/player.ts TourPlayerState.message).
+  const msgStrip = h('div', { class: 'tour-msg', 'data-testid': 'tour-msg', hidden: true }, '');
+
+  // A compact horizontal state-machine strip (Off · Starting · Ready · ...)
+  // with the current state highlighted. Hidden unless the current step
+  // resolved a state machine (TourPlayerState.stateStrip).
+  const stateStrip = h('div', { class: 'tour-state-strip', 'data-testid': 'tour-state-strip', hidden: true });
+
   const dots = h('div', { class: 'tour-dots', 'data-testid': 'tour-dots' });
   const backBtn = h(
     'button',
@@ -38,6 +49,8 @@ export function createTourOverlay(container: HTMLElement, player: TourPlayer): T
     { class: 'tour-overlay', 'data-testid': 'tour-overlay', role: 'dialog', 'aria-label': 'Story mode', hidden: true },
     header,
     caption,
+    msgStrip,
+    stateStrip,
     footer,
   ) as HTMLDivElement;
 
@@ -71,6 +84,36 @@ export function createTourOverlay(container: HTMLElement, player: TourPlayer): T
     }
   }
 
+  function renderMessage(message: TourPlayerState['message']) {
+    if (!message) {
+      msgStrip.hidden = true;
+      msgStrip.removeAttribute('title');
+      return;
+    }
+    msgStrip.hidden = false;
+    msgStrip.textContent = `${message.fromLabel} ── ${message.label} ──▶ ${message.toLabel}`;
+    msgStrip.setAttribute('title', message.sort);
+  }
+
+  function renderStateStrip(strip: TourPlayerState['stateStrip']) {
+    clear(stateStrip);
+    if (!strip || strip.states.length === 0) {
+      stateStrip.hidden = true;
+      return;
+    }
+    stateStrip.hidden = false;
+    strip.states.forEach((s, i) => {
+      if (i > 0) stateStrip.append(h('span', { class: 'tour-state-sep' }, '·'));
+      stateStrip.append(
+        h(
+          'span',
+          { class: `tour-state${s.id === strip.currentId ? ' is-current' : ''}`, 'data-testid': 'tour-state' },
+          s.name,
+        ),
+      );
+    });
+  }
+
   function render(state: TourPlayerState | null) {
     if (!state) {
       card.hidden = true;
@@ -80,6 +123,8 @@ export function createTourOverlay(container: HTMLElement, player: TourPlayer): T
     const step = state.scenario.steps[state.stepIndex];
     titleEl.textContent = state.scenario.title;
     caption.textContent = step?.caption ?? '';
+    renderMessage(state.message);
+    renderStateStrip(state.stateStrip);
     backBtn.disabled = state.stepIndex === 0;
     nextBtn.disabled = state.stepIndex >= state.stepCount - 1;
     renderDots(state.stepIndex, state.stepCount);

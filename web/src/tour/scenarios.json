@@ -1,6 +1,62 @@
 {
   "scenarios": [
     {
+      "id": "startup-sequence",
+      "title": "How the car wakes up",
+      "blurb": "Watch the exact handshake between the driver, the vehicle controller, the battery, and the inverter that gets the car from Off to Ready to drive.",
+      "steps": [
+        {
+          "caption": "Before the driver does anything, the vehicle sits in one simple state: Off. Every subsystem is idle, waiting for a start command.",
+          "selection": { "kind": "block", "id": "VEH" },
+          "focus": null,
+          "xray": true,
+          "explode": 0.15,
+          "stateMachine": { "id": "SM_VEH", "state": "SV_OFF" }
+        },
+        {
+          "caption": "The driver presses Start. The driver interface sends one message straight to the vehicle controller: startVehicle(). The vehicle begins waking up.",
+          "selection": { "kind": "block", "id": "VCONTROL" },
+          "focus": "VCONTROL",
+          "sequence": { "interaction": "SEQ_START", "message": 1 },
+          "stateMachine": { "id": "SM_VEH", "state": "SV_START" }
+        },
+        {
+          "caption": "The vehicle controller can't do anything without power, so it asks the battery system to enable it: PowerEnable.",
+          "selection": { "kind": "block", "id": "ENERGY" },
+          "focus": "ENERGY",
+          "sequence": { "interaction": "SEQ_START", "message": 2 },
+          "stateMachine": { "id": "SM_VEH", "state": "SV_START" }
+        },
+        {
+          "caption": "The battery replies once power is actually ready: PowerAvailable. Now the controller knows it's safe to move on.",
+          "selection": { "kind": "block", "id": "VCONTROL" },
+          "focus": "VCONTROL",
+          "sequence": { "interaction": "SEQ_START", "message": 3 },
+          "stateMachine": { "id": "SM_VEH", "state": "SV_START" }
+        },
+        {
+          "caption": "With power confirmed, the controller sends the very first torque command to the inverter: TorqueCommand. The car is ready to drive.",
+          "selection": { "kind": "block", "id": "INVERTER" },
+          "focus": "INVERTER",
+          "sequence": { "interaction": "SEQ_START", "message": 4 },
+          "stateMachine": { "id": "SM_VEH", "state": "SV_READY" }
+        },
+        {
+          "caption": "One invariant closes the loop: on the vehicle controller, vehicleReady == true. Requirement SYS-001, Commanded Startup, and test TC_START both prove this handshake actually works.",
+          "selection": { "kind": "requirement", "id": "REQ_SYS_001" },
+          "focus": "VCONTROL",
+          "stateMachine": { "id": "SM_VEH", "state": "SV_READY" }
+        },
+        {
+          "caption": "This whole handshake is one sequence diagram in the model. Every arrow you just saw is a real message between real parts.",
+          "selection": { "kind": "block", "id": "VEH" },
+          "focus": null,
+          "explode": 0,
+          "stateMachine": { "id": "SM_VEH", "state": "SV_DRIVE" }
+        }
+      ]
+    },
+    {
       "id": "accel-battery",
       "title": "Why does the battery care about 0-100 km/h?",
       "blurb": "Trace one driving expectation from a customer wish down to the two subsystems that deliver it, and the test that proves it.",

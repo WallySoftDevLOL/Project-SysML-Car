@@ -976,6 +976,46 @@ button {
   color: var(--color-text);
 }
 
+.tour-msg {
+  margin: -4px 0 12px;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82em;
+  color: var(--color-text);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.tour-msg[hidden] {
+  display: none;
+}
+
+.tour-state-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: -4px 0 12px;
+  font-size: 0.82em;
+  color: var(--color-muted);
+}
+
+.tour-state-strip[hidden] {
+  display: none;
+}
+
+.tour-state-sep {
+  opacity: 0.5;
+}
+
+.tour-state.is-current {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
 .tour-footer {
   display: flex;
   align-items: center;
@@ -1020,4 +1060,240 @@ button {
     bottom: 8px;
     width: calc(100% - 16px);
   }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Behaviour + parametrics (src/ui/state-diagram.ts, parametric-card.ts)   */
+/* ---------------------------------------------------------------------- */
+
+/* The SVG carries no colours of its own so the diagram follows the theme
+   with everything else. Scaled by the viewBox: it always fits the panel. */
+.state-diagram-wrap {
+  overflow-x: auto;
+  margin-bottom: 8px;
+}
+
+.state-diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.state-diagram .sd-state-box {
+  fill: var(--color-panel);
+  stroke: var(--color-border);
+  stroke-width: 1.5;
+}
+
+.state-diagram .sd-state-label {
+  fill: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 12px;
+}
+
+.state-diagram .sd-initial,
+.state-diagram .sd-final-inner {
+  fill: var(--color-text);
+}
+
+.state-diagram .sd-final-outer {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 1.5;
+}
+
+.state-diagram .sd-edge-line {
+  stroke: var(--color-border);
+  stroke-width: 1.5;
+}
+
+.state-diagram .sd-arrowhead {
+  fill: var(--color-border);
+}
+
+.state-diagram .sd-edge-label {
+  fill: var(--color-muted);
+  font-family: var(--font-sans);
+  font-size: 10px;
+}
+
+.state-diagram .sd-state.is-highlight .sd-state-box {
+  fill: var(--color-accent);
+  stroke: var(--color-accent);
+}
+
+.state-diagram .sd-state.is-highlight .sd-state-label {
+  fill: var(--color-accent-text);
+  font-weight: 600;
+}
+
+.state-diagram .sd-state.is-clickable {
+  cursor: pointer;
+}
+
+.state-diagram .sd-state.is-clickable:hover .sd-state-box {
+  stroke: var(--color-accent);
+}
+
+.state-diagram .sd-state:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Text fallback under the diagram, collapsed by default. */
+.sd-transitions > summary {
+  cursor: pointer;
+  color: var(--color-accent);
+  font-size: 0.85em;
+  margin-bottom: 6px;
+}
+
+.sd-transition-row {
+  cursor: default;
+  font-size: 0.9em;
+}
+
+/* Sub-part chips: clickable ones carry their parent's colour, the rest are
+   muted because there is nothing in the 3D view to select. */
+.subpart-chip {
+  max-width: 100%;
+}
+
+.subpart-chip.is-clickable {
+  cursor: pointer;
+}
+
+.subpart-chip.is-muted {
+  background: var(--color-bg);
+  color: var(--color-muted);
+  border-style: dashed;
+  cursor: help;
+}
+
+/* Parametric card: equation, one row per input, the answer, the verdict. */
+.param-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.param-equation {
+  font-family: var(--font-mono);
+  font-size: 1.05em;
+  padding: 6px 0 10px;
+  color: var(--color-text);
+}
+
+.param-row {
+  margin-bottom: 10px;
+}
+
+.param-label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 0.9em;
+  margin-bottom: 2px;
+}
+
+.param-symbol {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+.param-note {
+  font-size: 0.8em;
+  font-style: italic;
+}
+
+.param-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.param-slider {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--color-accent);
+}
+
+.param-number {
+  flex: none;
+  width: 84px;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 3px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-panel);
+  color: var(--color-text);
+}
+
+.param-unit {
+  flex: none;
+  font-size: 0.85em;
+  min-width: 2.5em;
+}
+
+.param-output {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.param-output-value {
+  font-size: 1.5em;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.param-output-name {
+  font-size: 0.85em;
+}
+
+.param-actions {
+  margin-top: 8px;
+}
+
+.pill-pass,
+.pill-fail {
+  font-family: var(--font-sans);
+  white-space: normal;
+}
+
+.pill-pass {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.pill-fail {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* Numbered step lists (procedures / message sequences). */
+.step-list {
+  counter-reset: step;
+  margin: 0;
+  padding: 0;
+}
+
+.step-row {
+  cursor: default;
+  font-size: 0.9em;
+  counter-increment: step;
+}
+
+.step-row::before {
+  content: counter(step) '.';
+  flex: none;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
 }

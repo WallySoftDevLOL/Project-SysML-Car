@@ -7,7 +7,10 @@
 // need to know about tour internals.
 import type { Store, AppState } from '../state/store';
 import type { Viewer } from '../scene/viewer-api';
-import type { Selection } from '../model/schema';
+import type { BlockId, HighlightState, MessageSignature, Selection, State as ModelState } from '../model/schema';
+import type { ModelIndex } from '../model/index';
+import { highlightFor } from '../model/highlight';
+import type { BehaviorIndex } from '../model/behavior';
 
 /** A single beat of a scripted tour. Mirrors `src/tour/scenarios.json`. */
 export interface TourStep {
@@ -20,6 +23,107 @@ export interface TourStep {
   explode?: number;
   /** An explicit camera pose, applied via `viewer.flyTo` instead of `focus`. */
   camera?: { position: [number, number, number]; target: [number, number, number] };
+  /**
+   * Ties this step to one message of a `behavior.interactions` sequence
+   * diagram (docs/model-contract.md section 6). `message` is the message's
+   * 1-based `order` within that interaction, not an array index. When this
+   * is set (and a `behavior` accessor was supplied to `createTourPlayer`),
+   * the player overrides `selection`/highlight to reflect the sender ->
+   * receiver of that message, and the overlay shows the message strip.
+   * If no `behavior` was supplied, or the interaction/message can't be
+   * resolved, the step falls back to acting on its own `selection`/`focus`
+   * fields as usual.
+   */
+  sequence?: { interaction: string; message: number };
+  /**
+   * Ties this step to one state of a `behavior.stateMachines` state machine.
+   * Purely a display hint for the overlay's state strip (it does not affect
+   * `selection`/highlight); ignored if `behavior` wasn't supplied or the
+   * state machine id is unknown.
+   */
+  stateMachine?: { id: string; state: string };
+}
+
+// ---------------------------------------------------------------------- //
+// Behavior lookups. `BehaviorIndex` (src/model/behavior.ts) is the
+// data-layer's query surface over `data/model.json`'s `behavior` key
+// (docs/model-contract.md section 6); it degrades to empty results rather
+// than throwing when that key is absent (pre-section-6 data), which is
+// exactly the "falls back to a normal step" behaviour this file wants.
+// ---------------------------------------------------------------------- //
+
+/** What the overlay renders for a `sequence` step (`tour-msg`). */
+export interface TourResolvedMessage {
+  fromLabel: string;
+  toLabel: string;
+  /** `"startVehicle()"` for operations, `"PowerEnable"` for signals. */
+  label: string;
+  /** UML message sort (e.g. "SynchCall", "AsynchSignal"), shown as a tooltip. */
+  sort: string;
+}
+
+/** What the overlay renders for a `stateMachine` step (`tour-state-strip`). */
+export interface TourResolvedStateMachine {
+  states: ModelState[];
+  currentId: string;
+}
+
+interface ResolvedSequenceStep {
+  fromBlock: BlockId;
+  toBlock: BlockId;
+  message: TourResolvedMessage;
+}
+
+/** `name()` for an operation call, plain `name` for a signal (or anything unsignatured). */
+function messageLabel(name: string, signature: MessageSignature | undefined): string {
+  return signature?.kind === 'operation' ? `${signature.name}()` : name;
+}
+
+/**
+ * Resolves a `TourStep.sequence` reference against `behavior`: the message's
+ * leaf sender/receiver blocks (via `messageSequence`, contract section 6)
+ * plus the lifeline display names for the overlay's message strip. Returns
+ * `undefined` if the interaction, or that message order within it, isn't
+ * found — the caller then falls back to treating this as a normal step.
+ */
+function resolveSequenceStep(
+  behavior: BehaviorIndex,
+  seq: NonNullable<TourStep['sequence']>,
+): ResolvedSequenceStep | undefined {
+  const resolved = behavior.messageSequence(seq.interaction).find((m) => m.order === seq.message);
+  if (!resolved) return undefined;
+
+  const interaction = behavior.interactions.find((it) => it.id === seq.interaction);
+  const raw = interaction?.messages.find((m) => m.order === seq.message);
+  const fromLifeline = interaction?.lifelines.find((ll) => ll.id === raw?.from);
+  const toLifeline = interaction?.lifelines.find((ll) => ll.id === raw?.to);
+
+  return {
+    fromBlock: resolved.fromBlock,
+    toBlock: resolved.toBlock,
+    message: {
+      fromLabel: fromLifeline?.name ?? resolved.fromBlock,
+      toLabel: toLifeline?.name ?? resolved.toBlock,
+      label: messageLabel(resolved.name, resolved.signature),
+      sort: resolved.sort,
+    },
+  };
+}
+
+/**
+ * Resolves a `TourStep.stateMachine` reference: the named state machine's
+ * ordered states, for the overlay's state strip. `BehaviorIndex` only
+ * exposes state machines filtered by owning block (`stateMachinesFor`), so
+ * this reads the raw list off `idx.model.behavior` directly instead — hence
+ * this needs `idx`, not just `behavior`. Returns `undefined` if `idx` wasn't
+ * supplied or the state machine id is unknown.
+ */
+function resolveStateMachine(
+  idx: ModelIndex | undefined,
+  ref: NonNullable<TourStep['stateMachine']>,
+): TourResolvedStateMachine | undefined {
+  const sm = idx?.model.behavior?.stateMachines?.find((s) => s.id === ref.id);
+  return sm ? { states: sm.states, currentId: ref.state } : undefined;
 }
 
 export interface TourScenario {
@@ -39,6 +143,10 @@ export interface TourPlayerState {
   scenario: TourScenario;
   stepIndex: number;
   stepCount: number;
+  /** Set when the current step has a resolved `sequence` (behavior supplied and message found). */
+  message?: TourResolvedMessage;
+  /** Set when the current step has a resolved `stateMachine` (behavior supplied and SM found). */
+  stateStrip?: TourResolvedStateMachine;
 }
 
 export type TourPlayerListener = (state: TourPlayerState | null) => void;
@@ -71,10 +179,38 @@ export interface CreateTourPlayerOptions {
   onExit?: () => void;
   /** Auto-advance delay in ms. Default 7000. Set to 0 to disable auto-advance entirely. */
   autoAdvanceMs?: number;
+  /**
+   * The model index, needed to compute sender/receiver highlight for a
+   * `sequence` step via `highlightFor` (docs/model-contract.md section 3).
+   * If omitted, `sequence` steps still set selection/message data but fall
+   * back to a plain primary/secondary highlight instead of the full
+   * `highlightFor`-derived one.
+   */
+  idx?: ModelIndex;
+  /** `behaviorIndex(model)` (src/model/behavior.ts). Omit to disable `sequence`/`stateMachine` steps entirely — those steps then act as normal steps. */
+  behavior?: BehaviorIndex;
 }
 
 function selectionKey(sel: Selection | TourStep['selection'] | null | undefined): string {
   return sel ? `${sel.kind}:${sel.id}` : '';
+}
+
+/**
+ * Highlight for a sequence-diagram message: the receiving block primary, the
+ * sending block secondary. Starts from `highlightFor`'s block-selection
+ * result (so the viewer's flow-tube lighting between primary and its
+ * neighbours still works) and overrides the two sets so sender/receiver read
+ * correctly even when they aren't directly connected by a modeled flow.
+ */
+export function highlightForMessage(idx: ModelIndex, fromBlock: BlockId, toBlock: BlockId): HighlightState {
+  const base = highlightFor(idx, { kind: 'block', id: toBlock });
+  const primary = new Set(base.primary);
+  primary.add(toBlock);
+  primary.delete(fromBlock);
+  const secondary = new Set(base.secondary);
+  secondary.add(fromBlock);
+  secondary.delete(toBlock);
+  return { primary, secondary };
 }
 
 function prefersReducedMotion(): boolean {
@@ -86,7 +222,7 @@ function prefersReducedMotion(): boolean {
 }
 
 export function createTourPlayer(opts: CreateTourPlayerOptions): TourPlayer {
-  const { store, viewer, scenarios, onExit } = opts;
+  const { store, viewer, scenarios, onExit, idx, behavior } = opts;
   const autoAdvanceMs = opts.autoAdvanceMs ?? 7000;
 
   let scenario: TourScenario | null = null;
@@ -98,10 +234,12 @@ export function createTourPlayer(opts: CreateTourPlayerOptions): TourPlayer {
   let paused = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   const listeners = new Set<TourPlayerListener>();
+  let currentMessage: TourResolvedMessage | undefined;
+  let currentStateStrip: TourResolvedStateMachine | undefined;
 
   function current(): TourPlayerState | null {
     if (!scenario) return null;
-    return { scenario, stepIndex, stepCount: scenario.steps.length };
+    return { scenario, stepIndex, stepCount: scenario.steps.length, message: currentMessage, stateStrip: currentStateStrip };
   }
 
   function notify() {
@@ -128,8 +266,17 @@ export function createTourPlayer(opts: CreateTourPlayerOptions): TourPlayer {
     const step = scenario.steps[stepIndex];
     if (!step) return;
 
+    // Resolve the sequence-diagram message this step points at, if any. Only
+    // used when a `behavior` accessor was supplied *and* the interaction/
+    // message actually resolves — otherwise this step falls back to acting
+    // on its own `selection`/`focus` fields, same as any other step.
+    const resolvedMsg = step.sequence && behavior ? resolveSequenceStep(behavior, step.sequence) : undefined;
+
     const patch: Partial<AppState> = { tour: true };
-    if (step.selection !== undefined) {
+    if (resolvedMsg) {
+      patch.selection = { kind: 'block', id: resolvedMsg.toBlock };
+      expectedSelectionKey = selectionKey(patch.selection);
+    } else if (step.selection !== undefined) {
       patch.selection = step.selection;
       expectedSelectionKey = selectionKey(step.selection);
     }
@@ -140,6 +287,17 @@ export function createTourPlayer(opts: CreateTourPlayerOptions): TourPlayer {
     store.set(patch);
     applyingStep = false;
 
+    // Override whatever highlight the store's own selection-driven subscriber
+    // just applied: for a resolved message, the sender is secondary and the
+    // receiver primary, not just "the receiver and its descendants/flows".
+    if (resolvedMsg) {
+      viewer.setHighlight(
+        idx
+          ? highlightForMessage(idx, resolvedMsg.fromBlock, resolvedMsg.toBlock)
+          : { primary: new Set([resolvedMsg.toBlock]), secondary: new Set([resolvedMsg.fromBlock]) },
+      );
+    }
+
     if (step.camera) {
       viewer.flyTo({
         position: { x: step.camera.position[0], y: step.camera.position[1], z: step.camera.position[2] },
@@ -148,6 +306,9 @@ export function createTourPlayer(opts: CreateTourPlayerOptions): TourPlayer {
     } else if (step.focus !== undefined) {
       viewer.focus(step.focus);
     }
+
+    currentMessage = resolvedMsg?.message;
+    currentStateStrip = step.stateMachine && behavior ? resolveStateMachine(idx, step.stateMachine) : undefined;
 
     scheduleAutoAdvance();
     notify();
@@ -182,6 +343,8 @@ export function createTourPlayer(opts: CreateTourPlayerOptions): TourPlayer {
     scenario = null;
     stepIndex = 0;
     expectedSelectionKey = '';
+    currentMessage = undefined;
+    currentStateStrip = undefined;
     paused = false;
     applyingStep = true;
     store.set({ tour: false });

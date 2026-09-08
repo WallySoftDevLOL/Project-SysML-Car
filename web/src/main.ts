@@ -190,7 +190,7 @@ async function main() {
 
   bindViewerToStore(viewer, idx);
 
-  const tourPlayer = createTourPlayer({ store, viewer, scenarios });
+  const tourPlayer = createTourPlayer({ store, viewer, scenarios, idx, behavior: idx.behavior });
   createTourOverlay(viewport, tourPlayer);
 
   mountUI({
