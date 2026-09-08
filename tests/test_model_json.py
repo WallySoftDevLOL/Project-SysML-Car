@@ -40,8 +40,17 @@ def test_committed_model_is_well_formed_json_with_trailing_newline():
 
 
 def test_committed_model_source_hash_matches_workbook():
+    """data/model.json's meta.sourceSha256 hashes its actual source (the
+    groovy model script, since tools/model_script_to_json.py landed) --
+    verified in test_model_script_to_json.py. Here we only check the
+    companion `workbookSha256` traceability field against the committed
+    workbook, which every converter generation (xlsx- or script-based) has
+    carried in one meta field or another.
+    """
     model = _load_model()
     if not XLSX_PATH.exists():
         pytest.skip("source workbook not present")
     expected_sha = hashlib.sha256(XLSX_PATH.read_bytes()).hexdigest()
-    assert model["meta"]["sourceSha256"] == expected_sha
+    meta = model["meta"]
+    actual_sha = meta.get("workbookSha256", meta.get("sourceSha256"))
+    assert actual_sha == expected_sha

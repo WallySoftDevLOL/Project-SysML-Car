@@ -9,6 +9,7 @@ on:
       - 'model/**'
       - 'tools/**'
       - 'data/blocks.json'
+      - 'data/source/**'
 
 jobs:
   verify:
@@ -29,6 +30,10 @@ jobs:
       - name: Check for required files
         id: guard
         run: |
+          has_script_tool=false
+          [ -f tools/model_script_to_json.py ] && has_script_tool=true
+          has_groovy=false
+          ls data/source/*.groovy >/dev/null 2>&1 && has_groovy=true
           has_xlsx_tool=false
           [ -f tools/xlsx_to_json.py ] && has_xlsx_tool=true
           has_model_json=false
@@ -42,6 +47,8 @@ jobs:
           has_report=false
           [ -f dist/build-report.json ] && has_report=true
 
+          echo "has_script_tool=$has_script_tool" >> "$GITHUB_OUTPUT"
+          echo "has_groovy=$has_groovy" >> "$GITHUB_OUTPUT"
           echo "has_xlsx_tool=$has_xlsx_tool" >> "$GITHUB_OUTPUT"
           echo "has_model_json=$has_model_json" >> "$GITHUB_OUTPUT"
           echo "has_source_xlsx=$has_source_xlsx" >> "$GITHUB_OUTPUT"
@@ -49,8 +56,8 @@ jobs:
           echo "has_validate=$has_validate" >> "$GITHUB_OUTPUT"
           echo "has_report=$has_report" >> "$GITHUB_OUTPUT"
 
-          if [ "$has_xlsx_tool" = false ] || [ "$has_model_json" = false ] || [ "$has_source_xlsx" = false ]; then
-            echo "::notice::Skipping xlsx-to-json reproducibility check: tools/xlsx_to_json.py, data/source/*.xlsx, or data/model.json is not present yet."
+          if [ "$has_script_tool" = false ] || [ "$has_groovy" = false ] || [ "$has_model_json" = false ] || [ "$has_source_xlsx" = false ]; then
+            echo "::notice::Skipping model-script reproducibility check: tools/model_script_to_json.py, data/source/*.groovy, data/source/*.xlsx, or data/model.json is not present yet."
           fi
           if [ "$has_build_car" = false ]; then
             echo "::notice::Skipping Blender build and downstream checks: model/build_car.py is not present yet."
@@ -62,11 +69,49 @@ jobs:
             echo "::notice::Skipping build-report comparison: dist/build-report.json is not present yet."
           fi
 
-      - name: Regenerate model.json and diff against committed copy
-        if: steps.guard.outputs.has_xlsx_tool == 'true' && steps.guard.outputs.has_model_json == 'true' && steps.guard.outputs.has_source_xlsx == 'true'
+      - name: Regenerate model.json (from the model script) and diff against committed copy
+        if: steps.guard.outputs.has_script_tool == 'true' && steps.guard.outputs.has_groovy == 'true' && steps.guard.outputs.has_model_json == 'true' && steps.guard.outputs.has_source_xlsx == 'true'
         run: |
-          python tools/xlsx_to_json.py data/source/*.xlsx data/blocks.json /tmp/model.json
+          python tools/model_script_to_json.py data/source/*.groovy data/blocks.json data/source/*.xlsx /tmp/model.json
           diff data/model.json /tmp/model.json
+
+      - name: Cross-check model_script_to_json.py against xlsx_to_json.py
+        if: steps.guard.outputs.has_script_tool == 'true' && steps.guard.outputs.has_groovy == 'true' && steps.guard.outputs.has_xlsx_tool == 'true' && steps.guard.outputs.has_source_xlsx == 'true'
+        run: |
+          python tools/xlsx_to_json.py data/source/*.xlsx data/blocks.json /tmp/model.xlsx.json
+          python - <<'PY'
+          import json
+
+          ADDITIVE_ELEMENT_KEYS = {"role", "subParts", "operations", "receptions", "values", "ports"}
+          ADDITIVE_TOP_LEVEL_KEYS = {"behavior", "parametrics", "signals", "composition"}
+          SECTION6_STATS_KEYS = {"stateMachines", "activities", "interactions", "parametrics", "signals", "subParts"}
+
+          def strip_additive(model):
+              stripped = {k: v for k, v in model.items() if k not in ADDITIVE_TOP_LEVEL_KEYS}
+              stripped["elements"] = [
+                  {k: v for k, v in el.items() if k not in ADDITIVE_ELEMENT_KEYS} for el in model["elements"]
+              ]
+              stripped["stats"] = {k: v for k, v in model["stats"].items() if k not in SECTION6_STATS_KEYS}
+              return stripped
+
+          with open("/tmp/model.json") as f:
+              script_model = json.load(f)
+          with open("/tmp/model.xlsx.json") as f:
+              xlsx_model = json.load(f)
+
+          stripped_script = strip_additive(script_model)
+          stripped_xlsx = strip_additive(xlsx_model)
+          for key in ("categories", "flows", "hierarchy", "relationships"):
+              assert stripped_script[key] == stripped_xlsx[key], key
+          assert stripped_script["stats"] == stripped_xlsx["stats"]
+          xlsx_by_id = {e["id"]: e for e in stripped_xlsx["elements"]}
+          script_by_id = {e["id"]: e for e in stripped_script["elements"]}
+          missing = set(xlsx_by_id) - set(script_by_id)
+          assert not missing, f"missing elements: {sorted(missing)}"
+          mismatched = [eid for eid, el in xlsx_by_id.items() if script_by_id[eid] != el]
+          assert not mismatched, f"mismatched elements: {sorted(mismatched)}"
+          print("model_script_to_json.py is a superset of xlsx_to_json.py's output.")
+          PY
 
       - name: Cache Blender
         if: steps.guard.outputs.has_build_car == 'true'

@@ -16,6 +16,19 @@ EXPECTED_STATS = {
     "flows": 9,
 }
 
+# Additive contract section 6 stats (added 2026-09-08, tools/model_script_to_json.py
+# only). Checked separately from EXPECTED_STATS (rather than folded into it)
+# so this module still works unchanged against a pre-section-6 model.json
+# (e.g. one produced by tools/xlsx_to_json.py, which has no behavior data).
+EXPECTED_SECTION6_STATS = {
+    "stateMachines": 2,
+    "activities": 3,
+    "interactions": 1,
+    "parametrics": 3,
+    "signals": 10,
+    "subParts": 10,
+}
+
 EXPECTED_SATISFY_COUNTS = {
     "VEH": 7,
     "POWERTRAIN": 11,
@@ -81,7 +94,18 @@ def assert_acyclic(edges):
 
 
 def check_model_invariants(model: dict, blocks_catalog: list) -> None:
-    assert model["stats"] == EXPECTED_STATS, model["stats"]
+    # Compare only the section-2 stats keys here (subset, not `==`) so this
+    # function keeps working unchanged whether `model` came from
+    # tools/xlsx_to_json.py (no section 6 keys) or tools/model_script_to_json.py
+    # (which adds stateMachines/activities/interactions/parametrics/signals/subParts).
+    stats = model["stats"]
+    actual_base_stats = {k: stats[k] for k in EXPECTED_STATS}
+    assert actual_base_stats == EXPECTED_STATS, stats
+    section6_keys_present = set(EXPECTED_SECTION6_STATS) & set(stats)
+    if section6_keys_present:
+        actual_section6_stats = {k: stats[k] for k in section6_keys_present}
+        expected_section6_stats = {k: EXPECTED_SECTION6_STATS[k] for k in section6_keys_present}
+        assert actual_section6_stats == expected_section6_stats, stats
 
     elements = model["elements"]
     element_ids = {e["id"] for e in elements}

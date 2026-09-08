@@ -37,8 +37,8 @@ Without it, you forget requirements, changes break downstream work, and nobody k
 ## How It Is Built
 
 ```
-Excel workbook
-    ↓  (tools/xlsx_to_json.py)
+Cameo model script (.groovy)
+    ↓  (tools/model_script_to_json.py)
 data/model.json
     ↓  (Blender 5.2 headless script)
 dist/car.glb
@@ -46,8 +46,8 @@ dist/car.glb
 GitHub Pages
 ```
 
-1. **Workbook** (`data/source/*.xlsx`) — Requirements, relationships, block definitions in Excel.
-2. **Data layer** (`tools/xlsx_to_json.py` → `data/model.json`) — Converts workbook to typed JSON. Committed to repo.
+1. **Model script** (`data/source/*.groovy`) — a Cameo `modelScript('''<JSON>''')` export: every requirement, block, port, connector, activity, state machine, sequence diagram and parametric in one semantic JSON document. This is the source of truth. The companion Excel workbook (`data/source/*.xlsx`) is a derived export of just the requirement/relationship subset, kept only as a reference/cross-check (`tools/xlsx_to_json.py` still converts it, and `tests/test_model_script_to_json.py` asserts the two converters agree on every field the workbook covers).
+2. **Data layer** (`tools/model_script_to_json.py` → `data/model.json`) — Converts the model script to typed JSON, including behavior (state machines, activities, sequence diagrams) and parametrics that the workbook alone can't express. Committed to repo.
 3. **3D model** (`model/build_car.py` → `dist/car.glb`) — Blender Python script builds the car mesh programmatically, no hand modeling.
 4. **Viewer** (`web/` → GitHub Pages) — Vite + three.js interactive viewer.
 
@@ -60,7 +60,7 @@ Outputs are deterministic: rebuilding produces byte-identical files, so you can 
 - Node 24
 - Python 3.12+ with `openpyxl`
 
-**Full pipeline** (workbook → model → glb → preview):
+**Full pipeline** (model script → model.json → glb → preview):
 ```powershell
 .\tools\build_local.ps1
 ```
@@ -79,7 +79,7 @@ The GLB asset is committed, so you can develop the viewer without Blender instal
 
 ## Repository Map
 
-- `data/` — Requirements workbook, model JSON (generated), and block catalog.
+- `data/` — Cameo model script, requirements workbook (reference export), model JSON (generated), and block catalog.
 - `model/` — Blender Python scripts: entry point `build_car.py`, layout math, one module per subsystem.
 - `web/` — Vite + TypeScript viewer: scene, state, UI, tests.
 - `docs/` — Model contract, preview image.

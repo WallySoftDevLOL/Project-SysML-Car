@@ -1,9 +1,10 @@
 {
   "meta": {
     "schema": 1,
-    "sourceFile": "data/source/Connected_EV_SysML_Requirements_and_Relationships_v7.xlsx",
-    "sourceSha256": "9c8798c97cad2ece182185536ac52735f9540606e11ca18b070299e2cf85717c",
-    "converter": "tools/xlsx_to_json.py"
+    "sourceFile": "data/source/Connected_EV_COMPLETE_SYSML_ALL_9_FAMILIES_v7_IMPORT_SAFE.groovy",
+    "sourceSha256": "9421724a0ae7ffde1fcbbb41b6006737e250fe07c1c1ae2057732724a2639354",
+    "converter": "tools/model_script_to_json.py",
+    "workbookSha256": "9c8798c97cad2ece182185536ac52735f9540606e11ca18b070299e2cf85717c"
   },
   "categories": [
     {
@@ -152,6 +153,13 @@
       "name": "estimatedRange"
     },
     {
+      "id": "BAT_MODULE",
+      "kind": "Block",
+      "name": "BatteryModule",
+      "parent": "ENERGY",
+      "role": "batteryModule"
+    },
+    {
       "id": "BMS",
       "kind": "Block",
       "name": "BatteryManagementSystem",
@@ -166,7 +174,8 @@
         0.6,
         -0.3,
         0.3
-      ]
+      ],
+      "role": "bms"
     },
     {
       "id": "BRAKES",
@@ -183,7 +192,43 @@
         0,
         -0.6,
         0
+      ],
+      "role": "brakes",
+      "subParts": [
+        "BRAKE_ACT",
+        "BRAKE_CTRL"
+      ],
+      "operations": [
+        {
+          "id": "OP_BRAKE",
+          "name": "applyBraking"
+        }
+      ],
+      "receptions": [
+        {
+          "id": "REC_BRAKE",
+          "name": "brakeCommand",
+          "signal": "SIG_BRAKE"
+        }
+      ],
+      "ports": [
+        {
+          "id": "BRAKE_CMD",
+          "name": "brakeCommandIn",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_BRAKE",
+            "name": "BrakeCommandInterface"
+          }
+        }
       ]
+    },
+    {
+      "id": "BRAKE_ACT",
+      "kind": "Block",
+      "name": "BrakeActuator",
+      "parent": "BRAKES",
+      "role": "actuator"
     },
     {
       "id": "BRAKE_CMD",
@@ -191,6 +236,13 @@
       "name": "brakeCommandIn",
       "owner": "BRAKES",
       "portKind": "ProxyPort"
+    },
+    {
+      "id": "BRAKE_CTRL",
+      "kind": "Block",
+      "name": "BrakeController",
+      "parent": "BRAKES",
+      "role": "controller"
     },
     {
       "id": "CB_FORCE",
@@ -222,6 +274,44 @@
         1,
         0.3,
         -0.5
+      ],
+      "role": "charging",
+      "subParts": [
+        "CHARGE_PORT",
+        "OBC"
+      ],
+      "operations": [
+        {
+          "id": "OP_CHARGE",
+          "name": "beginChargeSession"
+        }
+      ],
+      "receptions": [
+        {
+          "id": "REC_CHARGE",
+          "name": "chargeRequest",
+          "signal": "SIG_CHARGE_REQ"
+        }
+      ],
+      "ports": [
+        {
+          "id": "CHARGE_EXT",
+          "name": "externalChargeIn",
+          "kind": "FullPort",
+          "interface": {
+            "id": "FULL_CHARGE_TYPE",
+            "name": "ChargeInletAssembly"
+          }
+        },
+        {
+          "id": "CHARGE_OUT",
+          "name": "chargePowerOut",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_CHARGE",
+            "name": "ChargePowerInterface"
+          }
+        }
       ]
     },
     {
@@ -237,6 +327,13 @@
       "name": "chargePowerOut",
       "owner": "CHARGE",
       "portKind": "ProxyPort"
+    },
+    {
+      "id": "CHARGE_PORT",
+      "kind": "Block",
+      "name": "ChargePort",
+      "parent": "CHARGE",
+      "role": "chargePort"
     },
     {
       "id": "CPROP_FORCE / CF_A",
@@ -324,6 +421,69 @@
       "portKind": "ProxyPort"
     },
     {
+      "id": "DATA_BRAKE",
+      "kind": "Block",
+      "name": "BrakeCommandData",
+      "abstract": false,
+      "category": "Data"
+    },
+    {
+      "id": "DATA_CHARGE",
+      "kind": "Block",
+      "name": "ChargePowerData",
+      "abstract": false,
+      "category": "Data"
+    },
+    {
+      "id": "DATA_DIAG",
+      "kind": "Block",
+      "name": "DiagnosticServiceData",
+      "abstract": false,
+      "category": "Data"
+    },
+    {
+      "id": "DATA_DRIVER",
+      "kind": "Block",
+      "name": "DriverCommandData",
+      "abstract": false,
+      "category": "Data"
+    },
+    {
+      "id": "DATA_HV",
+      "kind": "Block",
+      "name": "HighVoltagePowerData",
+      "abstract": false,
+      "category": "Data"
+    },
+    {
+      "id": "DATA_MOTOR",
+      "kind": "Block",
+      "name": "MotorElectricalPowerData",
+      "abstract": false,
+      "category": "Data"
+    },
+    {
+      "id": "DATA_SENSOR",
+      "kind": "Block",
+      "name": "SensorData",
+      "abstract": false,
+      "category": "Data"
+    },
+    {
+      "id": "DATA_THERMAL",
+      "kind": "Block",
+      "name": "ThermalFlowData",
+      "abstract": false,
+      "category": "Data"
+    },
+    {
+      "id": "DATA_TORQUE",
+      "kind": "Block",
+      "name": "TorqueCommandData",
+      "abstract": false,
+      "category": "Data"
+    },
+    {
       "id": "DIAG",
       "kind": "Block",
       "name": "ServiceDiagnosticsSystem",
@@ -338,6 +498,30 @@
         1,
         0.2,
         0.4
+      ],
+      "role": "diagnostics",
+      "subParts": [
+        "DIAG_GATEWAY"
+      ],
+      "ports": [
+        {
+          "id": "DIAG_CTRL",
+          "name": "controllerDiagnostic",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_DIAG",
+            "name": "DiagnosticServiceInterface"
+          }
+        },
+        {
+          "id": "DIAG_SERVICE",
+          "name": "serviceBoundary",
+          "kind": "FullPort",
+          "interface": {
+            "id": "FULL_SERVICE_TYPE",
+            "name": "ServiceAccessAssembly"
+          }
+        }
       ]
     },
     {
@@ -346,6 +530,13 @@
       "name": "controllerDiagnostic",
       "owner": "DIAG",
       "portKind": "ProxyPort"
+    },
+    {
+      "id": "DIAG_GATEWAY",
+      "kind": "Block",
+      "name": "DiagnosticGateway",
+      "parent": "DIAG",
+      "role": "gateway"
     },
     {
       "id": "DIAG_SERVICE",
@@ -374,6 +565,47 @@
         0,
         -1,
         0
+      ],
+      "role": "energyStorage",
+      "subParts": [
+        "BAT_MODULE",
+        "BMS"
+      ],
+      "receptions": [
+        {
+          "id": "REC_POWER",
+          "name": "powerEnable",
+          "signal": "SIG_POWER_ENABLE"
+        }
+      ],
+      "ports": [
+        {
+          "id": "ENERGY_CHARGE",
+          "name": "chargePowerIn",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_CHARGE",
+            "name": "ChargePowerInterface"
+          }
+        },
+        {
+          "id": "ENERGY_HV",
+          "name": "highVoltageOut",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_HV",
+            "name": "HighVoltagePowerInterface"
+          }
+        },
+        {
+          "id": "ENERGY_THERM",
+          "name": "thermalPort",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_THERMAL",
+            "name": "ThermalFluidInterface"
+          }
+        }
       ]
     },
     {
@@ -398,6 +630,34 @@
       "portKind": "ProxyPort"
     },
     {
+      "id": "FORCE_ANALYSIS",
+      "kind": "Block",
+      "name": "TractiveForceAnalysis",
+      "abstract": false,
+      "category": "Analysis"
+    },
+    {
+      "id": "FULL_CHARGE_TYPE",
+      "kind": "Block",
+      "name": "ChargeInletAssembly",
+      "abstract": false,
+      "category": "PortType"
+    },
+    {
+      "id": "FULL_SERVICE_TYPE",
+      "kind": "Block",
+      "name": "ServiceAccessAssembly",
+      "abstract": false,
+      "category": "PortType"
+    },
+    {
+      "id": "FUSION",
+      "kind": "Block",
+      "name": "SensorFusionController",
+      "parent": "SENSORS",
+      "role": "fusionController"
+    },
+    {
       "id": "HMI",
       "kind": "Block",
       "name": "DriverInterfaceSystem",
@@ -412,6 +672,27 @@
         0,
         1,
         0.5
+      ],
+      "role": "driverInterface",
+      "ports": [
+        {
+          "id": "HMI_CTRL",
+          "name": "commandOut",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_DRIVER",
+            "name": "DriverCommandInterface"
+          }
+        },
+        {
+          "id": "HMI_DRIVER",
+          "name": "driverIn",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_DRIVER",
+            "name": "DriverCommandInterface"
+          }
+        }
       ]
     },
     {
@@ -443,6 +724,36 @@
         0,
         1,
         -1
+      ],
+      "role": "inverter",
+      "ports": [
+        {
+          "id": "INV_CMD",
+          "name": "torqueCommandIn",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_TORQUE",
+            "name": "TorqueCommandInterface"
+          }
+        },
+        {
+          "id": "INV_HV",
+          "name": "highVoltageIn",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_HV",
+            "name": "HighVoltagePowerInterface"
+          }
+        },
+        {
+          "id": "INV_MOTOR",
+          "name": "motorPowerOut",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_MOTOR",
+            "name": "MotorElectricalPowerInterface"
+          }
+        }
       ]
     },
     {
@@ -467,11 +778,36 @@
       "portKind": "ProxyPort"
     },
     {
+      "id": "MOTOR",
+      "kind": "Block",
+      "name": "TractionMotor",
+      "parent": "POWERTRAIN",
+      "role": "tractionMotor",
+      "ports": [
+        {
+          "id": "MOTOR_POWER",
+          "name": "motorPowerIn",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_MOTOR",
+            "name": "MotorElectricalPowerInterface"
+          }
+        }
+      ]
+    },
+    {
       "id": "MOTOR_POWER",
       "kind": "Port",
       "name": "motorPowerIn",
       "owner": "POWERTRAIN",
       "portKind": "ProxyPort"
+    },
+    {
+      "id": "OBC",
+      "kind": "Block",
+      "name": "OnboardCharger",
+      "parent": "CHARGE",
+      "role": "onboardCharger"
     },
     {
       "id": "OP_BRAKE",
@@ -538,7 +874,46 @@
         0,
         0.2,
         -1
+      ],
+      "role": "powertrain",
+      "subParts": [
+        "INVERTER",
+        "MOTOR"
+      ],
+      "receptions": [
+        {
+          "id": "REC_TORQUE",
+          "name": "torqueCommand",
+          "signal": "SIG_TORQUE"
+        }
+      ],
+      "ports": [
+        {
+          "id": "PT_HV",
+          "name": "highVoltageIn",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_HV",
+            "name": "HighVoltagePowerInterface"
+          }
+        },
+        {
+          "id": "PT_TORQUE",
+          "name": "torqueCommandIn",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_TORQUE",
+            "name": "TorqueCommandInterface"
+          }
+        }
       ]
+    },
+    {
+      "id": "POWER_ANALYSIS",
+      "kind": "Block",
+      "name": "ElectricalPowerAnalysis",
+      "abstract": false,
+      "category": "Analysis"
     },
     {
       "id": "PT_HV",
@@ -553,6 +928,20 @@
       "name": "torqueCommandIn",
       "owner": "POWERTRAIN",
       "portKind": "ProxyPort"
+    },
+    {
+      "id": "PUMP",
+      "kind": "Block",
+      "name": "CoolantPump",
+      "parent": "THERMAL",
+      "role": "coolantPump"
+    },
+    {
+      "id": "RANGE_ANALYSIS",
+      "kind": "Block",
+      "name": "DrivingRangeAnalysis",
+      "abstract": false,
+      "category": "Analysis"
     },
     {
       "id": "REQ_BAT_001",
@@ -1277,6 +1666,22 @@
         0,
         1.2,
         0
+      ],
+      "role": "sensors",
+      "subParts": [
+        "FUSION",
+        "WHEEL_SENSOR"
+      ],
+      "ports": [
+        {
+          "id": "SENS_DATA",
+          "name": "sensorDataOut",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_SENSOR",
+            "name": "SensorDataInterface"
+          }
+        }
       ]
     },
     {
@@ -1401,6 +1806,22 @@
         0,
         0.3,
         1
+      ],
+      "role": "thermalManagement",
+      "subParts": [
+        "PUMP",
+        "THERM_CTRL"
+      ],
+      "ports": [
+        {
+          "id": "THERM_ENERGY",
+          "name": "batteryThermalPort",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_THERMAL",
+            "name": "ThermalFluidInterface"
+          }
+        }
       ]
     },
     {
@@ -1418,7 +1839,8 @@
         0.5,
         0.6,
         1
-      ]
+      ],
+      "role": "controller"
     },
     {
       "id": "THERM_ENERGY",
@@ -1477,6 +1899,89 @@
         0,
         1,
         0.3
+      ],
+      "role": "vehicleControl",
+      "operations": [
+        {
+          "id": "OP_START",
+          "name": "startVehicle"
+        },
+        {
+          "id": "OP_STOP",
+          "name": "stopVehicle"
+        },
+        {
+          "id": "OP_TORQUE",
+          "name": "computeTorqueCommand"
+        },
+        {
+          "id": "OP_VALIDATE",
+          "name": "validateDriveRequest"
+        }
+      ],
+      "receptions": [
+        {
+          "id": "REC_FAULT_CTRL",
+          "name": "faultDetected",
+          "signal": "SIG_FAULT"
+        },
+        {
+          "id": "REC_START",
+          "name": "startCommand",
+          "signal": "SIG_START"
+        },
+        {
+          "id": "REC_STOP",
+          "name": "stopCommand",
+          "signal": "SIG_STOP"
+        }
+      ],
+      "ports": [
+        {
+          "id": "CTRL_BRAKE",
+          "name": "brakeCommandOut",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_BRAKE",
+            "name": "BrakeCommandInterface"
+          }
+        },
+        {
+          "id": "CTRL_DIAG",
+          "name": "diagnosticPort",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_DIAG",
+            "name": "DiagnosticServiceInterface"
+          }
+        },
+        {
+          "id": "CTRL_DRIVER",
+          "name": "driverCommandIn",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_DRIVER",
+            "name": "DriverCommandInterface"
+          }
+        },
+        {
+          "id": "CTRL_SENSOR",
+          "name": "sensorDataIn",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_SENSOR",
+            "name": "SensorDataInterface"
+          }
+        },
+        {
+          "id": "CTRL_TORQUE",
+          "name": "torqueCommandOut",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_TORQUE",
+            "name": "TorqueCommandInterface"
+          }
+        }
       ]
     },
     {
@@ -1598,6 +2103,66 @@
         0,
         0,
         0
+      ],
+      "subParts": [
+        "BRAKES",
+        "CHARGE",
+        "DIAG",
+        "ENERGY",
+        "HMI",
+        "POWERTRAIN",
+        "SENSORS",
+        "THERMAL",
+        "VCONTROL"
+      ],
+      "values": [
+        {
+          "id": "V_FAULT",
+          "name": "faultActive",
+          "default": null,
+          "type": "Boolean"
+        },
+        {
+          "id": "V_SOC",
+          "name": "stateOfChargePercent",
+          "default": 80,
+          "type": "Real"
+        },
+        {
+          "id": "V_SPEED",
+          "name": "vehicleSpeedKph",
+          "default": 0,
+          "type": "Real"
+        }
+      ],
+      "ports": [
+        {
+          "id": "VEH_CHARGE",
+          "name": "charge",
+          "kind": "FullPort",
+          "interface": {
+            "id": "FULL_CHARGE_TYPE",
+            "name": "ChargeInletAssembly"
+          }
+        },
+        {
+          "id": "VEH_DRIVER",
+          "name": "driverCommand",
+          "kind": "ProxyPort",
+          "interface": {
+            "id": "IF_DRIVER",
+            "name": "DriverCommandInterface"
+          }
+        },
+        {
+          "id": "VEH_SERVICE",
+          "name": "service",
+          "kind": "FullPort",
+          "interface": {
+            "id": "FULL_SERVICE_TYPE",
+            "name": "ServiceAccessAssembly"
+          }
+        }
       ]
     },
     {
@@ -1626,6 +2191,13 @@
       "kind": "Block",
       "name": "VehicleSubsystem",
       "abstract": true
+    },
+    {
+      "id": "WHEEL_SENSOR",
+      "kind": "Block",
+      "name": "WheelSpeedSensor",
+      "parent": "SENSORS",
+      "role": "wheelSpeedSensor"
     }
   ],
   "relationships": [
@@ -3498,6 +4070,732 @@
     "traceRelationships": 207,
     "allRelationships": 271,
     "blocks": 13,
-    "flows": 9
+    "flows": 9,
+    "stateMachines": 2,
+    "activities": 3,
+    "interactions": 1,
+    "parametrics": 3,
+    "signals": 10,
+    "subParts": 10
+  },
+  "behavior": {
+    "stateMachines": [
+      {
+        "id": "SM_ENERGY",
+        "name": "Energy Storage Operating Modes",
+        "context": "ENERGY",
+        "states": [
+          {
+            "id": "SE_CHARGE",
+            "name": "Charging",
+            "kind": "state"
+          },
+          {
+            "id": "SE_COMPLETE",
+            "name": "Complete",
+            "kind": "final"
+          },
+          {
+            "id": "SE_DISCHARGE",
+            "name": "Discharging",
+            "kind": "state"
+          },
+          {
+            "id": "SE_FAULT",
+            "name": "Fault",
+            "kind": "state"
+          },
+          {
+            "id": "SE_IDLE",
+            "name": "Idle",
+            "kind": "state"
+          },
+          {
+            "id": "SE_INIT",
+            "name": "Initial",
+            "kind": "initial"
+          }
+        ],
+        "transitions": [
+          {
+            "id": "SE_T0",
+            "source": "SE_INIT",
+            "target": "SE_IDLE"
+          },
+          {
+            "id": "SE_T1",
+            "source": "SE_IDLE",
+            "target": "SE_DISCHARGE",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_POWER_ENABLE",
+              "name": "PowerEnable"
+            }
+          },
+          {
+            "id": "SE_T2",
+            "source": "SE_DISCHARGE",
+            "target": "SE_COMPLETE",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_STOP",
+              "name": "StopCommand"
+            }
+          },
+          {
+            "id": "SE_T3",
+            "source": "SE_IDLE",
+            "target": "SE_CHARGE",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_CHARGE_REQ",
+              "name": "ChargeRequest"
+            }
+          },
+          {
+            "id": "SE_T4",
+            "source": "SE_CHARGE",
+            "target": "SE_COMPLETE",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_CHARGE_DONE",
+              "name": "ChargeComplete"
+            }
+          },
+          {
+            "id": "SE_T5",
+            "source": "SE_IDLE",
+            "target": "SE_FAULT",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_FAULT",
+              "name": "FaultDetected"
+            }
+          },
+          {
+            "id": "SE_T6",
+            "source": "SE_DISCHARGE",
+            "target": "SE_FAULT",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_FAULT",
+              "name": "FaultDetected"
+            }
+          }
+        ]
+      },
+      {
+        "id": "SM_VEH",
+        "name": "Vehicle Operating Modes",
+        "context": "VEH",
+        "states": [
+          {
+            "id": "SV_COMPLETE",
+            "name": "Complete",
+            "kind": "final"
+          },
+          {
+            "id": "SV_DRIVE",
+            "name": "Driving",
+            "kind": "state"
+          },
+          {
+            "id": "SV_FAULT",
+            "name": "Fault",
+            "kind": "state"
+          },
+          {
+            "id": "SV_INIT",
+            "name": "Initial",
+            "kind": "initial"
+          },
+          {
+            "id": "SV_OFF",
+            "name": "Off",
+            "kind": "state"
+          },
+          {
+            "id": "SV_READY",
+            "name": "Ready",
+            "kind": "state"
+          },
+          {
+            "id": "SV_START",
+            "name": "Starting",
+            "kind": "state"
+          }
+        ],
+        "transitions": [
+          {
+            "id": "SV_T0",
+            "source": "SV_INIT",
+            "target": "SV_OFF"
+          },
+          {
+            "id": "SV_T1",
+            "source": "SV_OFF",
+            "target": "SV_START",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_START",
+              "name": "StartCommand"
+            }
+          },
+          {
+            "id": "SV_T2",
+            "source": "SV_START",
+            "target": "SV_READY",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_READY",
+              "name": "VehicleReady"
+            }
+          },
+          {
+            "id": "SV_T3",
+            "source": "SV_READY",
+            "target": "SV_DRIVE",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_TORQUE",
+              "name": "TorqueCommand"
+            }
+          },
+          {
+            "id": "SV_T4",
+            "source": "SV_DRIVE",
+            "target": "SV_COMPLETE",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_STOP",
+              "name": "StopCommand"
+            }
+          },
+          {
+            "id": "SV_T5",
+            "source": "SV_READY",
+            "target": "SV_FAULT",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_FAULT",
+              "name": "FaultDetected"
+            }
+          },
+          {
+            "id": "SV_T6",
+            "source": "SV_DRIVE",
+            "target": "SV_FAULT",
+            "trigger": {
+              "kind": "signal",
+              "id": "SIG_FAULT",
+              "name": "FaultDetected"
+            }
+          }
+        ]
+      }
+    ],
+    "activities": [
+      {
+        "id": "ACT_DRIVE",
+        "name": "Deliver Requested Torque",
+        "refines": [],
+        "nodes": [
+          {
+            "id": "DRIVE_FINAL",
+            "name": "Torque Delivered",
+            "kind": "final"
+          },
+          {
+            "id": "DRIVE_INIT",
+            "name": "Initial",
+            "kind": "initial"
+          },
+          {
+            "id": "DRIVE_SEND",
+            "name": "Publish Torque Command",
+            "kind": "action",
+            "body": "publishTorqueCommand()"
+          },
+          {
+            "id": "DRIVE_TORQUE",
+            "name": "Compute Torque Command",
+            "kind": "action",
+            "body": "computeTorqueCommand()"
+          },
+          {
+            "id": "DRIVE_VALIDATE",
+            "name": "Validate Drive Request",
+            "kind": "action",
+            "body": "validateDriveRequest()"
+          }
+        ],
+        "edges": [
+          {
+            "id": "DRIVE_E1",
+            "source": "DRIVE_INIT",
+            "target": "DRIVE_VALIDATE",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "DRIVE_E2",
+            "source": "DRIVE_VALIDATE",
+            "target": "DRIVE_TORQUE",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "DRIVE_E3",
+            "source": "DRIVE_TORQUE",
+            "target": "DRIVE_SEND",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "DRIVE_E4",
+            "source": "DRIVE_SEND",
+            "target": "DRIVE_FINAL",
+            "kind": "ControlFlow"
+          }
+        ]
+      },
+      {
+        "id": "ACT_OPERATE",
+        "name": "Operate Electric Vehicle",
+        "refines": [],
+        "nodes": [
+          {
+            "id": "OPERATE_BRAKE",
+            "name": "Apply Braking",
+            "kind": "action",
+            "body": "applyBraking()"
+          },
+          {
+            "id": "OPERATE_DRIVE",
+            "name": "Deliver Requested Torque",
+            "kind": "call",
+            "calls": "ACT_DRIVE"
+          },
+          {
+            "id": "OPERATE_FINAL",
+            "name": "Complete",
+            "kind": "final"
+          },
+          {
+            "id": "OPERATE_INIT",
+            "name": "Initial",
+            "kind": "initial"
+          },
+          {
+            "id": "OPERATE_START",
+            "name": "Start Vehicle",
+            "kind": "call",
+            "calls": "ACT_START"
+          },
+          {
+            "id": "OPERATE_STOP",
+            "name": "Stop Vehicle",
+            "kind": "action",
+            "body": "stopVehicle()"
+          }
+        ],
+        "edges": [
+          {
+            "id": "OPERATE_E1",
+            "source": "OPERATE_INIT",
+            "target": "OPERATE_START",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "OPERATE_E2",
+            "source": "OPERATE_START",
+            "target": "OPERATE_DRIVE",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "OPERATE_E3",
+            "source": "OPERATE_DRIVE",
+            "target": "OPERATE_BRAKE",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "OPERATE_E4",
+            "source": "OPERATE_BRAKE",
+            "target": "OPERATE_STOP",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "OPERATE_E5",
+            "source": "OPERATE_STOP",
+            "target": "OPERATE_FINAL",
+            "kind": "ControlFlow"
+          }
+        ]
+      },
+      {
+        "id": "ACT_START",
+        "name": "Start Vehicle",
+        "refines": [
+          "REQ_SYS_001"
+        ],
+        "nodes": [
+          {
+            "id": "START_ACCEPT",
+            "name": "Accept Start Command",
+            "kind": "action",
+            "body": "captureStartCommand()"
+          },
+          {
+            "id": "START_AVAILABLE",
+            "name": "Confirm Power Available",
+            "kind": "action",
+            "body": "confirmPowerAvailable()"
+          },
+          {
+            "id": "START_CALL",
+            "name": "Start Controller",
+            "kind": "action",
+            "body": "startVehicleController()"
+          },
+          {
+            "id": "START_ENABLE",
+            "name": "Enable Traction Power",
+            "kind": "action",
+            "body": "enableTractionPower()"
+          },
+          {
+            "id": "START_FINAL",
+            "name": "Ready",
+            "kind": "final"
+          },
+          {
+            "id": "START_INIT",
+            "name": "Initial",
+            "kind": "initial"
+          },
+          {
+            "id": "START_READY",
+            "name": "Announce Vehicle Ready",
+            "kind": "action",
+            "body": "announceVehicleReady()"
+          }
+        ],
+        "edges": [
+          {
+            "id": "START_E1",
+            "source": "START_INIT",
+            "target": "START_ACCEPT",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "START_E2",
+            "source": "START_ACCEPT",
+            "target": "START_CALL",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "START_E3",
+            "source": "START_CALL",
+            "target": "START_ENABLE",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "START_E4",
+            "source": "START_ENABLE",
+            "target": "START_AVAILABLE",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "START_E5",
+            "source": "START_AVAILABLE",
+            "target": "START_READY",
+            "kind": "ControlFlow"
+          },
+          {
+            "id": "START_E6",
+            "source": "START_READY",
+            "target": "START_FINAL",
+            "kind": "ControlFlow"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "SEQ_START",
+        "name": "Vehicle Startup Sequence",
+        "context": "VEH",
+        "lifelines": [
+          {
+            "id": "LL_CTRL",
+            "name": "vehicleControl",
+            "block": "VCONTROL"
+          },
+          {
+            "id": "LL_ENERGY",
+            "name": "energyStorage",
+            "block": "ENERGY"
+          },
+          {
+            "id": "LL_HMI",
+            "name": "driverInterface",
+            "block": "HMI"
+          },
+          {
+            "id": "LL_INV",
+            "name": "powertrain.inverter",
+            "block": "INVERTER"
+          }
+        ],
+        "messages": [
+          {
+            "id": "MSG_START",
+            "order": 1,
+            "name": "startVehicle",
+            "sort": "SynchCall",
+            "from": "LL_HMI",
+            "to": "LL_CTRL",
+            "signature": {
+              "kind": "operation",
+              "id": "OP_START",
+              "name": "startVehicle"
+            }
+          },
+          {
+            "id": "MSG_ENABLE",
+            "order": 2,
+            "name": "PowerEnable",
+            "sort": "AsynchSignal",
+            "from": "LL_CTRL",
+            "to": "LL_ENERGY",
+            "signature": {
+              "kind": "signal",
+              "id": "SIG_POWER_ENABLE",
+              "name": "PowerEnable"
+            }
+          },
+          {
+            "id": "MSG_AVAILABLE",
+            "order": 3,
+            "name": "PowerAvailable",
+            "sort": "AsynchSignal",
+            "from": "LL_ENERGY",
+            "to": "LL_CTRL",
+            "signature": {
+              "kind": "signal",
+              "id": "SIG_POWER_AVAILABLE",
+              "name": "PowerAvailable"
+            }
+          },
+          {
+            "id": "MSG_TORQUE",
+            "order": 4,
+            "name": "TorqueCommand",
+            "sort": "AsynchSignal",
+            "from": "LL_CTRL",
+            "to": "LL_INV",
+            "signature": {
+              "kind": "signal",
+              "id": "SIG_TORQUE",
+              "name": "TorqueCommand"
+            }
+          }
+        ],
+        "invariants": [
+          {
+            "lifeline": "LL_CTRL",
+            "order": 7,
+            "constraint": "vehicleReady == true"
+          }
+        ]
+      }
+    ]
+  },
+  "parametrics": [
+    {
+      "id": "FORCE_ANALYSIS",
+      "name": "TractiveForceAnalysis",
+      "constraint": "CB_FORCE",
+      "expression": "F = m * a",
+      "output": "F",
+      "refines": [
+        "REQ_STK_003"
+      ],
+      "parameters": [
+        {
+          "parameter": "m",
+          "value": "A_FORCE_MASS",
+          "name": "mass",
+          "default": 1800,
+          "unit": "kg"
+        },
+        {
+          "parameter": "a",
+          "value": "A_FORCE_ACCEL",
+          "name": "acceleration",
+          "default": 4.0,
+          "unit": "m/s^2"
+        },
+        {
+          "parameter": "F",
+          "value": "A_FORCE_OUT",
+          "name": "tractiveForce",
+          "default": null,
+          "unit": "N"
+        }
+      ]
+    },
+    {
+      "id": "POWER_ANALYSIS",
+      "name": "ElectricalPowerAnalysis",
+      "constraint": "CB_POWER",
+      "expression": "P = F * v / eta",
+      "output": "P",
+      "refines": [
+        "REQ_STK_003"
+      ],
+      "parameters": [
+        {
+          "parameter": "F",
+          "value": "A_POWER_FORCE",
+          "name": "forceInput",
+          "default": 7200,
+          "unit": "N"
+        },
+        {
+          "parameter": "v",
+          "value": "A_POWER_SPEED",
+          "name": "targetSpeed",
+          "default": 20,
+          "unit": "m/s"
+        },
+        {
+          "parameter": "eta",
+          "value": "A_POWER_EFF",
+          "name": "conversionEfficiency",
+          "default": 0.95,
+          "unit": "ratio"
+        },
+        {
+          "parameter": "P",
+          "value": "A_POWER_OUT",
+          "name": "electricalPower",
+          "default": null,
+          "unit": "W"
+        }
+      ]
+    },
+    {
+      "id": "RANGE_ANALYSIS",
+      "name": "DrivingRangeAnalysis",
+      "constraint": "CB_RANGE",
+      "expression": "R = E / c",
+      "output": "R",
+      "refines": [
+        "REQ_STK_002"
+      ],
+      "parameters": [
+        {
+          "parameter": "E",
+          "value": "A_RANGE_E",
+          "name": "usableEnergy",
+          "default": 82,
+          "unit": "kWh"
+        },
+        {
+          "parameter": "c",
+          "value": "A_RANGE_C",
+          "name": "energyConsumption",
+          "default": 0.18,
+          "unit": "kWh/km"
+        },
+        {
+          "parameter": "R",
+          "value": "A_RANGE_OUT",
+          "name": "estimatedRange",
+          "default": null,
+          "unit": "km"
+        }
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "id": "SIG_BRAKE",
+      "name": "BrakeCommand"
+    },
+    {
+      "id": "SIG_CHARGE_DONE",
+      "name": "ChargeComplete"
+    },
+    {
+      "id": "SIG_CHARGE_REQ",
+      "name": "ChargeRequest"
+    },
+    {
+      "id": "SIG_FAULT",
+      "name": "FaultDetected"
+    },
+    {
+      "id": "SIG_POWER_AVAILABLE",
+      "name": "PowerAvailable"
+    },
+    {
+      "id": "SIG_POWER_ENABLE",
+      "name": "PowerEnable"
+    },
+    {
+      "id": "SIG_READY",
+      "name": "VehicleReady"
+    },
+    {
+      "id": "SIG_START",
+      "name": "StartCommand"
+    },
+    {
+      "id": "SIG_STOP",
+      "name": "StopCommand"
+    },
+    {
+      "id": "SIG_TORQUE",
+      "name": "TorqueCommand"
+    }
+  ],
+  "composition": {
+    "BRAKES": [
+      "BRAKE_ACT",
+      "BRAKE_CTRL"
+    ],
+    "CHARGE": [
+      "CHARGE_PORT",
+      "OBC"
+    ],
+    "DIAG": [
+      "DIAG_GATEWAY"
+    ],
+    "ENERGY": [
+      "BAT_MODULE",
+      "BMS"
+    ],
+    "POWERTRAIN": [
+      "INVERTER",
+      "MOTOR"
+    ],
+    "SENSORS": [
+      "FUSION",
+      "WHEEL_SENSOR"
+    ],
+    "THERMAL": [
+      "PUMP",
+      "THERM_CTRL"
+    ],
+    "VEH": [
+      "BRAKES",
+      "CHARGE",
+      "DIAG",
+      "ENERGY",
+      "HMI",
+      "POWERTRAIN",
+      "SENSORS",
+      "THERMAL",
+      "VCONTROL"
+    ]
   }
 }

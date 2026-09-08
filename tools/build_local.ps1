@@ -1,19 +1,35 @@
-# Full local pipeline: workbook -> model.json -> Blender glb -> validate -> preview render.
-# Usage: .\tools\build_local.ps1 [-NoRender] [-Blend]
+# Full local pipeline: model script -> model.json -> Blender glb -> validate -> preview render.
+# Usage: .\tools\build_local.ps1 [-NoRender] [-Blend] [-CrossCheck]
+#   -CrossCheck also runs tools/xlsx_to_json.py on the companion workbook and
+#   diffs it against tools/model_script_to_json.py's output (the section-2
+#   fields must agree; see tests/test_model_script_to_json.py for the same
+#   check run automatically by `python -m pytest tests`).
 param(
     [switch]$NoRender,
-    [switch]$Blend
+    [switch]$Blend,
+    [switch]$CrossCheck
 )
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
 $Blender  = "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
+$Groovy   = Get-ChildItem "data\source\*.groovy" | Select-Object -First 1 -ExpandProperty FullName
 $Workbook = Get-ChildItem "data\source\*.xlsx" | Select-Object -First 1 -ExpandProperty FullName
 
-Write-Host "== 1/4 Convert workbook -> data/model.json" -ForegroundColor Cyan
-python tools\xlsx_to_json.py $Workbook data\blocks.json data\model.json
+Write-Host "== 1/4 Convert model script -> data/model.json" -ForegroundColor Cyan
+python tools\model_script_to_json.py $Groovy data\blocks.json $Workbook data\model.json
 if ($LASTEXITCODE -ne 0) { throw "converter failed" }
+
+if ($CrossCheck) {
+    Write-Host "== Cross-check: tools/xlsx_to_json.py vs tools/model_script_to_json.py" -ForegroundColor Cyan
+    $xlsxOut = Join-Path $env:TEMP "model.xlsx-cross-check.json"
+    python tools\xlsx_to_json.py $Workbook data\blocks.json $xlsxOut
+    if ($LASTEXITCODE -ne 0) { throw "xlsx converter failed" }
+    Write-Host "  (companion workbook conversion written to $xlsxOut for manual inspection)"
+    python -m pytest tests\test_model_script_to_json.py -q -k cross_check
+    if ($LASTEXITCODE -ne 0) { throw "cross-check failed" }
+}
 
 Write-Host "== 2/4 Build car in Blender (headless)" -ForegroundColor Cyan
 $args = @("--background", "--factory-startup", "--python-exit-code", "1",

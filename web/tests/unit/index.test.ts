@@ -64,8 +64,11 @@ describe('buildIndex (fixture)', () => {
 describe('buildIndex (real data/model.json)', () => {
   const idx = buildIndex(loadRealModel());
 
-  it('indexes all 168 elements and 271 relationships', () => {
-    expect(idx.byId.size).toBe(168);
+  it('indexes all 192 elements and 271 relationships', () => {
+    // 168 pre-section-6 elements (unchanged, see tools/xlsx_to_json.py) plus
+    // 24 section-6 additions: 10 composition sub-parts, 9 DATA_* payload
+    // types, 2 FULL_*_TYPE boundary port types, 3 analysis blocks.
+    expect(idx.byId.size).toBe(192);
     let relCount = 0;
     for (const list of idx.out.values()) relCount += list.length;
     expect(relCount).toBe(271);

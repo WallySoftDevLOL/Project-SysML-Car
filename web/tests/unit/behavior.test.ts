@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { behaviorIndex, relatedRequirementsForBehavior } from '../../src/model/behavior';
 import { buildIndex } from '../../src/model/index';
-import { buildBehaviorFixtureModel, loadRealModel } from './fixtures';
+import { buildBehaviorFixtureModel, buildFixtureModel, loadRealModel } from './fixtures';
 
 describe('behaviorIndex (fixture)', () => {
   const model = buildBehaviorFixtureModel();
@@ -104,16 +104,20 @@ describe('behaviorIndex (fixture)', () => {
 
 describe('behaviorIndex degrades gracefully when section 6 keys are absent', () => {
   it('every query returns an empty result rather than throwing', () => {
-    const idx = buildIndex(loadRealModel());
+    // buildFixtureModel() (unlike loadRealModel(), which carries contract
+    // section 6 data since tools/model_script_to_json.py landed) has no
+    // `behavior`/`signals`/`composition`/`parametrics` keys at all, so it
+    // stands in for "a model.json from before section 6 existed".
+    const idx = buildIndex(buildFixtureModel());
     const behavior = idx.behavior;
-    expect(behavior.stateMachinesFor('VEH')).toEqual([]);
+    expect(behavior.stateMachinesFor('ROOT')).toEqual([]);
     expect(behavior.activities).toEqual([]);
     expect(behavior.interactions).toEqual([]);
-    expect(behavior.interactionsInvolving('VEH')).toEqual([]);
-    expect(behavior.signalsReceivedBy('VEH')).toEqual([]);
-    expect(behavior.signalsSentBy('VEH')).toEqual([]);
-    expect(behavior.subPartsOf('POWERTRAIN')).toEqual([]);
-    expect(behavior.portsOf('POWERTRAIN')).toEqual([]);
+    expect(behavior.interactionsInvolving('ROOT')).toEqual([]);
+    expect(behavior.signalsReceivedBy('ROOT')).toEqual([]);
+    expect(behavior.signalsSentBy('ROOT')).toEqual([]);
+    expect(behavior.subPartsOf('PARTA')).toEqual([]);
+    expect(behavior.portsOf('PARTA')).toEqual([]);
     expect(behavior.messageSequence('nope')).toEqual([]);
     expect(behavior.activityOutline('nope')).toEqual([]);
     expect(behavior.transitionsFrom('nope')).toEqual([]);
@@ -139,9 +143,16 @@ describe.skipIf(!hasBehaviorData)('behaviorIndex (real data/model.json)', () => 
     expect(sm?.states).toHaveLength(7);
   });
 
-  it('SEQ_START has 4 messages in HMI -> VCONTROL -> ENERGY -> INVERTER order', () => {
+  it('SEQ_START has 4 messages: HMI calls VCONTROL, which enables ENERGY, which reports available back to VCONTROL, which commands torque to INVERTER', () => {
     const seq = behavior.messageSequence('SEQ_START');
     expect(seq).toHaveLength(4);
-    expect(seq.map((m) => m.fromBlock)).toEqual(['HMI', 'VCONTROL', 'ENERGY', 'INVERTER']);
+    // Verified against data/source/*.groovy's occurrence/lifeline wiring:
+    // O1(HMI)->O2(CTRL) startVehicle, O3(CTRL)->O4(ENERGY) PowerEnable,
+    // O5(ENERGY)->O6(CTRL) PowerAvailable, O7(CTRL)->O8(INV) TorqueCommand.
+    // VCONTROL is both the message-2 sender and the message-4 sender (it
+    // relays the enable request and, once told power is available, commands
+    // torque onward to the inverter) -- INVERTER is a receiver only.
+    expect(seq.map((m) => m.fromBlock)).toEqual(['HMI', 'VCONTROL', 'ENERGY', 'VCONTROL']);
+    expect(seq.map((m) => m.toBlock)).toEqual(['VCONTROL', 'ENERGY', 'VCONTROL', 'INVERTER']);
   });
 });
