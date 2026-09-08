@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SysML Car - Systems Engineering, Explained</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="toolbar" class="toolbar" data-testid="toolbar">
+        <div class="toolbar-group toolbar-brand">
+          <span class="brand-title">SysML Car</span>
+        </div>
+        <div class="toolbar-group toolbar-controls">
+          <label class="control control-slider">
+            <span class="control-label">Explode</span>
+            <input type="range" id="explode" data-testid="explode" min="0" max="1" step="0.01" value="0" />
+          </label>
+          <button type="button" id="xray" data-testid="xray" class="btn btn-toggle" aria-pressed="false">
+            X-ray
+          </button>
+          <button type="button" id="tour" data-testid="tour" class="btn btn-toggle" aria-pressed="false">
+            Tour
+          </button>
+          <button type="button" id="terms" data-testid="terms" class="btn btn-toggle" aria-pressed="false">
+            Plain / SysML
+          </button>
+          <button type="button" id="theme" data-testid="theme" class="btn btn-toggle" aria-pressed="false">
+            Theme
+          </button>
+        </div>
+      </header>
+
+      <main id="viewport" class="viewport" data-testid="viewport">
+        <div id="loading" class="loading-overlay">
+          <div class="loading-box">
+            <div class="spinner" aria-hidden="true"></div>
+            <p id="loading-text" class="loading-text">Loading model&hellip;</p>
+          </div>
+        </div>
+      </main>
+
+      <aside id="panel" class="panel" data-testid="panel">
+        <div class="panel-tabs">
+          <button type="button" id="tab-parts" data-testid="tab-parts" class="tab-btn is-active">Parts</button>
+          <button type="button" id="tab-reqs" data-testid="tab-reqs" class="tab-btn">Requirements</button>
+        </div>
+
+        <div class="panel-search">
+          <input
+            type="search"
+            id="search"
+            data-testid="search"
+            class="search-input"
+            placeholder="Search parts and requirements&hellip;"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="panel-body">
+          <h2 id="detail-title" data-testid="detail-title" class="detail-title">Select a part</h2>
+
+          <div class="panel-meta">
+            <span id="req-count" data-testid="req-count" class="chip req-count">0 requirements</span>
+          </div>
+
+          <div id="detail-content" class="detail-content">
+            <p class="muted">
+              Click a part in the 3D view, or switch to the Requirements tab to browse by requirement.
+            </p>
+          </div>
+
+          <ul id="req-list" class="list req-list" aria-label="Requirements"></ul>
+        </div>
+      </aside>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

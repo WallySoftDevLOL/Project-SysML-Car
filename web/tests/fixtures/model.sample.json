@@ -1,0 +1,154 @@
+{
+  "meta": {
+    "schema": 1,
+    "sourceFile": "data/source/fixture.xlsx",
+    "sourceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "converter": "tools/xlsx_to_json.py"
+  },
+  "categories": [
+    { "id": "STK", "name": "Stakeholder / Mission", "plain": "What customers and the mission need", "level": 0 },
+    { "id": "SYS", "name": "System", "plain": "What the car must do", "level": 1 },
+    { "id": "PT", "name": "Subsystem - Powertrain", "plain": "Powertrain requirements", "level": 2, "block": "POWERTRAIN" }
+  ],
+  "elements": [
+    {
+      "id": "REQ_STK_001",
+      "kind": "Requirement",
+      "displayId": "STK-001",
+      "category": "STK",
+      "name": "Vehicle Acceleration Performance",
+      "text": "The vehicle shall accelerate from 0-60 mph in under 6 seconds.",
+      "rationale": "Customer expectation for a sporty electric vehicle.",
+      "acceptance": "Measured on a closed track with a fully charged battery.",
+      "authoritative": true,
+      "owner": "PKG_REQ_MISSION"
+    },
+    {
+      "id": "REQ_SYS_001",
+      "kind": "Requirement",
+      "displayId": "SYS-001",
+      "category": "SYS",
+      "name": "Propulsion Delivery",
+      "text": "The system shall deliver propulsive torque to the drive wheels on driver demand.",
+      "rationale": "Directly supports acceleration performance.",
+      "acceptance": "Torque request-to-delivery latency under 100 ms.",
+      "authoritative": true
+    },
+    {
+      "id": "REQ_SYS_002",
+      "kind": "Requirement",
+      "displayId": "SYS-002",
+      "category": "SYS",
+      "name": "Energy Storage Capacity",
+      "text": "The system shall store sufficient energy for a 300 mile range.",
+      "rationale": "Range is a top-level customer promise.",
+      "acceptance": "EPA range test cycle result >= 300 miles.",
+      "authoritative": true
+    },
+    {
+      "id": "REQ_PT_001",
+      "kind": "Requirement",
+      "displayId": "PT-001",
+      "category": "PT",
+      "name": "Motor Torque Output",
+      "text": "The powertrain shall produce at least 400 N*m of peak torque.",
+      "rationale": "Sized to meet the acceleration requirement.",
+      "acceptance": "Dynamometer test at rated voltage.",
+      "authoritative": true
+    },
+    {
+      "id": "REQ_PT_002",
+      "kind": "Requirement",
+      "displayId": "PT-002",
+      "category": "PT",
+      "name": "Powertrain Efficiency",
+      "text": "The powertrain shall convert at least 90% of input electrical energy to mechanical work.",
+      "rationale": "Efficiency directly supports range.",
+      "acceptance": "Bench efficiency mapping across the drive cycle.",
+      "authoritative": true
+    },
+    {
+      "id": "VEH",
+      "kind": "Block",
+      "name": "ElectricVehicle",
+      "label": "Whole vehicle",
+      "blurb": "The car as a whole. Top-level promises to the customer live here.",
+      "category": "Vehicle",
+      "mesh": "VEH",
+      "parent": null,
+      "color": "#94A3B8",
+      "alpha": 0.35,
+      "explode": [0, 0, 0]
+    },
+    {
+      "id": "POWERTRAIN",
+      "kind": "Block",
+      "name": "PowertrainSystem",
+      "label": "Powertrain",
+      "blurb": "Electric motors, reduction gears and half-shafts that turn electricity into motion.",
+      "category": "Propulsion",
+      "mesh": "POWERTRAIN",
+      "parent": "VEH",
+      "color": "#F97316",
+      "alpha": 1.0,
+      "explode": [0, 0.2, -1]
+    },
+    {
+      "id": "ENERGY",
+      "kind": "Block",
+      "name": "EnergyStorageSystem",
+      "label": "Battery pack",
+      "blurb": "The skateboard battery under the floor. Stores the energy for range and acceleration.",
+      "category": "Energy",
+      "mesh": "ENERGY",
+      "parent": "VEH",
+      "color": "#22C55E",
+      "alpha": 1.0,
+      "explode": [0, -1, 0]
+    },
+    {
+      "id": "TC_ACCEL",
+      "kind": "TestCase",
+      "name": "Acceleration / Force / Power Verification"
+    }
+  ],
+  "relationships": [
+    { "id": "SAT_PT_001", "type": "Satisfy", "source": "POWERTRAIN", "target": "REQ_PT_001" },
+    { "id": "SAT_PT_002", "type": "Satisfy", "source": "POWERTRAIN", "target": "REQ_PT_002" },
+    { "id": "SAT_SYS_002", "type": "Satisfy", "source": "ENERGY", "target": "REQ_SYS_002" },
+    { "id": "VER_STK_001", "type": "Verify", "source": "TC_ACCEL", "target": "REQ_STK_001" },
+    { "id": "DER_SYS_001", "type": "DeriveRequirement", "source": "REQ_SYS_001", "target": "REQ_STK_001" },
+    { "id": "DER_PT_001", "type": "DeriveRequirement", "source": "REQ_PT_001", "target": "REQ_SYS_001" },
+    {
+      "id": "ITEMFLOW_ENERGY_POWERTRAIN",
+      "type": "ItemFlow",
+      "source": "ENERGY",
+      "target": "POWERTRAIN",
+      "extra": {
+        "item": "DCPowerData",
+        "connector": "CONN_ENERGY_POWERTRAIN"
+      }
+    }
+  ],
+  "flows": [
+    {
+      "id": "CONN_ENERGY_POWERTRAIN",
+      "source": "ENERGY",
+      "target": "POWERTRAIN",
+      "item": "DCPowerData",
+      "label": "DC power",
+      "meshName": "FLOW__ENERGY__POWERTRAIN"
+    }
+  ],
+  "hierarchy": {
+    "VEH": ["POWERTRAIN", "ENERGY"]
+  },
+  "stats": {
+    "requirements": 5,
+    "copies": 0,
+    "traceRelationships": 6,
+    "allRelationships": 7,
+    "blocks": 3,
+    "flows": 1
+  }
+}

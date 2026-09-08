@@ -1,0 +1,26 @@
+{
+  "name": "sysml-car-viewer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Three.js viewer for the SysML Car traceability demo.",
+  "scripts": {
+    "copy-assets": "node scripts/copy-assets.mjs",
+    "dev": "npm run copy-assets && vite",
+    "build": "npm run copy-assets && vite build",
+    "preview": "vite preview",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "three": "0.185.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/three": "0.185.1",
+    "typescript": "5.9.3",
+    "vite": "7.3.6",
+    "vitest": "3.2.7"
+  }
+}
