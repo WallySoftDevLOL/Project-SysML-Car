@@ -1,15 +1,393 @@
 [
-  { "id": "VEH",        "name": "ElectricVehicle",          "label": "Whole vehicle",       "blurb": "The car as a whole. Top-level promises to the customer live here.",                       "parentId": null,         "category": "Vehicle",            "meshName": "VEH",        "color": "#94A3B8", "alpha": 0.35, "explode": [0, 0, 0] },
-  { "id": "POWERTRAIN", "name": "PowertrainSystem",         "label": "Powertrain",          "blurb": "Electric motors, reduction gears and half-shafts that turn electricity into motion.",     "parentId": "VEH",        "category": "Propulsion",         "meshName": "POWERTRAIN", "color": "#F97316", "alpha": 1.0,  "explode": [0, 0.2, -1] },
-  { "id": "INVERTER",   "name": "TractionInverter",         "label": "Traction inverter",   "blurb": "Converts battery DC into the AC the motor needs, and sets how hard the motor pushes.",     "parentId": "POWERTRAIN", "category": "Propulsion",         "meshName": "INVERTER",   "color": "#FDBA74", "alpha": 1.0,  "explode": [0, 1, -1] },
-  { "id": "ENERGY",     "name": "EnergyStorageSystem",      "label": "Battery pack",        "blurb": "The skateboard battery under the floor. Stores the energy for range and acceleration.",   "parentId": "VEH",        "category": "Energy",             "meshName": "ENERGY",     "color": "#22C55E", "alpha": 1.0,  "explode": [0, -1, 0] },
-  { "id": "BMS",        "name": "BatteryManagementSystem",  "label": "Battery management",  "blurb": "Watches every cell: charge level, temperature, and protection limits.",                    "parentId": "ENERGY",     "category": "Energy",             "meshName": "BMS",        "color": "#86EFAC", "alpha": 1.0,  "explode": [0.6, -0.3, 0.3] },
-  { "id": "VCONTROL",   "name": "VehicleControlSystem",     "label": "Vehicle controller",  "blurb": "The central brain. Reads the driver and sensors, then commands torque and braking.",       "parentId": "VEH",        "category": "Control",            "meshName": "VCONTROL",   "color": "#3B82F6", "alpha": 1.0,  "explode": [0, 1, 0.3] },
-  { "id": "BRAKES",     "name": "BrakeSystem",              "label": "Brakes",              "blurb": "Discs and calipers at each wheel, blended with motor regeneration.",                      "parentId": "VEH",        "category": "Chassis",            "meshName": "BRAKES",     "color": "#EF4444", "alpha": 1.0,  "explode": [0, -0.6, 0] },
-  { "id": "THERMAL",    "name": "ThermalManagementSystem",  "label": "Cooling system",      "blurb": "Radiator, fan and coolant loop that keep the battery and electronics at a safe temperature.", "parentId": "VEH",    "category": "Thermal",            "meshName": "THERMAL",    "color": "#22D3EE", "alpha": 1.0,  "explode": [0, 0.3, 1] },
-  { "id": "THERM_CTRL", "name": "ThermalController",        "label": "Thermal controller",  "blurb": "Runs the coolant pump and fan based on temperatures.",                                    "parentId": "THERMAL",    "category": "Thermal",            "meshName": "THERM_CTRL", "color": "#A5F3FC", "alpha": 1.0,  "explode": [0.5, 0.6, 1] },
-  { "id": "SENSORS",    "name": "VehicleSensorSystem",      "label": "Sensors",             "blurb": "Wheel-speed sensors, front radar and camera that tell the controller what is happening.", "parentId": "VEH",        "category": "Sensing",            "meshName": "SENSORS",    "color": "#A855F7", "alpha": 1.0,  "explode": [0, 1.2, 0] },
-  { "id": "HMI",        "name": "DriverInterfaceSystem",    "label": "Driver interface",    "blurb": "Dashboard, steering wheel, pedals and screen. How the driver commands and observes the car.", "parentId": "VEH",     "category": "Driver interface",   "meshName": "HMI",        "color": "#EC4899", "alpha": 1.0,  "explode": [0, 1, 0.5] },
-  { "id": "CHARGE",     "name": "ChargingSystem",           "label": "Charging port",       "blurb": "Charge door and socket. Manages the handshake with a charging station.",                  "parentId": "VEH",        "category": "Charging",           "meshName": "CHARGE",     "color": "#EAB308", "alpha": 1.0,  "explode": [1, 0.3, -0.5] },
-  { "id": "DIAG",       "name": "ServiceDiagnosticsSystem", "label": "Diagnostics port",    "blurb": "The service connector a technician plugs into to read faults and telemetry.",             "parentId": "VEH",        "category": "Service",            "meshName": "DIAG",       "color": "#0D9488", "alpha": 1.0,  "explode": [1, 0.2, 0.4] }
+  {
+    "id": "VEH",
+    "name": "ElectricVehicle",
+    "label": "Whole vehicle",
+    "blurb": "The car as a whole. Top-level promises to the customer live here.",
+    "parentId": null,
+    "category": "Vehicle",
+    "meshName": "VEH",
+    "color": "#94A3B8",
+    "alpha": 0.35,
+    "explode": [
+      0,
+      0,
+      0
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "POWERTRAIN",
+    "name": "PowertrainSystem",
+    "label": "Powertrain",
+    "blurb": "Electric motors, reduction gears and half-shafts that turn electricity into motion.",
+    "parentId": "VEH",
+    "category": "Propulsion",
+    "meshName": "POWERTRAIN",
+    "color": "#F97316",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      0.2,
+      -1
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "INVERTER",
+    "name": "TractionInverter",
+    "label": "Traction inverter",
+    "blurb": "Converts battery DC into the AC the motor needs, and sets how hard the motor pushes.",
+    "parentId": "POWERTRAIN",
+    "category": "Propulsion",
+    "meshName": "INVERTER",
+    "color": "#FDBA74",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      1,
+      -1
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "ENERGY",
+    "name": "EnergyStorageSystem",
+    "label": "Battery pack",
+    "blurb": "The skateboard battery under the floor. Stores the energy for range and acceleration.",
+    "parentId": "VEH",
+    "category": "Energy",
+    "meshName": "ENERGY",
+    "color": "#22C55E",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      -1,
+      0
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "BMS",
+    "name": "BatteryManagementSystem",
+    "label": "Battery management",
+    "blurb": "Watches every cell: charge level, temperature, and protection limits.",
+    "parentId": "ENERGY",
+    "category": "Energy",
+    "meshName": "BMS",
+    "color": "#86EFAC",
+    "alpha": 1.0,
+    "explode": [
+      0.6,
+      -0.3,
+      0.3
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "VCONTROL",
+    "name": "VehicleControlSystem",
+    "label": "Vehicle controller",
+    "blurb": "The central brain. Reads the driver and sensors, then commands torque and braking.",
+    "parentId": "VEH",
+    "category": "Control",
+    "meshName": "VCONTROL",
+    "color": "#3B82F6",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      1,
+      0.3
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "BRAKES",
+    "name": "BrakeSystem",
+    "label": "Brakes",
+    "blurb": "Discs and calipers at each wheel, blended with motor regeneration.",
+    "parentId": "VEH",
+    "category": "Chassis",
+    "meshName": "BRAKES",
+    "color": "#EF4444",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      -0.6,
+      0
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "THERMAL",
+    "name": "ThermalManagementSystem",
+    "label": "Cooling system",
+    "blurb": "Radiator, fan and coolant loop that keep the battery and electronics at a safe temperature.",
+    "parentId": "VEH",
+    "category": "Thermal",
+    "meshName": "THERMAL",
+    "color": "#22D3EE",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      0.3,
+      1
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "THERM_CTRL",
+    "name": "ThermalController",
+    "label": "Thermal controller",
+    "blurb": "Runs the coolant pump and fan based on temperatures.",
+    "parentId": "THERMAL",
+    "category": "Thermal",
+    "meshName": "THERM_CTRL",
+    "color": "#A5F3FC",
+    "alpha": 1.0,
+    "explode": [
+      0.5,
+      0.6,
+      1
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "SENSORS",
+    "name": "VehicleSensorSystem",
+    "label": "Sensors",
+    "blurb": "Wheel-speed sensors, front radar and camera that tell the controller what is happening.",
+    "parentId": "VEH",
+    "category": "Sensing",
+    "meshName": "SENSORS",
+    "color": "#A855F7",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      1.2,
+      0
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "HMI",
+    "name": "DriverInterfaceSystem",
+    "label": "Driver interface",
+    "blurb": "Dashboard, steering wheel, pedals and screen. How the driver commands and observes the car.",
+    "parentId": "VEH",
+    "category": "Driver interface",
+    "meshName": "HMI",
+    "color": "#EC4899",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      1,
+      0.5
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "CHARGE",
+    "name": "ChargingSystem",
+    "label": "Charging port",
+    "blurb": "Charge door and socket. Manages the handshake with a charging station.",
+    "parentId": "VEH",
+    "category": "Charging",
+    "meshName": "CHARGE",
+    "color": "#EAB308",
+    "alpha": 1.0,
+    "explode": [
+      1,
+      0.3,
+      -0.5
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "DIAG",
+    "name": "ServiceDiagnosticsSystem",
+    "label": "Diagnostics port",
+    "blurb": "The service connector a technician plugs into to read faults and telemetry.",
+    "parentId": "VEH",
+    "category": "Service",
+    "meshName": "DIAG",
+    "color": "#0D9488",
+    "alpha": 1.0,
+    "explode": [
+      1,
+      0.2,
+      0.4
+    ],
+    "tier": "system"
+  },
+  {
+    "id": "MOTOR",
+    "name": "TractionMotor",
+    "label": "Traction motor",
+    "blurb": "The electric motor itself: turns inverter power into torque at the axle.",
+    "parentId": "POWERTRAIN",
+    "category": "Propulsion",
+    "meshName": "MOTOR",
+    "color": "#FB923C",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      0.4,
+      -1
+    ],
+    "tier": "component"
+  },
+  {
+    "id": "BAT_MODULE",
+    "name": "BatteryModule",
+    "label": "Battery modules",
+    "blurb": "The cell modules inside the pack that actually store the energy.",
+    "parentId": "ENERGY",
+    "category": "Energy",
+    "meshName": "BAT_MODULE",
+    "color": "#4ADE80",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      -1,
+      0
+    ],
+    "tier": "component"
+  },
+  {
+    "id": "CHARGE_PORT",
+    "name": "ChargePort",
+    "label": "Charge socket",
+    "blurb": "The socket and door where the charging cable plugs in.",
+    "parentId": "CHARGE",
+    "category": "Charging",
+    "meshName": "CHARGE_PORT",
+    "color": "#FDE047",
+    "alpha": 1.0,
+    "explode": [
+      1,
+      0.3,
+      -0.5
+    ],
+    "tier": "component"
+  },
+  {
+    "id": "OBC",
+    "name": "OnboardCharger",
+    "label": "Onboard charger",
+    "blurb": "Converts AC from a wall charger into DC for the battery.",
+    "parentId": "CHARGE",
+    "category": "Charging",
+    "meshName": "OBC",
+    "color": "#FACC15",
+    "alpha": 1.0,
+    "explode": [
+      0.8,
+      0.6,
+      -0.6
+    ],
+    "tier": "component"
+  },
+  {
+    "id": "BRAKE_CTRL",
+    "name": "BrakeController",
+    "label": "Brake controller",
+    "blurb": "The electronic module that decides how much friction and regeneration to blend.",
+    "parentId": "BRAKES",
+    "category": "Chassis",
+    "meshName": "BRAKE_CTRL",
+    "color": "#F87171",
+    "alpha": 1.0,
+    "explode": [
+      0.6,
+      1,
+      0.6
+    ],
+    "tier": "component"
+  },
+  {
+    "id": "BRAKE_ACT",
+    "name": "BrakeActuator",
+    "label": "Brake calipers",
+    "blurb": "The calipers that clamp the discs when friction braking is needed.",
+    "parentId": "BRAKES",
+    "category": "Chassis",
+    "meshName": "BRAKE_ACT",
+    "color": "#FCA5A5",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      -0.4,
+      0
+    ],
+    "tier": "component"
+  },
+  {
+    "id": "PUMP",
+    "name": "CoolantPump",
+    "label": "Coolant pump",
+    "blurb": "Circulates coolant between the radiator, battery and electronics.",
+    "parentId": "THERMAL",
+    "category": "Thermal",
+    "meshName": "PUMP",
+    "color": "#67E8F9",
+    "alpha": 1.0,
+    "explode": [
+      0.4,
+      0.4,
+      1
+    ],
+    "tier": "component"
+  },
+  {
+    "id": "FUSION",
+    "name": "SensorFusionController",
+    "label": "Sensor fusion controller",
+    "blurb": "Combines radar, camera and wheel data into one picture for the controller.",
+    "parentId": "SENSORS",
+    "category": "Sensing",
+    "meshName": "FUSION",
+    "color": "#C084FC",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      1.2,
+      0.3
+    ],
+    "tier": "component"
+  },
+  {
+    "id": "WHEEL_SENSOR",
+    "name": "WheelSpeedSensor",
+    "label": "Wheel-speed sensors",
+    "blurb": "One sensor per wheel reporting how fast it turns.",
+    "parentId": "SENSORS",
+    "category": "Sensing",
+    "meshName": "WHEEL_SENSOR",
+    "color": "#D8B4FE",
+    "alpha": 1.0,
+    "explode": [
+      0,
+      -0.6,
+      0
+    ],
+    "tier": "component"
+  },
+  {
+    "id": "DIAG_GATEWAY",
+    "name": "DiagnosticGateway",
+    "label": "Diagnostic gateway",
+    "blurb": "The secure gateway that decides what a service tool may read or change.",
+    "parentId": "DIAG",
+    "category": "Service",
+    "meshName": "DIAG_GATEWAY",
+    "color": "#2DD4BF",
+    "alpha": 1.0,
+    "explode": [
+      1,
+      0.4,
+      0.4
+    ],
+    "tier": "component"
+  }
 ]
