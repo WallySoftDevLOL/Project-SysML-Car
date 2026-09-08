@@ -1,7 +1,7 @@
 {
   "meta": {
     "schema": 1,
-    "sourceFile": "C:/Users/Austi/OneDrive/Desktop/Claude Projects/Project SysML Car/data/source/Connected_EV_SysML_Requirements_and_Relationships_v7.xlsx",
+    "sourceFile": "data/source/Connected_EV_SysML_Requirements_and_Relationships_v7.xlsx",
     "sourceSha256": "9c8798c97cad2ece182185536ac52735f9540606e11ca18b070299e2cf85717c",
     "converter": "tools/xlsx_to_json.py"
   },

@@ -427,7 +427,7 @@ def convert(xlsx_path: Path, blocks_path: Path, out_path: Path) -> dict:
     model = {
         "meta": {
             "schema": 1,
-            "sourceFile": str(xlsx_path).replace("\\", "/"),
+            "sourceFile": _repo_relative(xlsx_path),
             "sourceSha256": source_sha256,
             "converter": "tools/xlsx_to_json.py",
         },
@@ -458,6 +458,16 @@ def inspect_workbook(xlsx_path: Path) -> None:
         print(f"\n=== {name} ({ws.dimensions}) — {data_rows} data rows ===")
         print(f"headers: {list(headers)}")
 
+
+
+def _repo_relative(path) -> str:
+    """Path relative to the repo root (parent of tools/), posix style, so output is machine-independent."""
+    repo_root = Path(__file__).resolve().parent.parent
+    p = Path(path).resolve()
+    try:
+        return p.relative_to(repo_root).as_posix()
+    except ValueError:
+        return f"data/source/{p.name}"
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
