@@ -60,6 +60,33 @@ export interface BlockEntry {
   restBox: THREE.Box3;
   /** Live AABB, restBox shifted by the current explode offset. */
   box: THREE.Box3;
+  /**
+   * Highest vertex of the part's own geometry, world space at explode = 0.
+   * Used as the label anchor when there is no pointer hit: unlike the
+   * bounding-sphere top it always lies ON the part, which matters for parts
+   * spread across the car (brakes at four wheels, sensors bumper to bumper).
+   */
+  restTop: THREE.Vector3;
+}
+
+/** World-space vertex with the greatest y across `meshes` (falls back to `fallback`). */
+function highestVertex(meshes: THREE.Mesh[], fallback: THREE.Vector3): THREE.Vector3 {
+  const best = fallback.clone();
+  let bestY = -Infinity;
+  const v = new THREE.Vector3();
+  for (const mesh of meshes) {
+    const pos = mesh.geometry.getAttribute('position');
+    if (!pos) continue;
+    mesh.updateWorldMatrix(true, false);
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+      if (v.y > bestY) {
+        bestY = v.y;
+        best.copy(v);
+      }
+    }
+  }
+  return best;
 }
 
 export interface FlowEntry {
@@ -288,6 +315,7 @@ export function indexScene(scene: THREE.Group, defs: ViewerBlockDef[]): SceneAss
       sphere: restSphere.clone(),
       restBox,
       box: restBox.clone(),
+      restTop: highestVertex(meshes, restSphere.center),
     });
   });
 

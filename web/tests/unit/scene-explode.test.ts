@@ -36,6 +36,7 @@ function makeAssets(): SceneAssets {
       sphere: restSphere.clone(),
       restBox,
       box: restBox.clone(),
+      restTop: new THREE.Vector3(0, 1, 0),
     });
   }
   return {

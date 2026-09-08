@@ -311,10 +311,15 @@ export function createViewer(container: HTMLElement, opts: ViewerOptions = {}): 
     if (point) hoverAnchor.copy(point);
     if (showLabels) {
       const entry = id ? assets?.blocks.get(id) : null;
+      if (entry && !hoverHasAnchor) {
+        // No pointer hit (hover came from a list row or legend chip): sit the
+        // label on the part's highest point, shifted by the live explode offset.
+        hoverAnchor.copy(entry.restTop).add(entry.sphere.center).sub(entry.restSphere.center);
+      }
       labels.show(
         entry ? (labelText.get(entry.id) ?? entry.id) : null,
         entry?.sphere ?? null,
-        hoverHasAnchor ? hoverAnchor : null,
+        entry ? hoverAnchor : null,
       );
     }
     requestRender();
@@ -394,7 +399,9 @@ export function createViewer(container: HTMLElement, opts: ViewerOptions = {}): 
       // Blocks moved, so the label anchor and the hovered id may be stale.
       if (hoveredId && showLabels) {
         const entry = assets?.blocks.get(hoveredId);
-        labels.show(entry ? (labelText.get(hoveredId) ?? hoveredId) : null, entry?.sphere ?? null);
+        if (entry) hoverAnchor.copy(entry.restTop).add(entry.sphere.center).sub(entry.restSphere.center);
+        hoverHasAnchor = false;
+        labels.show(entry ? (labelText.get(hoveredId) ?? hoveredId) : null, entry?.sphere ?? null, entry ? hoverAnchor : null);
       }
       picker?.invalidate();
       if (changed) scheduleExplodeFit();
