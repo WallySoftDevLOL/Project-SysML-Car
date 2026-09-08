@@ -425,7 +425,7 @@ describe('createTourPlayer with behavior data (sequence/stateMachine steps)', ()
     expect(store.get().selection).toEqual({ kind: 'block', id: 'PARTB' });
     expect(player.current()?.message).toEqual({ fromLabel: 'partA', toLabel: 'partB', label: 'doThing()', sort: 'SynchCall' });
     expect(player.current()?.stateStrip?.currentId).toBe('ST_ON');
-    expect(player.current()?.stateStrip?.states.map((s) => s.id)).toEqual(['ST_INIT', 'ST_OFF', 'ST_ON', 'ST_FAULT', 'ST_DONE']);
+    expect(player.current()?.stateStrip?.states.map((s) => s.id)).toEqual(['ST_OFF', 'ST_ON', 'ST_FAULT', 'ST_DONE']);
   });
 
   it('a signal message (no operation signature) renders its plain name, not name()', () => {
@@ -613,7 +613,7 @@ describe('createTourOverlay with behavior data (message/state strips)', () => {
 
     expect(stateStrip.hidden).toBe(false);
     const stateEls = Array.from(container.querySelectorAll('[data-testid="tour-state"]'));
-    expect(stateEls.map((el) => el.textContent)).toEqual(['Initial', 'Off', 'On', 'Fault', 'Done']);
+    expect(stateEls.map((el) => el.textContent)).toEqual(['Off', 'On', 'Fault', 'Done']);
     const current = stateEls.filter((el) => el.classList.contains('is-current'));
     expect(current).toHaveLength(1);
     expect(current[0]!.textContent).toBe('On');
