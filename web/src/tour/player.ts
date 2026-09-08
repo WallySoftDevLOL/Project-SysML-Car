@@ -123,7 +123,25 @@ function resolveStateMachine(
   ref: NonNullable<TourStep['stateMachine']>,
 ): TourResolvedStateMachine | undefined {
   const sm = idx?.model.behavior?.stateMachines?.find((s) => s.id === ref.id);
-  return sm ? { states: sm.states, currentId: ref.state } : undefined;
+  if (!sm) return undefined;
+  // Present states in machine order: breadth-first from the initial pseudostate
+  // along transitions, then anything unreachable. The initial dot itself is
+  // not a mode the car can be in, so it is left off the strip.
+  const byId = new Map(sm.states.map((st) => [st.id, st]));
+  const initial = sm.states.find((st) => st.kind === 'initial');
+  const ordered: typeof sm.states = [];
+  const seen = new Set<string>();
+  const queue: string[] = initial ? [initial.id] : [];
+  while (queue.length) {
+    const id = queue.shift()!;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const st = byId.get(id);
+    if (st && st.kind !== 'initial') ordered.push(st);
+    for (const t of sm.transitions) if (t.source === id && !seen.has(t.target)) queue.push(t.target);
+  }
+  for (const st of sm.states) if (!seen.has(st.id) && st.kind !== 'initial') ordered.push(st);
+  return { states: ordered, currentId: ref.state };
 }
 
 export interface TourScenario {

@@ -37,6 +37,24 @@ const KIND_PLAIN: Record<string, string> = {
   Requirement: 'Requirement',
   TestCase: 'Test',
   UseCase: 'Scenario',
+
+  // Behaviour and structure (docs/model-contract.md section 6). These read as
+  // what the thing *does* for the reader rather than what SysML calls it:
+  // a StateMachine is "how it behaves", a ValueProperty is what a part
+  // "tracks". 'sysml' mode still returns the formal term unchanged.
+  StateMachine: 'How it behaves',
+  State: 'Mode',
+  Transition: 'Changes to',
+  Signal: 'Signal',
+  Reception: 'Listens for',
+  Operation: 'Can do',
+  ValueProperty: 'Tracks',
+  PartProperty: 'Contains',
+  Port: 'Connection',
+  InterfaceBlock: 'Connection type',
+  ConstraintBlock: 'Formula',
+  Interaction: 'Sequence',
+  Activity: 'Procedure',
 };
 
 /**

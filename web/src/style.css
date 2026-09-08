@@ -1088,7 +1088,7 @@ button {
 .state-diagram .sd-state-label {
   fill: var(--color-text);
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .state-diagram .sd-initial,
@@ -1114,7 +1114,7 @@ button {
 .state-diagram .sd-edge-label {
   fill: var(--color-muted);
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .state-diagram .sd-state.is-highlight .sd-state-box {
@@ -1288,6 +1288,13 @@ button {
   cursor: default;
   font-size: 0.9em;
   counter-increment: step;
+  /* The counter is the first flex item, so the step text has to be told to
+     start beside it rather than being pushed to the far edge. */
+  justify-content: flex-start;
+}
+
+.step-row .row-label {
+  flex: 1;
 }
 
 .step-row::before {

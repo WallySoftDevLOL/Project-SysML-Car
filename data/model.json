@@ -2119,7 +2119,7 @@
         {
           "id": "V_FAULT",
           "name": "faultActive",
-          "default": null,
+          "default": false,
           "type": "Boolean"
         },
         {

@@ -116,6 +116,15 @@ def strip_handle(ref):
     return ref
 
 
+def parse_default(value):
+    """Value-property defaults: numbers stay numbers, 'true'/'false' become booleans, else None."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str) and value.strip().lower() in ("true", "false"):
+        return value.strip().lower() == "true"
+    return parse_number(value)
+
+
 def parse_number(raw):
     """'1800' -> 1800, '4.0' -> 4.0, 'false' / None -> None (not numeric)."""
     if raw is None:
@@ -485,7 +494,7 @@ def convert(groovy_path: Path, blocks_path: Path, xlsx_path: Path, out_path: Pat
             {
                 "id": op["external_id"],
                 "name": op["name"],
-                "default": parse_number(op.get("default_value")),
+                "default": parse_default(op.get("default_value")),
                 "type": type_name,
             }
         )
