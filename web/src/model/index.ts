@@ -4,34 +4,6 @@
 import type { Category, Element, Flow, ModelJson, Parametric, Relationship } from './schema';
 import { behaviorIndex, type BehaviorIndex } from './behavior';
 
-/**
- * The 13 real, clickable car parts (docs/model-contract.md section 1),
- * in the order they were hand-authored in `data/blocks.json`. `hierarchy`
- * in `data/model.json` sorts each parent's children alphabetically by id
- * (contract: "arrays sorted by id"), which loses that authored order — this
- * table restores it so `ModelIndex.blocks` matches the original catalog
- * order (VEH, then each of its children in this order, with each child's
- * own children immediately after it). A block id absent from this table
- * (e.g. one added to the workbook later) simply sorts after every listed
- * id, alphabetically among any other newcomers, so the index degrades
- * gracefully rather than throwing.
- */
-const CANONICAL_BLOCK_ORDER = [
-  'VEH',
-  'POWERTRAIN',
-  'INVERTER',
-  'ENERGY',
-  'BMS',
-  'VCONTROL',
-  'BRAKES',
-  'THERMAL',
-  'THERM_CTRL',
-  'SENSORS',
-  'HMI',
-  'CHARGE',
-  'DIAG',
-];
-
 export interface ModelIndex {
   /** The underlying parsed model, for consumers that need raw arrays (e.g. search.ts). */
   model: ModelJson;
@@ -50,8 +22,21 @@ export interface ModelIndex {
   /** Relationships with `target === id` and `type === type`. */
   inBy(id: string, type: string): Relationship[];
 
-  /** The 13 real (meshed) blocks, in hierarchy order — see {@link CANONICAL_BLOCK_ORDER}. */
+  /**
+   * All 23 real (meshed) blocks — the 13 systems and 10 components of
+   * `data/blocks.json` (contract section 1) — in hierarchy order: VEH, then
+   * each system followed immediately by its own components, in catalog
+   * order. Derived straight from `model.hierarchy` (the converter emits
+   * each parent's children in `data/blocks.json` order, contract section 2),
+   * so no separate ordering table is needed here.
+   */
   blocks: Element[];
+  /** The 13 `tier: "system"` blocks (incl. VEH), in the same order as {@link blocks}. */
+  systems: Element[];
+  /** The 10 `tier: "component"` blocks, in the same order as {@link blocks}. */
+  components: Element[];
+  /** A block's `tier` ("system" | "component"), or `undefined` if `id` isn't a Block (or has no `tier`, e.g. pre-catalog data). */
+  tierOf(id: string): string | undefined;
 
   /** Categories keyed by id (e.g. "STK", "SYS", "PT"). */
   categories: Map<string, Category>;
@@ -126,19 +111,13 @@ export function buildIndex(model: ModelJson): ModelIndex {
     return categories.get(catId);
   }
 
-  const orderIndex = new Map<string, number>();
-  CANONICAL_BLOCK_ORDER.forEach((id, i) => orderIndex.set(id, i));
-
-  function sortByCanonicalOrder(ids: string[]): string[] {
-    return [...ids].sort((a, b) => {
-      const ai = orderIndex.get(a) ?? Number.MAX_SAFE_INTEGER;
-      const bi = orderIndex.get(b) ?? Number.MAX_SAFE_INTEGER;
-      return ai !== bi ? ai - bi : a.localeCompare(b);
-    });
-  }
-
+  // `model.hierarchy` lists each parent's children in `data/blocks.json`
+  // catalog order (contract section 2: the converter builds it straight off
+  // the hand-authored blocks.json, not sorted). That's exactly the display
+  // order the UI wants, so `blocks`/`childrenOf` use it directly rather than
+  // re-deriving/overriding order with a separate table.
   function childIdsOf(blockId: string): string[] {
-    return sortByCanonicalOrder(model.hierarchy[blockId] ?? []);
+    return model.hierarchy[blockId] ?? [];
   }
 
   function parentOf(blockId: string): Element | undefined {
@@ -156,14 +135,12 @@ export function buildIndex(model: ModelJson): ModelIndex {
     return result;
   }
 
-  // The 13 real, clickable blocks are the ones carrying a `mesh` (the
+  // The 23 real, clickable blocks are the ones carrying a `mesh` (the
   // abstract SysML block VEH_SUBSYSTEM, generalized-to by every subsystem,
   // has neither a mesh nor a parent and is excluded).
   const meshedBlocks = model.elements.filter((e) => e.kind === 'Block' && typeof e.mesh === 'string');
   const meshedIds = new Set(meshedBlocks.map((b) => b.id));
-  const roots = sortByCanonicalOrder(
-    meshedBlocks.filter((b) => typeof b.parent !== 'string' || !meshedIds.has(b.parent)).map((b) => b.id),
-  );
+  const roots = meshedBlocks.filter((b) => typeof b.parent !== 'string' || !meshedIds.has(b.parent)).map((b) => b.id);
 
   const blocks: Element[] = [];
   const visited = new Set<string>();
@@ -177,6 +154,14 @@ export function buildIndex(model: ModelJson): ModelIndex {
     }
   }
   for (const rootId of roots) visit(rootId);
+
+  const systems = blocks.filter((b) => b.tier === 'system');
+  const components = blocks.filter((b) => b.tier === 'component');
+
+  function tierOf(id: string): string | undefined {
+    const tier = byId.get(id)?.tier;
+    return typeof tier === 'string' ? tier : undefined;
+  }
 
   function requirements(authoritativeOnly = true): Element[] {
     const reqs = byKind.get('Requirement') ?? [];
@@ -214,6 +199,9 @@ export function buildIndex(model: ModelJson): ModelIndex {
     outBy,
     inBy,
     blocks,
+    systems,
+    components,
+    tierOf,
     categories,
     categoryOf,
     flows: model.flows,

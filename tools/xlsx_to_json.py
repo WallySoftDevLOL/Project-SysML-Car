@@ -361,6 +361,7 @@ def convert(xlsx_path: Path, blocks_path: Path, out_path: Path) -> dict:
                     "color": b["color"],
                     "alpha": b["alpha"],
                     "explode": b["explode"],
+                    "tier": b["tier"],
                 }
                 catalog_block_ids_seen.add(elem_id)
             elif elem_id in KNOWN_ABSTRACT_BLOCKS:
@@ -392,10 +393,39 @@ def convert(xlsx_path: Path, blocks_path: Path, out_path: Path) -> dict:
             # Package, TestCase, UseCase, Actor, ConstraintBlock, Operation, ...
             elements_by_id[elem_id] = {"id": elem_id, "kind": raw_kind, "name": name}
 
-    missing_catalog_blocks = set(blocks_by_id) - catalog_block_ids_seen
+    # Component-tier blocks (data/blocks.json's 10 sub-parts, e.g. MOTOR) are
+    # a newer addition to the catalog than this workbook: they satisfy
+    # nothing directly and aren't a flow endpoint, so they never turn up as a
+    # relationship Source/Target in All_Relationships and are never harvested
+    # above. Merge them in directly from the catalog so this converter still
+    # produces the full 23-block hierarchy/stats that
+    # tools/model_script_to_json.py does (contract section 1). Only the 13
+    # system-tier blocks are still required to actually appear in the
+    # workbook.
+    for b in blocks_catalog:
+        if b["id"] in elements_by_id:
+            continue
+        elements_by_id[b["id"]] = {
+            "id": b["id"],
+            "kind": "Block",
+            "name": b["name"],
+            "label": b["label"],
+            "blurb": b["blurb"],
+            "category": b["category"],
+            "mesh": b["meshName"],
+            "parent": b["parentId"],
+            "color": b["color"],
+            "alpha": b["alpha"],
+            "explode": b["explode"],
+            "tier": b["tier"],
+        }
+
+    missing_catalog_blocks = {
+        b["id"] for b in blocks_catalog if b["tier"] == "system"
+    } - catalog_block_ids_seen
     if missing_catalog_blocks:
         raise SystemExit(
-            "blocks.json id(s) never appear in the workbook: "
+            "blocks.json system-tier id(s) never appear in the workbook: "
             f"{sorted(missing_catalog_blocks)}"
         )
 
@@ -417,6 +447,8 @@ def convert(xlsx_path: Path, blocks_path: Path, out_path: Path) -> dict:
         "traceRelationships": len(rr_records),
         "allRelationships": len(ar_records),
         "blocks": len(blocks_catalog),
+        "systems": sum(1 for b in blocks_catalog if b["tier"] == "system"),
+        "components": sum(1 for b in blocks_catalog if b["tier"] == "component"),
         "flows": len(flows),
     }
 

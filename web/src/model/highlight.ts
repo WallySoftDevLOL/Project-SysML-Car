@@ -45,12 +45,18 @@ function satisfiersOf(idx: ModelIndex, reqId: string): Set<BlockId> {
 function highlightForBlock(idx: ModelIndex, blockId: BlockId): HighlightState {
   const primary = withDescendantBlocks(idx, blockId);
 
+  const parent = idx.parentOf(blockId);
+  // Components aren't a flow endpoint themselves (contract: flows stay at
+  // system granularity) -- so a component's "related parts" are its parent
+  // system's flow neighbours, not (always-empty) flows of its own.
+  const isComponent = idx.tierOf(blockId) === 'component';
+  const flowAnchor = isComponent && parent ? parent.id : blockId;
+
   const secondary = new Set<BlockId>();
   for (const flow of idx.flows) {
-    if (flow.source === blockId) secondary.add(flow.target);
-    else if (flow.target === blockId) secondary.add(flow.source);
+    if (flow.source === flowAnchor) secondary.add(flow.target);
+    else if (flow.target === flowAnchor) secondary.add(flow.source);
   }
-  const parent = idx.parentOf(blockId);
   if (parent) secondary.add(parent.id);
   // VEH (the x-ray shell) is everyone's ultimate parent; surfacing it as a
   // "related part" for nearly every selection is just noise, so it's

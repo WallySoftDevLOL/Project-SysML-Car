@@ -156,7 +156,19 @@
       "id": "BAT_MODULE",
       "kind": "Block",
       "name": "BatteryModule",
+      "label": "Battery modules",
+      "blurb": "The cell modules inside the pack that actually store the energy.",
+      "category": "Energy",
+      "mesh": "BAT_MODULE",
       "parent": "ENERGY",
+      "color": "#4ADE80",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        -1,
+        0
+      ],
+      "tier": "component",
       "role": "batteryModule"
     },
     {
@@ -175,6 +187,7 @@
         -0.3,
         0.3
       ],
+      "tier": "system",
       "role": "bms"
     },
     {
@@ -193,6 +206,7 @@
         -0.6,
         0
       ],
+      "tier": "system",
       "role": "brakes",
       "subParts": [
         "BRAKE_ACT",
@@ -227,7 +241,19 @@
       "id": "BRAKE_ACT",
       "kind": "Block",
       "name": "BrakeActuator",
+      "label": "Brake calipers",
+      "blurb": "The calipers that clamp the discs when friction braking is needed.",
+      "category": "Chassis",
+      "mesh": "BRAKE_ACT",
       "parent": "BRAKES",
+      "color": "#FCA5A5",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        -0.4,
+        0
+      ],
+      "tier": "component",
       "role": "actuator"
     },
     {
@@ -241,7 +267,19 @@
       "id": "BRAKE_CTRL",
       "kind": "Block",
       "name": "BrakeController",
+      "label": "Brake controller",
+      "blurb": "The electronic module that decides how much friction and regeneration to blend.",
+      "category": "Chassis",
+      "mesh": "BRAKE_CTRL",
       "parent": "BRAKES",
+      "color": "#F87171",
+      "alpha": 1.0,
+      "explode": [
+        0.6,
+        1,
+        0.6
+      ],
+      "tier": "component",
       "role": "controller"
     },
     {
@@ -275,6 +313,7 @@
         0.3,
         -0.5
       ],
+      "tier": "system",
       "role": "charging",
       "subParts": [
         "CHARGE_PORT",
@@ -332,7 +371,19 @@
       "id": "CHARGE_PORT",
       "kind": "Block",
       "name": "ChargePort",
+      "label": "Charge socket",
+      "blurb": "The socket and door where the charging cable plugs in.",
+      "category": "Charging",
+      "mesh": "CHARGE_PORT",
       "parent": "CHARGE",
+      "color": "#FDE047",
+      "alpha": 1.0,
+      "explode": [
+        1,
+        0.3,
+        -0.5
+      ],
+      "tier": "component",
       "role": "chargePort"
     },
     {
@@ -499,6 +550,7 @@
         0.2,
         0.4
       ],
+      "tier": "system",
       "role": "diagnostics",
       "subParts": [
         "DIAG_GATEWAY"
@@ -535,7 +587,19 @@
       "id": "DIAG_GATEWAY",
       "kind": "Block",
       "name": "DiagnosticGateway",
+      "label": "Diagnostic gateway",
+      "blurb": "The secure gateway that decides what a service tool may read or change.",
+      "category": "Service",
+      "mesh": "DIAG_GATEWAY",
       "parent": "DIAG",
+      "color": "#2DD4BF",
+      "alpha": 1.0,
+      "explode": [
+        1,
+        0.4,
+        0.4
+      ],
+      "tier": "component",
       "role": "gateway"
     },
     {
@@ -566,6 +630,7 @@
         -1,
         0
       ],
+      "tier": "system",
       "role": "energyStorage",
       "subParts": [
         "BAT_MODULE",
@@ -654,7 +719,19 @@
       "id": "FUSION",
       "kind": "Block",
       "name": "SensorFusionController",
+      "label": "Sensor fusion controller",
+      "blurb": "Combines radar, camera and wheel data into one picture for the controller.",
+      "category": "Sensing",
+      "mesh": "FUSION",
       "parent": "SENSORS",
+      "color": "#C084FC",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        1.2,
+        0.3
+      ],
+      "tier": "component",
       "role": "fusionController"
     },
     {
@@ -673,6 +750,7 @@
         1,
         0.5
       ],
+      "tier": "system",
       "role": "driverInterface",
       "ports": [
         {
@@ -725,6 +803,7 @@
         1,
         -1
       ],
+      "tier": "system",
       "role": "inverter",
       "ports": [
         {
@@ -781,7 +860,19 @@
       "id": "MOTOR",
       "kind": "Block",
       "name": "TractionMotor",
+      "label": "Traction motor",
+      "blurb": "The electric motor itself: turns inverter power into torque at the axle.",
+      "category": "Propulsion",
+      "mesh": "MOTOR",
       "parent": "POWERTRAIN",
+      "color": "#FB923C",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        0.4,
+        -1
+      ],
+      "tier": "component",
       "role": "tractionMotor",
       "ports": [
         {
@@ -806,7 +897,19 @@
       "id": "OBC",
       "kind": "Block",
       "name": "OnboardCharger",
+      "label": "Onboard charger",
+      "blurb": "Converts AC from a wall charger into DC for the battery.",
+      "category": "Charging",
+      "mesh": "OBC",
       "parent": "CHARGE",
+      "color": "#FACC15",
+      "alpha": 1.0,
+      "explode": [
+        0.8,
+        0.6,
+        -0.6
+      ],
+      "tier": "component",
       "role": "onboardCharger"
     },
     {
@@ -875,6 +978,7 @@
         0.2,
         -1
       ],
+      "tier": "system",
       "role": "powertrain",
       "subParts": [
         "INVERTER",
@@ -933,7 +1037,19 @@
       "id": "PUMP",
       "kind": "Block",
       "name": "CoolantPump",
+      "label": "Coolant pump",
+      "blurb": "Circulates coolant between the radiator, battery and electronics.",
+      "category": "Thermal",
+      "mesh": "PUMP",
       "parent": "THERMAL",
+      "color": "#67E8F9",
+      "alpha": 1.0,
+      "explode": [
+        0.4,
+        0.4,
+        1
+      ],
+      "tier": "component",
       "role": "coolantPump"
     },
     {
@@ -1667,6 +1783,7 @@
         1.2,
         0
       ],
+      "tier": "system",
       "role": "sensors",
       "subParts": [
         "FUSION",
@@ -1807,6 +1924,7 @@
         0.3,
         1
       ],
+      "tier": "system",
       "role": "thermalManagement",
       "subParts": [
         "PUMP",
@@ -1840,6 +1958,7 @@
         0.6,
         1
       ],
+      "tier": "system",
       "role": "controller"
     },
     {
@@ -1900,6 +2019,7 @@
         1,
         0.3
       ],
+      "tier": "system",
       "role": "vehicleControl",
       "operations": [
         {
@@ -2104,6 +2224,7 @@
         0,
         0
       ],
+      "tier": "system",
       "subParts": [
         "BRAKES",
         "CHARGE",
@@ -2196,7 +2317,19 @@
       "id": "WHEEL_SENSOR",
       "kind": "Block",
       "name": "WheelSpeedSensor",
+      "label": "Wheel-speed sensors",
+      "blurb": "One sensor per wheel reporting how fast it turns.",
+      "category": "Sensing",
+      "mesh": "WHEEL_SENSOR",
       "parent": "SENSORS",
+      "color": "#D8B4FE",
+      "alpha": 1.0,
+      "explode": [
+        0,
+        -0.6,
+        0
+      ],
+      "tier": "component",
       "role": "wheelSpeedSensor"
     }
   ],
@@ -4055,13 +4188,31 @@
       "DIAG"
     ],
     "POWERTRAIN": [
-      "INVERTER"
+      "INVERTER",
+      "MOTOR"
     ],
     "ENERGY": [
-      "BMS"
+      "BMS",
+      "BAT_MODULE"
     ],
     "THERMAL": [
-      "THERM_CTRL"
+      "THERM_CTRL",
+      "PUMP"
+    ],
+    "CHARGE": [
+      "CHARGE_PORT",
+      "OBC"
+    ],
+    "BRAKES": [
+      "BRAKE_CTRL",
+      "BRAKE_ACT"
+    ],
+    "SENSORS": [
+      "FUSION",
+      "WHEEL_SENSOR"
+    ],
+    "DIAG": [
+      "DIAG_GATEWAY"
     ]
   },
   "stats": {
@@ -4069,14 +4220,16 @@
     "copies": 8,
     "traceRelationships": 207,
     "allRelationships": 271,
-    "blocks": 13,
+    "blocks": 23,
+    "systems": 13,
+    "components": 10,
     "flows": 9,
     "stateMachines": 2,
     "activities": 3,
     "interactions": 1,
     "parametrics": 3,
     "signals": 10,
-    "subParts": 10
+    "subParts": 0
   },
   "behavior": {
     "stateMachines": [

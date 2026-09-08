@@ -131,9 +131,12 @@ describe('traceForBlock (fixture)', () => {
     expect(trace.useCases.map((u) => u.id)).toEqual(['UC_1']);
     expect(trace.stakeholderRoots.map((r) => r.id)).toEqual(['REQ_STK_1']);
     expect(trace.flows.out.map((f) => f.meshName)).toEqual(['FLOW__PARTA__PARTB']);
+    expect(trace.flows.out.every((f) => !f.viaParent)).toBe(true);
     expect(trace.flows.in).toEqual([]);
     expect(trace.parent?.id).toBe('ROOT');
-    expect(trace.children.map((c) => c.id)).toEqual(['PARTA_CHILD']);
+    expect(trace.children.map((c) => c.id)).toEqual(['PARTA_CHILD', 'PARTA_WIDGET']);
+    expect(trace.isInherited).toBe(false);
+    expect(trace.inherited).toBeUndefined();
   });
 
   it('ROOT: satisfies only the stakeholder requirement directly', () => {
@@ -142,6 +145,24 @@ describe('traceForBlock (fixture)', () => {
     expect(trace.allReqs[0]?.id).toBe('REQ_STK_1');
     expect(trace.parent).toBeUndefined();
     expect(trace.children.map((c) => c.id)).toEqual(['PARTA', 'PARTB']);
+  });
+
+  it("PARTA_WIDGET (a component): reqsByCategory/allReqs/tests are empty; reqCount/testCount/flows inherit from its parent PARTA", () => {
+    const trace = traceForBlock(idx, 'PARTA_WIDGET');
+    expect(trace.reqsByCategory).toEqual([]);
+    expect(trace.allReqs).toEqual([]);
+    expect(trace.tests).toEqual([]);
+    expect(trace.isInherited).toBe(true);
+    expect(trace.inherited?.from.id).toBe('PARTA');
+    expect(trace.inherited?.reqs.map((r) => r.id)).toEqual(['REQ_PT_1']);
+    expect(trace.inherited?.tests.map((t) => t.id)).toEqual(['TC_1']);
+    expect(trace.reqCount).toBe(1);
+    expect(trace.testCount).toBe(1);
+    expect(trace.flows.out.map((f) => f.meshName)).toEqual(['FLOW__PARTA__PARTB']);
+    expect(trace.flows.out.every((f) => f.viaParent === true)).toBe(true);
+    expect(trace.flows.in).toEqual([]);
+    expect(trace.parent?.id).toBe('PARTA');
+    expect(trace.children).toEqual([]);
   });
 
   it('throws a readable error for an unknown id', () => {
@@ -204,5 +225,23 @@ describe('real data/model.json', () => {
     expect(trace.blocks.direct.map((b) => b.id)).toEqual(['VEH']);
     expect(trace.derived.some((r) => r.id === 'REQ_SYS_002')).toBe(true);
     expect(trace.blocks.inherited.map((b) => b.id)).toContain('POWERTRAIN');
+  });
+
+  it('traceForBlock(MOTOR) inherits POWERTRAIN\'s direct reqs/tests/flows (contract: components satisfy nothing directly)', () => {
+    const motor = traceForBlock(idx, 'MOTOR');
+    const powertrain = traceForBlock(idx, 'POWERTRAIN');
+
+    expect(motor.allReqs).toEqual([]);
+    expect(motor.reqsByCategory).toEqual([]);
+    expect(motor.tests).toEqual([]);
+    expect(motor.isInherited).toBe(true);
+    expect(motor.inherited?.from.id).toBe('POWERTRAIN');
+    expect(motor.reqCount).toBe(powertrain.reqCount);
+    expect(motor.testCount).toBe(powertrain.testCount);
+    expect(motor.inherited?.reqs.map((r) => r.id).sort()).toEqual(powertrain.allReqs.map((r) => r.id).sort());
+    expect(motor.flows.out.map((f) => f.meshName).sort()).toEqual(powertrain.flows.out.map((f) => f.meshName).sort());
+    expect(motor.flows.in.map((f) => f.meshName).sort()).toEqual(powertrain.flows.in.map((f) => f.meshName).sort());
+    expect([...motor.flows.out, ...motor.flows.in].every((f) => f.viaParent === true)).toBe(true);
+    expect(motor.parent?.id).toBe('POWERTRAIN');
   });
 });

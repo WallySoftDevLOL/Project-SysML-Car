@@ -12,7 +12,9 @@ EXPECTED_STATS = {
     "copies": 8,
     "traceRelationships": 207,
     "allRelationships": 271,
-    "blocks": 13,
+    "blocks": 23,
+    "systems": 13,
+    "components": 10,
     "flows": 9,
 }
 
@@ -26,7 +28,12 @@ EXPECTED_SECTION6_STATS = {
     "interactions": 1,
     "parametrics": 3,
     "signals": 10,
-    "subParts": 10,
+    # The 10 blocks.json components (MOTOR, BAT_MODULE, ...) used to be the
+    # only "sub-parts" the script converter synthesized (name/parent/role
+    # only, no mesh/color). Now that they're full catalog blocks (contract
+    # section 1), subParts counts whatever *other* PartProperty-derived
+    # blocks aren't in the catalog -- currently none.
+    "subParts": 0,
 }
 
 EXPECTED_SATISFY_COUNTS = {

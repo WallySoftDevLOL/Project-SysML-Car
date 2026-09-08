@@ -12,16 +12,23 @@ describe('highlightFor (fixture)', () => {
     expect(h.secondary.size).toBe(0);
   });
 
-  it('block selection: primary is the block plus its descendants; secondary is flow neighbours + parent', () => {
+  it('block selection: primary is the block plus its descendants (incl. its component); secondary is flow neighbours + parent', () => {
     const h = highlightFor(idx, { kind: 'block', id: 'PARTA' });
-    expect([...h.primary].sort()).toEqual(['PARTA', 'PARTA_CHILD']);
+    expect([...h.primary].sort()).toEqual(['PARTA', 'PARTA_CHILD', 'PARTA_WIDGET']);
     expect([...h.secondary].sort()).toEqual(['PARTB', 'ROOT']);
   });
 
   it('block selection: secondary never overlaps primary', () => {
     const h = highlightFor(idx, { kind: 'block', id: 'ROOT' });
-    expect([...h.primary].sort()).toEqual(['PARTA', 'PARTA_CHILD', 'PARTB', 'ROOT']);
+    expect([...h.primary].sort()).toEqual(['PARTA', 'PARTA_CHILD', 'PARTA_WIDGET', 'PARTB', 'ROOT']);
     for (const id of h.secondary) expect(h.primary.has(id)).toBe(false);
+  });
+
+  it('component selection: primary is the component alone; secondary is its parent system plus the parent\'s flow neighbours', () => {
+    const h = highlightFor(idx, { kind: 'block', id: 'PARTA_WIDGET' });
+    expect([...h.primary]).toEqual(['PARTA_WIDGET']);
+    // PARTA_WIDGET has no flows of its own; PARTA (its parent) flows to PARTB.
+    expect([...h.secondary].sort()).toEqual(['PARTA', 'PARTB']);
   });
 
   it("requirement selection: primary is direct satisfiers, secondary is descendants' satisfiers", () => {
@@ -76,5 +83,19 @@ describe('highlightFor / flowsToLight (real data/model.json)', () => {
     const lit = flowsToLight(idx, h);
     expect(lit.has('FLOW__VCONTROL__POWERTRAIN')).toBe(true);
     expect(lit.has('FLOW__HMI__VCONTROL')).toBe(true);
+  });
+
+  it('MOTOR (component) selection: primary is MOTOR alone; secondary is POWERTRAIN plus POWERTRAIN\'s flow neighbours', () => {
+    const h = highlightFor(idx, { kind: 'block', id: 'MOTOR' });
+    expect([...h.primary]).toEqual(['MOTOR']);
+    // POWERTRAIN itself has no flows of its own in the fixture-free real data;
+    // ENERGY, INVERTER and VCONTROL each flow into it.
+    expect([...h.secondary].sort()).toEqual(['ENERGY', 'INVERTER', 'POWERTRAIN', 'VCONTROL']);
+  });
+
+  it('a system selection includes its own components in primary (recursive childrenOf)', () => {
+    const h = highlightFor(idx, { kind: 'block', id: 'POWERTRAIN' });
+    expect(h.primary.has('INVERTER')).toBe(true);
+    expect(h.primary.has('MOTOR')).toBe(true);
   });
 });

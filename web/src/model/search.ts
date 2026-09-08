@@ -35,14 +35,21 @@ export function search(idx: ModelIndex, query: string, options: SearchOptions = 
 
     const displayId = typeof el.displayId === 'string' ? el.displayId.toLowerCase() : '';
     const name = el.name.toLowerCase();
+    // Blocks (systems AND the 10 catalog components) carry a plain-language
+    // `label` distinct from their formal SysML `name`, e.g. label "Battery
+    // modules" vs name "BatteryModule" -- search both so a component is
+    // findable by the words shown in the UI, not just its internal name.
+    const label = typeof el.label === 'string' ? el.label.toLowerCase() : '';
     const text = typeof el.text === 'string' ? el.text.toLowerCase() : '';
     const id = el.id.toLowerCase();
 
-    const allMatch = tokens.every((t) => id.includes(t) || displayId.includes(t) || name.includes(t) || text.includes(t));
+    const allMatch = tokens.every(
+      (t) => id.includes(t) || displayId.includes(t) || name.includes(t) || label.includes(t) || text.includes(t),
+    );
     if (!allMatch) return;
 
     const displayIdPrefixMatch = tokens.some((t) => displayId.startsWith(t));
-    const nameMatch = tokens.some((t) => name.includes(t));
+    const nameMatch = tokens.some((t) => name.includes(t) || label.includes(t));
     const rank = displayIdPrefixMatch ? 0 : nameMatch ? 1 : 2;
 
     matches.push({ el, index, rank });

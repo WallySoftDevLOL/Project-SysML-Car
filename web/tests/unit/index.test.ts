@@ -9,7 +9,7 @@ describe('buildIndex (fixture)', () => {
     expect(idx.byId.get('REQ_PT_1')?.name).toBe('Part A Behavior');
     expect(idx.byId.get('nope')).toBeUndefined();
     expect(idx.byKind.get('Requirement')).toHaveLength(5);
-    expect(idx.byKind.get('Block')).toHaveLength(4);
+    expect(idx.byKind.get('Block')).toHaveLength(5);
   });
 
   it('out/in and outBy/inBy split relationships by source and target', () => {
@@ -25,7 +25,16 @@ describe('buildIndex (fixture)', () => {
   });
 
   it('blocks lists only meshed blocks, in hierarchy order (parent before children, grandchild right after its parent)', () => {
-    expect(idx.blocks.map((b) => b.id)).toEqual(['ROOT', 'PARTA', 'PARTA_CHILD', 'PARTB']);
+    expect(idx.blocks.map((b) => b.id)).toEqual(['ROOT', 'PARTA', 'PARTA_CHILD', 'PARTA_WIDGET', 'PARTB']);
+  });
+
+  it('systems / components / tierOf split blocks by tier', () => {
+    expect(idx.systems.map((b) => b.id)).toEqual(['ROOT', 'PARTA', 'PARTA_CHILD', 'PARTB']);
+    expect(idx.components.map((b) => b.id)).toEqual(['PARTA_WIDGET']);
+    expect(idx.tierOf('ROOT')).toBe('system');
+    expect(idx.tierOf('PARTA_WIDGET')).toBe('component');
+    expect(idx.tierOf('nope')).toBeUndefined();
+    expect(idx.tierOf('REQ_PT_1')).toBeUndefined(); // not a Block
   });
 
   it('categories / categoryOf', () => {
@@ -44,8 +53,11 @@ describe('buildIndex (fixture)', () => {
   it('parentOf / childrenOf', () => {
     expect(idx.parentOf('PARTA')?.id).toBe('ROOT');
     expect(idx.parentOf('ROOT')).toBeUndefined();
+    expect(idx.parentOf('PARTA_WIDGET')?.id).toBe('PARTA');
     expect(idx.childrenOf('ROOT').map((b) => b.id)).toEqual(['PARTA', 'PARTB']);
+    expect(idx.childrenOf('PARTA').map((b) => b.id)).toEqual(['PARTA_CHILD', 'PARTA_WIDGET']);
     expect(idx.childrenOf('PARTA_CHILD')).toEqual([]);
+    expect(idx.childrenOf('PARTA_WIDGET')).toEqual([]);
   });
 
   it('requirements(authoritativeOnly) defaults to excluding non-authoritative copies', () => {
@@ -55,6 +67,7 @@ describe('buildIndex (fixture)', () => {
 
   it('displayName: label for blocks, "displayId name" for requirements, name otherwise', () => {
     expect(idx.displayName('PARTA')).toBe('Part A');
+    expect(idx.displayName('PARTA_WIDGET')).toBe('Widget'); // component: also uses `label`
     expect(idx.displayName('REQ_PT_1')).toBe('PT-1 Part A Behavior');
     expect(idx.displayName('TC_1')).toBe('Part A Test');
     expect(idx.displayName('nope')).toBe('nope');
@@ -66,35 +79,71 @@ describe('buildIndex (real data/model.json)', () => {
 
   it('indexes all 192 elements and 271 relationships', () => {
     // 168 pre-section-6 elements (unchanged, see tools/xlsx_to_json.py) plus
-    // 24 section-6 additions: 10 composition sub-parts, 9 DATA_* payload
-    // types, 2 FULL_*_TYPE boundary port types, 3 analysis blocks.
+    // 24 section-6 additions: 10 catalog components (now full data/blocks.json
+    // blocks with mesh/color/label -- see docs/model-contract.md section 1),
+    // 9 DATA_* payload types, 2 FULL_*_TYPE boundary port types, 3 analysis
+    // blocks.
     expect(idx.byId.size).toBe(192);
     let relCount = 0;
     for (const list of idx.out.values()) relCount += list.length;
     expect(relCount).toBe(271);
   });
 
-  it('has exactly the 13 real (meshed) blocks in the documented hierarchy order', () => {
-    expect(idx.blocks).toHaveLength(13);
+  it('has exactly the 23 real (meshed) blocks -- 13 systems + 10 components -- in the documented hierarchy order', () => {
+    expect(idx.blocks).toHaveLength(23);
     expect(idx.blocks.map((b) => b.id)).toEqual([
       'VEH',
       'POWERTRAIN',
       'INVERTER',
+      'MOTOR',
       'ENERGY',
       'BMS',
+      'BAT_MODULE',
       'VCONTROL',
       'BRAKES',
+      'BRAKE_CTRL',
+      'BRAKE_ACT',
       'THERMAL',
       'THERM_CTRL',
+      'PUMP',
       'SENSORS',
+      'FUSION',
+      'WHEEL_SENSOR',
       'HMI',
       'CHARGE',
+      'CHARGE_PORT',
+      'OBC',
       'DIAG',
+      'DIAG_GATEWAY',
     ]);
     // The abstract generalization target VEH_SUBSYSTEM is a Block-kind
-    // element with no mesh/parent, and must not show up as a 14th block.
+    // element with no mesh/parent, and must not show up as a 24th block.
     expect(idx.byId.get('VEH_SUBSYSTEM')?.kind).toBe('Block');
     expect(idx.blocks.some((b) => b.id === 'VEH_SUBSYSTEM')).toBe(false);
+  });
+
+  it('systems / components / tierOf split the real 23 blocks 13/10', () => {
+    expect(idx.systems).toHaveLength(13);
+    expect(idx.components).toHaveLength(10);
+    expect(idx.systems.map((b) => b.id)).toContain('VEH');
+    expect(idx.components.map((b) => b.id).sort()).toEqual(
+      [
+        'BAT_MODULE',
+        'BRAKE_ACT',
+        'BRAKE_CTRL',
+        'CHARGE_PORT',
+        'DIAG_GATEWAY',
+        'FUSION',
+        'MOTOR',
+        'OBC',
+        'PUMP',
+        'WHEEL_SENSOR',
+      ].sort(),
+    );
+    expect(idx.tierOf('MOTOR')).toBe('component');
+    expect(idx.tierOf('POWERTRAIN')).toBe('system');
+    // MOTOR uses its own label (not a `role` fallback) since it's now a full catalog block.
+    expect(idx.displayName('MOTOR')).toBe('Traction motor');
   });
 
   it('requirements(true) excludes the 8 VER copies, matching stats.requirements', () => {
@@ -108,9 +157,10 @@ describe('buildIndex (real data/model.json)', () => {
     expect(idx.categories.get('SYS')?.level).toBe(1);
   });
 
-  it('childrenOf/parentOf match model.hierarchy for POWERTRAIN/INVERTER', () => {
-    expect(idx.childrenOf('POWERTRAIN').map((b) => b.id)).toEqual(['INVERTER']);
+  it('childrenOf/parentOf match model.hierarchy for POWERTRAIN/INVERTER/MOTOR', () => {
+    expect(idx.childrenOf('POWERTRAIN').map((b) => b.id)).toEqual(['INVERTER', 'MOTOR']);
     expect(idx.parentOf('INVERTER')?.id).toBe('POWERTRAIN');
+    expect(idx.parentOf('MOTOR')?.id).toBe('POWERTRAIN');
     expect(idx.parentOf('VEH')).toBeUndefined();
   });
 });

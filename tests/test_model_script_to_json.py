@@ -127,8 +127,12 @@ def test_cross_check_against_xlsx_converter(tmp_path):
     # The script converter must add elements (sub-parts, DATA_*, FULL_*_TYPE,
     # analysis blocks) on top -- never fewer, never a different total by
     # coincidence -- confirming "superset" is a real (not vacuous) claim.
+    # (The 10 blocks.json components used to be part of this "extra" set --
+    # they were script-only sub-parts before the catalog grew to 23 blocks;
+    # now both converters merge them in directly, so the count dropped from
+    # 24 to 14.)
     extra_ids = set(script_elements_by_id) - set(xlsx_elements_by_id)
-    assert len(extra_ids) == 24, sorted(extra_ids)
+    assert len(extra_ids) == 14, sorted(extra_ids)
 
 
 # ---------------------------------------------------------------------------

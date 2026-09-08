@@ -28,8 +28,10 @@ function meta(): ModelJson['meta'] {
  *            <- REQ_PT_1, REQ_PT_2 (PT, level 2, siblings)
  *   REQ_COPY_1 (VER, non-authoritative) Copies REQ_PT_1.
  *
- * Blocks: ROOT -> PARTA -> PARTA_CHILD, ROOT -> PARTB. A flow runs
- * PARTA -> PARTB.
+ * Blocks: ROOT -> PARTA -> PARTA_CHILD, ROOT -> PARTA -> PARTA_WIDGET,
+ * ROOT -> PARTB. A flow runs PARTA -> PARTB. ROOT/PARTA/PARTA_CHILD/PARTB are
+ * `tier: "system"`; PARTA_WIDGET is `tier: "component"` (contract section 1)
+ * — it satisfies nothing directly, mirroring the real model's components.
  *
  * ROOT Satisfies REQ_STK_1; PARTA Satisfies REQ_PT_1; PARTA_CHILD Satisfies
  * REQ_PT_2. TC_1 Verifies REQ_PT_1. UC_1 Traces REQ_PT_1 and is Allocated to
@@ -102,6 +104,7 @@ export function buildFixtureModel(): ModelJson {
         color: '#000000',
         alpha: 0.35,
         explode: [0, 0, 0],
+        tier: 'system',
       },
       {
         id: 'PARTA',
@@ -114,6 +117,7 @@ export function buildFixtureModel(): ModelJson {
         color: '#111111',
         alpha: 1,
         explode: [1, 0, 0],
+        tier: 'system',
       },
       {
         id: 'PARTA_CHILD',
@@ -126,6 +130,20 @@ export function buildFixtureModel(): ModelJson {
         color: '#222222',
         alpha: 1,
         explode: [1, 1, 0],
+        tier: 'system',
+      },
+      {
+        id: 'PARTA_WIDGET',
+        kind: 'Block',
+        name: 'PartAWidget',
+        label: 'Widget',
+        blurb: 'A component inside Part A.',
+        mesh: 'PARTA_WIDGET',
+        parent: 'PARTA',
+        color: '#444444',
+        alpha: 1,
+        explode: [1, 0.5, 0],
+        tier: 'component',
       },
       {
         id: 'PARTB',
@@ -138,6 +156,7 @@ export function buildFixtureModel(): ModelJson {
         color: '#333333',
         alpha: 1,
         explode: [-1, 0, 0],
+        tier: 'system',
       },
       { id: 'TC_1', kind: 'TestCase', name: 'Part A Test' },
       { id: 'UC_1', kind: 'UseCase', name: 'Use Part A' },
@@ -170,14 +189,16 @@ export function buildFixtureModel(): ModelJson {
     ],
     hierarchy: {
       ROOT: ['PARTA', 'PARTB'],
-      PARTA: ['PARTA_CHILD'],
+      PARTA: ['PARTA_CHILD', 'PARTA_WIDGET'],
     },
     stats: {
       requirements: 4,
       copies: 1,
       traceRelationships: 9,
       allRelationships: 13,
-      blocks: 4,
+      blocks: 5,
+      systems: 4,
+      components: 1,
       flows: 1,
     },
   };

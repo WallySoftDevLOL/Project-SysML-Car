@@ -252,18 +252,22 @@ def convert(groovy_path: Path, blocks_path: Path, xlsx_path: Path, out_path: Pat
         children.sort()
 
     def lift_to_catalog_block(raw_owner: str) -> str:
-        """Nearest data/blocks.json ancestor of `raw_owner`, climbing the
-        PartProperty composition chain (raw_owner itself if already a
-        catalog block)."""
+        """Nearest data/blocks.json *system*-tier ancestor of `raw_owner`,
+        climbing the PartProperty composition chain (raw_owner itself if
+        already a system block). Component-tier catalog blocks (e.g. MOTOR)
+        are themselves in data/blocks.json now, but relationships/flows/
+        Satisfy stay at system granularity exactly as before components
+        were added to the catalog, so a component owner keeps climbing past
+        itself to its owning system."""
         seen = set()
         current = raw_owner
-        while current not in blocks_by_id:
+        while current not in blocks_by_id or blocks_by_id[current].get("tier") == "component":
             if current in seen:
-                raise SystemExit(f"Cycle lifting {raw_owner!r} to a catalog block")
+                raise SystemExit(f"Cycle lifting {raw_owner!r} to a catalog system block")
             seen.add(current)
             nxt = parent_of_subpart.get(current)
             if nxt is None:
-                raise SystemExit(f"Cannot lift {raw_owner!r} (via {current!r}) to a data/blocks.json block")
+                raise SystemExit(f"Cannot lift {raw_owner!r} (via {current!r}) to a data/blocks.json system block")
             current = nxt
         return current
 
@@ -383,26 +387,33 @@ def convert(groovy_path: Path, blocks_path: Path, xlsx_path: Path, out_path: Pat
         harvest[compound_id] = ("Binding Endpoint", compound_name)
 
     old_elements: dict[str, dict] = dict(requirements_by_id)
+
+    # Catalog blocks -- all 23 of data/blocks.json, systems AND components --
+    # get their full field merge unconditionally, whether or not they are
+    # ever referenced by a relationship/connector/item_flow/binding.
+    # Components in particular typically aren't (see lift_to_catalog_block):
+    # they satisfy nothing directly and don't appear in `flows`.
+    for b in blocks_catalog:
+        old_elements[b["id"]] = {
+            "id": b["id"],
+            "kind": "Block",
+            "name": b["name"],
+            "label": b["label"],
+            "blurb": b["blurb"],
+            "category": b["category"],
+            "mesh": b["meshName"],
+            "parent": b["parentId"],
+            "color": b["color"],
+            "alpha": b["alpha"],
+            "explode": b["explode"],
+            "tier": b["tier"],
+        }
+
     for eid, (raw_kind, name) in harvest.items():
-        if eid in requirements_by_id:
-            continue  # Requirements are built with full fidelity above; don't clobber with the generic branch.
+        if eid in old_elements:
+            continue  # Requirements and catalog blocks are built with full fidelity above.
         if raw_kind == "Block":
-            if eid in blocks_by_id:
-                b = blocks_by_id[eid]
-                old_elements[eid] = {
-                    "id": eid,
-                    "kind": "Block",
-                    "name": b["name"],
-                    "label": b["label"],
-                    "blurb": b["blurb"],
-                    "category": b["category"],
-                    "mesh": b["meshName"],
-                    "parent": b["parentId"],
-                    "color": b["color"],
-                    "alpha": b["alpha"],
-                    "explode": b["explode"],
-                }
-            elif eid in KNOWN_ABSTRACT_BLOCKS:
+            if eid in KNOWN_ABSTRACT_BLOCKS:
                 old_elements[eid] = {"id": eid, "kind": "Block", "name": name, "abstract": True}
             else:
                 raise SystemExit(
@@ -419,15 +430,13 @@ def convert(groovy_path: Path, blocks_path: Path, xlsx_path: Path, out_path: Pat
         else:
             old_elements[eid] = {"id": eid, "kind": raw_kind, "name": name}
 
-    missing_catalog_blocks = set(blocks_by_id) - {
-        eid for eid, el in old_elements.items() if el.get("kind") == "Block" and el.get("mesh")
-    }
+    all_block_ids = {op["external_id"] for op in by_op["element"] if op["kind"] == "Block"}
+    missing_catalog_blocks = set(blocks_by_id) - all_block_ids
     if missing_catalog_blocks:
         raise SystemExit(f"blocks.json id(s) never appear in the script: {sorted(missing_catalog_blocks)}")
 
     # ------------------------------------------------- New section-6 blocks
     new_block_ids: set[str] = set()
-    all_block_ids = {op["external_id"] for op in by_op["element"] if op["kind"] == "Block"}
     subpart_only_ids = {tid for lst in composition.values() for tid in lst if tid not in blocks_by_id}
     for tid in sorted(subpart_only_ids):
         op = element_ops[tid]
@@ -811,6 +820,8 @@ def convert(groovy_path: Path, blocks_path: Path, xlsx_path: Path, out_path: Pat
         "traceRelationships": trace_relationship_count,
         "allRelationships": len(relationships_sorted),
         "blocks": len(blocks_catalog),
+        "systems": sum(1 for b in blocks_catalog if b["tier"] == "system"),
+        "components": sum(1 for b in blocks_catalog if b["tier"] == "component"),
         "flows": len(flows),
         "stateMachines": len(state_machines),
         "activities": len(activities),

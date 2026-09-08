@@ -196,23 +196,43 @@ export function traceForRequirement(idx: ModelIndex, id: string): RequirementTra
   };
 }
 
+/** A `Flow` traced onto a component's `BlockTrace`, borrowed from its parent system. */
+export interface TracedFlow extends Flow {
+  /** True when this flow belongs to the block's parent, not the block itself (contract: components aren't a flow endpoint). */
+  viaParent?: boolean;
+}
+
+/** A component's inherited direct requirements/tests (contract: components satisfy nothing directly). */
+export interface InheritedTrace {
+  from: Element;
+  reqs: Element[];
+  tests: Element[];
+}
+
 export interface BlockTrace {
   block: Element;
-  /** Directly satisfied requirements, grouped by category. */
+  /** Directly satisfied requirements, grouped by category. Empty for a component (it satisfies nothing directly) — see `inherited`. */
   reqsByCategory: Array<{ category: Category; reqs: Element[] }>;
-  /** The same requirements, flat. */
+  /** The same requirements, flat. Empty for a component — see `inherited`. */
   allReqs: Element[];
   /** Deduped level-0 ancestors of every requirement this block satisfies. */
   stakeholderRoots: Element[];
-  /** TestCases verifying any requirement this block satisfies. */
+  /** TestCases verifying any requirement this block satisfies. Empty for a component — see `inherited`. */
   tests: Element[];
   /** UseCases allocated to this block, plus UseCases tracing any of its requirements. */
   useCases: Element[];
-  flows: { out: Flow[]; in: Flow[] };
+  /** This block's own flows, or — for a component — its parent's flows, each tagged `viaParent: true`. */
+  flows: { out: TracedFlow[]; in: TracedFlow[] };
   parent: Element | undefined;
   children: Element[];
+  /** `inherited.tests.length` when `isInherited`, else `tests.length`. */
   testCount: number;
+  /** `inherited.reqs.length` when `isInherited`, else `allReqs.length`. */
   reqCount: number;
+  /** True for a `tier: "component"` block with a parent: `reqCount`/`testCount` report `inherited`'s counts, not this block's own (empty) direct Satisfy/Verify edges. */
+  isInherited: boolean;
+  /** Present only when `isInherited`: the parent system's own direct requirements/tests. */
+  inherited?: InheritedTrace;
 }
 
 export function traceForBlock(idx: ModelIndex, blockId: string): BlockTrace {
@@ -263,8 +283,36 @@ export function traceForBlock(idx: ModelIndex, blockId: string): BlockTrace {
   );
   const useCases = dedupeById([...allocatedUseCases, ...tracedUseCases]);
 
-  const flowsOut = idx.flows.filter((f) => f.source === blockId);
-  const flowsIn = idx.flows.filter((f) => f.target === blockId);
+  const parent = idx.parentOf(blockId);
+
+  // Components satisfy nothing directly and aren't a flow endpoint (contract
+  // section 1: Satisfy/flows stay at system granularity) -- so a component's
+  // own reqCount/testCount/flows would otherwise always read as zero. Fall
+  // back to the parent system's direct requirements/tests/flows instead,
+  // tagging the flows `viaParent: true` so callers can tell them apart.
+  const isInherited = block.tier === 'component' && parent !== undefined;
+
+  let flowsOut: TracedFlow[] = idx.flows.filter((f) => f.source === blockId);
+  let flowsIn: TracedFlow[] = idx.flows.filter((f) => f.target === blockId);
+  let inherited: InheritedTrace | undefined;
+  let reqCount = allReqs.length;
+  let testCount = tests.length;
+
+  if (isInherited && parent) {
+    const parentReqs = dedupeById(
+      idx
+        .outBy(parent.id, 'Satisfy')
+        .map((r) => idx.byId.get(r.target))
+        .filter((e): e is Element => e !== undefined),
+    ).sort(byDisplayIdThenName);
+    const parentTests = dedupeById(parentReqs.flatMap((req) => directVerifiers(idx, req.id)));
+
+    inherited = { from: parent, reqs: parentReqs, tests: parentTests };
+    reqCount = parentReqs.length;
+    testCount = parentTests.length;
+    flowsOut = idx.flows.filter((f) => f.source === parent.id).map((f) => ({ ...f, viaParent: true }));
+    flowsIn = idx.flows.filter((f) => f.target === parent.id).map((f) => ({ ...f, viaParent: true }));
+  }
 
   return {
     block,
@@ -274,10 +322,12 @@ export function traceForBlock(idx: ModelIndex, blockId: string): BlockTrace {
     tests,
     useCases,
     flows: { out: flowsOut, in: flowsIn },
-    parent: idx.parentOf(blockId),
+    parent,
     children: idx.childrenOf(blockId),
-    testCount: tests.length,
-    reqCount: allReqs.length,
+    testCount,
+    reqCount,
+    isInherited,
+    inherited,
   };
 }
 

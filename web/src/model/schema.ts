@@ -58,10 +58,19 @@ export interface Element {
   color?: string;
   alpha?: number;
   explode?: [number, number, number];
+  /**
+   * `"system"` for one of the 13 top-level subsystems (incl. VEH and the
+   * three previously-only-nested systems INVERTER/BMS/THERM_CTRL), or
+   * `"component"` for one of the 10 sub-parts owned by a system (contract
+   * section 1). Present on every `data/blocks.json` catalog block (both
+   * converters merge it in); absent from every other element kind and from
+   * the pre-catalog composition-only sub-parts contract section 6 also adds.
+   */
+  tier?: 'system' | 'component' | (string & {});
 
   // Block extras (contract section 6, added 2026-09-08). Present on both the
-  // 13 clickable (meshed) blocks and the new non-clickable composition
-  // sub-parts (which have `parent` but no `mesh`/`color`).
+  // 23 clickable (meshed) catalog blocks and the new non-clickable
+  // composition sub-parts (which have `parent` but no `mesh`/`color`).
   /** Part-property name this block plays in its owner, e.g. `tractionMotor`. */
   role?: string;
   /** Ids of this block's composition sub-parts (mirrors `ModelJson.composition[id]`). */
@@ -336,6 +345,10 @@ export interface ModelJson {
     traceRelationships: number;
     allRelationships: number;
     blocks: number;
+    /** Count of `tier: "system"` catalog blocks (13, incl. VEH). Added alongside `components` (contract section 1). */
+    systems?: number;
+    /** Count of `tier: "component"` catalog blocks (10). */
+    components?: number;
     flows: number;
     stateMachines?: number;
     activities?: number;

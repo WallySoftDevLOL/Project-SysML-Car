@@ -143,6 +143,12 @@ describe.skipIf(!hasBehaviorData)('behaviorIndex (real data/model.json)', () => 
     expect(sm?.states).toHaveLength(7);
   });
 
+  it('subPartsOf(POWERTRAIN) tags MOTOR clickable: true (contract section 1: the 10 components are now full catalog blocks with their own mesh)', () => {
+    const subParts = behavior.subPartsOf('POWERTRAIN');
+    const motor = subParts.find((s) => s.element.id === 'MOTOR');
+    expect(motor?.clickable).toBe(true);
+  });
+
   it('SEQ_START has 4 messages: HMI calls VCONTROL, which enables ENERGY, which reports available back to VCONTROL, which commands torque to INVERTER', () => {
     const seq = behavior.messageSequence('SEQ_START');
     expect(seq).toHaveLength(4);
